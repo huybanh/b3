@@ -1,0 +1,8 @@
+
+*.class
+
+*.class
+
+*.class
+
+pushclient/target/classes/com/betbrain/data/pushclient/App.class
