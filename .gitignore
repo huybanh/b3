@@ -6,3 +6,9 @@
 *.class
 
 pushclient/target/classes/com/betbrain/data/pushclient/App.class
+
+pushclient/.classpath
+
+pushclient/.project
+
+*.prefs
