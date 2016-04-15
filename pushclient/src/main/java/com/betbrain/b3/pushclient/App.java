@@ -1,4 +1,4 @@
-package com.betbrain.data.pushclient;
+package com.betbrain.b3.pushclient;
 
 /**
  * Hello world!
