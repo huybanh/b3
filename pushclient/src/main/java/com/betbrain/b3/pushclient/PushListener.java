@@ -8,11 +8,20 @@ import com.betbrain.sepc.connector.sportsmodel.EntityChange;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
 
 public class PushListener implements SEPCConnectorListener {
+	
+	private static boolean first = false;
 
 	public void notifyEntityUpdates(EntityChangeBatch changeBatch) {
+		//long lastBatchId = changeBatch.getId();
+		if (first) {
+			return;
+		}
 		System.out.println("notifyEntityUpdates: " + changeBatch);
+		System.out.println("notifyEntityUpdates: batch id: " + changeBatch.getId());
+		first = true;
 		for (EntityChange ec: changeBatch.getEntityChanges()) {
 			System.out.println("Changed: " + ec);
+			//ec.
 		}
 	}
 
