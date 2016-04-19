@@ -1,0 +1,22 @@
+Suppose we have a match:
+Football -> England -> Premier League -> Liverpool Arsenal -> 
+1x2 -> Whole Match (this is the event part. The event part can be 1st half, 2nd half, whole match etc).
+
+So, you should ask the user the following questions:
+
+1  Chose time range (user chooses 15 March - 15 April)
+2  Choose the Sport (user chooses Footbal)
+3. Choose the Country  (user chooses England)
+4. Choose the League  (user chooses Premier League)
+5. Choose the Match (user chooses Liverpool Arsenal)
+
+6. Chose the BettingType (user chooses 1x2)
+
+7. Chose the Parameter (some of the betting types, like asian handicap, over under , have parameters) .
+
+8. Chose the Event Part (user chooses Whole Match)
+
+Note: if it is too difficult we can start with the step 5. Step 5 changes to: 
+	Choose the id of the match (user chooses the id of the match).
+
+And then, you should show the report for what the user chose.

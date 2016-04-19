@@ -1,0 +1,4 @@
+One more note: your understand is correct, the data model, especially the outcome modelling, 
+is quite generic. I suggest you start with a few types (which are also different). 
+Yes, probably it would be good if you go through all the types and understand 
+how they differ in order not to have surprises after the modeling phase.
