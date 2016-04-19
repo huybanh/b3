@@ -16,6 +16,7 @@ So, you should ask the user the following questions:
 
 8. Chose the Event Part (user chooses Whole Match)
 
-Note: if it is too difficult we can start with the step 5. Step 5 changes to: Choose the id of the match (user chooses the id of the match).
+Note: if it is too difficult we can start with the step 5. Step 5 changes to: 
+	Choose the id of the match (user chooses the id of the match).
 
 And then, you should show the report for what the user chose.

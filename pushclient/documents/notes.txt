@@ -1,0 +1,2 @@
+- Main model objects to focus on phase 1:
+   + Event <- Outcome <- BettingOffer
