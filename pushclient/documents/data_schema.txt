@@ -1,0 +1,134 @@
+* Schema guideline
+
+- Betbrain business focuses on 3 main entities: Event, Outcome and BettingOffer. 
+B3 engine will have these 3 entities are main data types/tables as well.
+
+- Denormalized: 
+  + SE Event/Outcome/BettingOffer are mapped into B3 types of same names
+  + Other entities are denormalized into these main entities
+   
+- Field mapping:
+  + Each SE entity goes into one data column, in json format (one B3 record has multiple columns, 
+    each column is corresponding to one SE entity)
+  + All IDs in one entity (entity ID, parent IDs, child IDs) are extracted, stored duplicated in
+    its own column in a B3 record. 
+
+- Handling main entity's links: Possible link types are:
+  + 1:1 UP/DOWN: Use lookup table
+  + 1:n DOWN: not exists
+  + 1:n UP: Lookup table
+  
+- Handling 1:n relations: Two methods:
+  + Method 1: Use nosql collections + table relation for back referencing in updating
+  + Method 2: Use table relation (see below)
+  + Depend on data's characteristics, either method can be used.
+  + Nosql collection is preferred. Relation table is considered 
+    only in case of large number of child entities (not suitable to nosql collections). 
+
+- Handling Parts (unlimited nesting):
+  + Entity and EntityPart are modeled using one super data structure (containing all fields of the two)
+  + Two are distinguished using a marker in key 
+  + unlimited nested structures: Handled by a lookup table (below)
+
+- Handling revisions option 1: All changes to an entity are kept as a full data record
+
+- Handling revisions option 2: 
+   + 2 full records, one for base and one for current revisions
+   + diffs from the base, for historical revisions
+   
+- Indexes: Additional secondary indexes can be configured to serve the purposes of reports
+
+I/ Table lookup
+
+a/ Key spec: entityClass/entityId
+b/ Columns: link1Id, link2Id, ...
+
+* Usuage: Used to find IDs of parent entities
+
+Example: Find event_type_id from an event_id
+
+II/ Table relation
+
+a/ Key spec: childEntityClass/entityClass/entityId/childEntityId
+b/ Columns: no columns if child entity is denormalized by collection, 
+   otherwise child entity's json & linking IDs
+
+* Usage: 
+  + Find children of a parent (find events belong to an eventType)
+  + Finding is done by scanning a key-range: child_entity_class/entity_class/entity_id/*
+  + Updating a child: Scan child_entity_class/*
+  + This table is ONLY used in method 2 of handling relation
+
+Example key data: EventType/type1/Event/event1
+
+III/ Table event
+
+a/ Key spec: sportId/eventTypeId/statusId/[EVENT|EVENTPART]/eventId/[BLANK|revision_number]
+-Need justification on ordering of typeId and statusId
+
+b/ Columns: 
+
+IV/ Table outcome
+
+V/ Table betting_offer
+
+* SE entities mapping to B3 tables
+A/ Event-related
+1/ Event
+  + Link type: N/A
+  + Denormalization method: N/A
+  + Table event (option 1): (sportId/eventTypeId/statusId/EVENT/eventId/BLANK), EVENT_id, EVENT_typeId,
+    EVENT_sportId, EVENT_templateId, EVENT_promotionId, EVENT_parentId, EVENT_parentPartId, 
+    EVENT_venueId, EVENT_statusId, EVENT_rootPartId, EVENT_currentPartId, EVENT_entity (json)
+  + Table event (option 2): (sportId/eventTypeId/statusId/EVENT/eventId/BLANK), 
+    EVENT_parentId, EVENT_parentPartId, 
+    EVENT_entity (json)
+    
+  + Table lookup: (EVENT/eventId), typeId, sportId, templateId, promotionId 
+    parentId, parentPartId, venueId, statusId, rootPartId, currentPartId
+    
+  + Table relation:
+      Insert: NOTHING
+      Query: NONEED
+
+2/ Sport
+  + Link type <Event-Sport>: n-1
+  + Denormalization method: in-place
+  + Table event: (sportId/eventTypeId*/statusId*/[EVENT|EVENTPART]/eventId*/[BLANK|revision_number*]), 
+    EVENT_sportId, SPORT_sportId, SPORT_parentId, SPORT_entity (json)
+  + Table lookup: (SPORT/sportId), parentId
+  + Table relation: 
+      Insert: (EVENT/SPORT/sportId/eventId), [no columns]
+      Query: (EVENT/SPORT/sportId/eventId*), [no columns]
+
+3/ 	EventType
+  + Link type <Event-EventType>: n-1
+  + Denormalization method: in-place
+  + Table event: (sportId*/eventTypeId*/statusId*/[EVENT|EVENTPART]/eventId*/[BLANK|revision_number*]), 
+    EVENT_typeId, EVENTTYPE_id, EVENTTYPE_entity
+  + Table lookup: NOTHING
+  + Table relation: 
+      Insert: (EVENT/EVENTTYPE/eventTypeId/eventId), [no columns]
+      Query: (EVENT/EVENTTYPE/eventTypeId/eventId*), [no columns]
+  
+4/ EventTypeUsage
+  + Link type: 1-1
+  + Denormalization method: in-place
+  + Table event: (sportId/eventTypeId/statusId*/[EVENT|EVENTPART]/eventId*/[BLANK|revision_number*]),
+    EVENTTYPEUSAGE_id, EVENTTYPEUSAGE_eventTypeId, 
+    EVENTTYPEUSAGE_sportId, EVENTTYPEUSAGE_entity (json)
+  + Table lookup: (EVENTTYPEUSAGE/EVENTTYPEUSAGE_id), sportId, eventTypeId
+  + Table relation: 
+      Insert: NOTHING
+      Query: NONEED
+
+5/ ProviderEventRelation
+  + Link type <Event-ProviderEventRelation>: 1-n
+  + Denormalization method: collection
+  + Table event: (sportId+/eventTypeId+/statusId*/[EVENT|EVENTPART]/eventId/[BLANK|revision_number*]), 
+    PROVIDEREVENTRELATION_id, PROVIDEREVENTRELATION_providerId, PROVIDEREVENTRELATION_eventId, 
+    PROVIDEREVENTRELATION_entity (json)
+  + Table lookup: (PROVIDEREVENTRELATION/id), providerId, eventId
+  + Table relation 
+      Insert: (EVENT/PROVIDEREVENTRELATION/providerEventRelation_id, eventId), [no columns]
+      Query: NONEED
