@@ -7,8 +7,10 @@ import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
-import com.betbrain.sepc.connector.sportsmodel.Entity;
-import com.betbrain.sepc.connector.sportsmodel.Event;
+import org.codehaus.jackson.map.ObjectMapper.DefaultTyping;
+
+//import com.betbrain.sepc.connector.sportsmodel.*;
+
 
 public class JsonMapper {
 
@@ -17,6 +19,7 @@ public class JsonMapper {
 	public static String Serialize(Entity entity) {
 		String jsonString = "[]";
 		try {
+			mapper.enableDefaultTyping(DefaultTyping.NON_FINAL);
 			jsonString = mapper.writeValueAsString(entity);
 		} catch (JsonGenerationException e) {
 			// TODO Auto-generated catch block
@@ -50,12 +53,19 @@ public class JsonMapper {
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		System.out.println("Hello Word");
-		Event event = new Event();
-		event.setCurrentPartId(100L);
-		event.setStartTime(new Date(1234));
-		String json = JsonMapper.Serialize(event);
-		System.out.println(json);
+		try {
+			System.out.println("Hello Word");
+			Event event = new Event();
+			event.setCurrentPartId(100L);
+			event.setStartTime(new Date(1234));
+			String json = JsonMapper.Serialize(event);
+			System.out.println(json);			
+			Event entity = (Event)JsonMapper.Deserialize(json);
+			System.out.println(entity.getCurrentPartId());
+		}
+		catch (Exception ex) {
+			ex.printStackTrace();
+		}
 	}
 
 }
