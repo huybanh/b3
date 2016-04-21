@@ -1,7 +1,7 @@
 * Schema guideline
 
-- Betbrain business focuses on 3 main entities: Event, Outcome and BettingOffer. 
-B3 engine will have these 3 entities are main data types/tables as well.
+- Betbrain business focuses on 3 main entities: Event and BettingOffer. 
+B3 engine will have these 2 entities are main data types/tables as well.
 
 - Denormalized: 
   + SE Event/Outcome/BettingOffer are mapped into B3 types of same names
@@ -38,7 +38,17 @@ B3 engine will have these 3 entities are main data types/tables as well.
    
 - Indexes: Additional secondary indexes can be configured to serve the purposes of reports
 
-I/ Table lookup
+I/ Table initial_dump
+
+a/ Key spec: sequenceId
+b/ Column: entity_json
+
+II/ Table changebatch
+
+a/ Key spec: batchId
+b/ Column: entity_json
+
+III/ Table lookup
 
 a/ Key spec: entityClass/entityId
 b/ Columns: link1Id, link2Id, ...
@@ -47,7 +57,7 @@ b/ Columns: link1Id, link2Id, ...
 
 Example: Find event_type_id from an event_id
 
-II/ Table relation
+IV/ Table relation
 
 a/ Key spec: childEntityClass/entityClass/entityId/childEntityId
 b/ Columns: no columns if child entity is denormalized by collection, 
@@ -61,28 +71,27 @@ b/ Columns: no columns if child entity is denormalized by collection,
 
 Example key data: EventType/type1/Event/event1
 
-III/ Table event
+V/ Table event
 
-a/ Key spec: sportId/eventTypeId/statusId/[EVENT|EVENTPART]/eventId/[BLANK|revision_number]
--Need justification on ordering of typeId and statusId
+a/ Key spec: sportId/eventTypeId/[EVENT|EVENTPART]/eventId
 
-b/ Columns: 
+b/ Columns:
 
-IV/ Table outcome
+VI/ Table betting_offer
 
-V/ Table betting_offer
+a/ Key spec: sportId/eventTypeId/[EVENT|EVENTPART]/eventId/
+             bettingTypeId/outcomeId/bettingOfferId/[BLANK|revision_number]
 
 * SE entities mapping to B3 tables
-A/ Event-related
+A/ Event-related entities
 1/ Event
+  + Existing IDs: id, typeId, sportId, templateId, promotionId, parentId, parentPartId, 
+    venueId, rootPartId, currentPartId
   + Link type: N/A
   + Denormalization method: N/A
-  + Table event (option 1): (sportId/eventTypeId/statusId/EVENT/eventId/BLANK), EVENT_id, EVENT_typeId,
+  + Table event: (sportId/eventTypeId/EVENT/eventId), EVENT_id, EVENT_typeId,
     EVENT_sportId, EVENT_templateId, EVENT_promotionId, EVENT_parentId, EVENT_parentPartId, 
     EVENT_venueId, EVENT_statusId, EVENT_rootPartId, EVENT_currentPartId, EVENT_entity (json)
-  + Table event (option 2): (sportId/eventTypeId/statusId/EVENT/eventId/BLANK), 
-    EVENT_parentId, EVENT_parentPartId, 
-    EVENT_entity (json)
     
   + Table lookup: (EVENT/eventId), typeId, sportId, templateId, promotionId 
     parentId, parentPartId, venueId, statusId, rootPartId, currentPartId
@@ -92,16 +101,18 @@ A/ Event-related
       Query: NONEED
 
 2/ Sport
+  + Existing IDs: id, parentId
   + Link type <Event-Sport>: n-1
   + Denormalization method: in-place
-  + Table event: (sportId/eventTypeId*/statusId*/[EVENT|EVENTPART]/eventId*/[BLANK|revision_number*]), 
-    EVENT_sportId, SPORT_sportId, SPORT_parentId, SPORT_entity (json)
+  + Table event: (sportId/eventTypeId*/[EVENT|EVENTPART]/eventId*), 
+                 SPORT_sportId, SPORT_parentId, SPORT_entity (json)
   + Table lookup: (SPORT/sportId), parentId
   + Table relation: 
       Insert: (EVENT/SPORT/sportId/eventId), [no columns]
       Query: (EVENT/SPORT/sportId/eventId*), [no columns]
 
 3/ 	EventType
+  + Existing IDs: id
   + Link type <Event-EventType>: n-1
   + Denormalization method: in-place
   + Table event: (sportId*/eventTypeId*/statusId*/[EVENT|EVENTPART]/eventId*/[BLANK|revision_number*]), 
@@ -112,6 +123,7 @@ A/ Event-related
       Query: (EVENT/EVENTTYPE/eventTypeId/eventId*), [no columns]
   
 4/ EventTypeUsage
+  + Existing IDs: id, eventTypeId, sportId
   + Link type: 1-1
   + Denormalization method: in-place
   + Table event: (sportId/eventTypeId/statusId*/[EVENT|EVENTPART]/eventId*/[BLANK|revision_number*]),
@@ -123,6 +135,7 @@ A/ Event-related
       Query: NONEED
 
 5/ ProviderEventRelation
+  + Existing IDs: id, providerId, eventId
   + Link type <Event-ProviderEventRelation>: 1-n
   + Denormalization method: collection
   + Table event: (sportId+/eventTypeId+/statusId*/[EVENT|EVENTPART]/eventId/[BLANK|revision_number*]), 
@@ -132,3 +145,20 @@ A/ Event-related
   + Table relation 
       Insert: (EVENT/PROVIDEREVENTRELATION/providerEventRelation_id, eventId), [no columns]
       Query: NONEED
+      
+B/ BettingOffer related entities
+1/ BettingOffer
+  + Existing IDs: id, providerId, sourceId, outcomeId, bettingTypeId, statusId
+  + Link type: N/A
+  + Denormalization method: N/A
+  + Table bettingoffer: (sportId/eventTypeId/statusId/EVENT/eventId/BLANK), EVENT_id, EVENT_typeId,
+    EVENT_sportId, EVENT_templateId, EVENT_promotionId, EVENT_parentId, EVENT_parentPartId, 
+    EVENT_venueId, EVENT_statusId, EVENT_rootPartId, EVENT_currentPartId, EVENT_entity (json)
+    
+  + Table lookup: (EVENT/eventId), typeId, sportId, templateId, promotionId 
+    parentId, parentPartId, venueId, statusId, rootPartId, currentPartId
+    
+  + Table relation:
+      Insert: NOTHING
+      Query: NONEED
+
