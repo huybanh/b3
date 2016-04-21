@@ -41,5 +41,12 @@
 			<artifactId>jackson-mapper-asl</artifactId>
 			<version>1.9.13</version>
 		</dependency>
+		
+		<dependency>
+            <groupId>net.sf.flexjson</groupId>
+            <artifactId>flexjson</artifactId>
+            <version>3.0</version> <!-- This may not be the current version. Check the above link -->
+        </dependency>
+		
 	</dependencies>
 </project>
