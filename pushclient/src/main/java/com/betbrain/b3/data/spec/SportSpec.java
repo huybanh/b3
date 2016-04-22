@@ -1,9 +1,11 @@
 package com.betbrain.b3.data.spec;
 
-import java.util.HashMap;
+import java.util.LinkedList;
 
 import com.betbrain.b3.data.B3KeyEvent;
-import com.betbrain.b3.data.EventCentricSpec;
+import com.betbrain.b3.data.B3Table;
+import com.betbrain.b3.data.EntityLink;
+import com.betbrain.b3.data.EntitySpec;
 import com.betbrain.sepc.connector.sportsmodel.Sport;
 
 /**
@@ -16,15 +18,10 @@ import com.betbrain.sepc.connector.sportsmodel.Sport;
  *    Insert: (EVENT/SPORT/sportId/eventId), [no columns] 
  *    Query: (EVENT/SPORT/sportId/eventId*), [no columns]
  */
-public class SportSpec extends EventCentricSpec<Sport> {
+public class SportSpec extends EntitySpec<Sport, B3KeyEvent> {
 
 	public SportSpec() {
-		super(Sport.class.getName());
-	}
-
-	@Override
-	protected long getId(Sport e) {
-		return e.getId();
+		super(B3Table.Event, Sport.class.getName());
 	}
 
 	@Override
@@ -33,9 +30,10 @@ public class SportSpec extends EventCentricSpec<Sport> {
 	}
 
 	@Override
-	protected void getAllIDs(Sport e, HashMap<String, Long> map) {
-		map.put(Sport.PROPERTY_NAME_parentId, e.getParentId());
-		map.put(Sport.PROPERTY_NAME_id, e.getId());
+	protected void getAllDownlinks(Sport e, LinkedList<EntityLink> downlinks) {
+		//ignore parent linking
+		//downlinks.add(new EntityLink(Sport.PROPERTY_NAME_parentId, e.getParentId(), Sport.class));
+		//downlinks.add(new EntityLink(Sport.PROPERTY_NAME_id, e.getId()); //NOT a link
 	}
 
 }
