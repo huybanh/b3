@@ -1,8 +1,6 @@
 package com.betbrain.b3.data;
 
-abstract class B3Key {
-	
-	final String SEP = "/";
+public abstract class B3Key {
 	
 	abstract boolean isDetermined();
 	
