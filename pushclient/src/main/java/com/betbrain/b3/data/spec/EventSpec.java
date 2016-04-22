@@ -1,10 +1,17 @@
 package com.betbrain.b3.data.spec;
 
-import java.util.HashMap;
+import java.util.LinkedList;
 
 import com.betbrain.b3.data.B3KeyEvent;
-import com.betbrain.b3.data.EventCentricSpec;
+import com.betbrain.b3.data.B3Table;
+import com.betbrain.b3.data.EntityLink;
+import com.betbrain.b3.data.EntitySpec;
 import com.betbrain.sepc.connector.sportsmodel.Event;
+import com.betbrain.sepc.connector.sportsmodel.EventPart;
+import com.betbrain.sepc.connector.sportsmodel.EventStatus;
+import com.betbrain.sepc.connector.sportsmodel.EventTemplate;
+import com.betbrain.sepc.connector.sportsmodel.EventType;
+import com.betbrain.sepc.connector.sportsmodel.Sport;
 
 /**
  * Event
@@ -24,15 +31,10 @@ import com.betbrain.sepc.connector.sportsmodel.Event;
       Query: NONEED
  *
  */
-public class EventSpec extends EventCentricSpec<Event> {
+public class EventSpec extends EntitySpec<Event, B3KeyEvent> {
 
 	public EventSpec() {
-		super(Event.class.getName());
-	}
-
-	@Override
-	protected long getId(Event e) {
-		return e.getId();
+		super(B3Table.Event, Event.class.getName());
 	}
 
 	@Override
@@ -51,18 +53,19 @@ public class EventSpec extends EventCentricSpec<Event> {
 	}*/
 
 	@Override
-	protected void getAllIDs(Event e, HashMap<String, Long> map) {
-		map.put(Event.PROPERTY_NAME_currentPartId, e.getCurrentPartId());
-		map.put(Event.PROPERTY_NAME_parentId, e.getParentId());
-		map.put(Event.PROPERTY_NAME_parentPartId, e.getParentPartId());
-		map.put(Event.PROPERTY_NAME_promotionId, e.getPromotionId());
-		map.put(Event.PROPERTY_NAME_rootPartId, e.getRootPartId());
-		map.put(Event.PROPERTY_NAME_sportId, e.getSportId());
-		map.put(Event.PROPERTY_NAME_statusId, e.getStatusId());
-		map.put(Event.PROPERTY_NAME_templateId, e.getTemplateId());
-		map.put(Event.PROPERTY_NAME_venueId, e.getVenueId());
-		map.put(Event.PROPERTY_NAME_id, e.getId());
-		map.put(Event.PROPERTY_NAME_typeId, e.getTypeId());
+	protected void getAllDownlinks(Event e, LinkedList<EntityLink> downlinks) {
+		downlinks.add(new EntityLink(Event.PROPERTY_NAME_currentPartId, e.getCurrentPartId(), EventPart.class));
+		//ignore parent linking
+		//downlinks.add(new EntityLink(Event.PROPERTY_NAME_parentId, e.getParentId(), Event.class));
+		downlinks.add(new EntityLink(Event.PROPERTY_NAME_parentPartId, e.getParentPartId(), EventPart.class));
+		//downlinks.add(new EntityLink(Event.PROPERTY_NAME_promotionId, e.getPromotionId(), promotion);
+		downlinks.add(new EntityLink(Event.PROPERTY_NAME_rootPartId, e.getRootPartId(), EventPart.class));
+		downlinks.add(new EntityLink(Event.PROPERTY_NAME_sportId, e.getSportId(), Sport.class));
+		downlinks.add(new EntityLink(Event.PROPERTY_NAME_statusId, e.getStatusId(), EventStatus.class));
+		downlinks.add(new EntityLink(Event.PROPERTY_NAME_templateId, e.getTemplateId(), EventTemplate.class));
+		//downlinks.add(new EntityLink(Event.PROPERTY_NAME_venueId, e.getVenueId(), ); //no entity class found
+		//downlinks.add(new EntityLink(Event.PROPERTY_NAME_id, e.getId(), ); //NOT a link
+		downlinks.add(new EntityLink(Event.PROPERTY_NAME_typeId, e.getTypeId(), EventType.class));
 	}
 
 }

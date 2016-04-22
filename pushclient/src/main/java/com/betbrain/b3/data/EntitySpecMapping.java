@@ -8,12 +8,13 @@ import com.betbrain.sepc.connector.sportsmodel.Entity;
 
 public enum EntitySpecMapping {
 
+	//Entity class prefix is exact-two-character 
 	Event("EV", new EventSpec()),
 	Sport("SP", new SportSpec());
 	
-	public final EntitySpec<? extends Entity> spec;
+	public final EntitySpec<? extends Entity, ?> spec;
 	
-	private EntitySpecMapping(String prefix, EntitySpec<? extends Entity> spec) {
+	private EntitySpecMapping(String prefix, EntitySpec<? extends Entity, ?> spec) {
 		this.spec = spec;
 		this.spec.setPrefix(prefix);
 	}
@@ -27,7 +28,7 @@ public enum EntitySpecMapping {
 		}
 	}
 	
-	public static EntitySpec<? extends Entity> getSpec(String entityClassName) {
+	public static EntitySpec<? extends Entity, ?> getSpec(String entityClassName) {
 		EntitySpecMapping mapping = allMetas.get(entityClassName);
 		if (mapping == null) {
 			return null;

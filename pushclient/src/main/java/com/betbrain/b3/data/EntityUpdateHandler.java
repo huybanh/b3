@@ -1,7 +1,6 @@
 package com.betbrain.b3.data;
 
 import java.util.Date;
-import java.util.LinkedList;
 
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Event;
@@ -10,7 +9,7 @@ public class EntityUpdateHandler<E extends Entity> {
 
 	public void update(E entity) {
 		
-		@SuppressWarnings("unchecked")
+		/*@SuppressWarnings("unchecked")
 		EntitySpec<E> spec = (EntitySpec<E>) EntitySpecMapping.getSpec(entity.getClass().getName());
 		LinkedList<B3Cell<?>> allCells = spec.getCellList(entity);
 		
@@ -22,7 +21,7 @@ public class EntityUpdateHandler<E extends Entity> {
 		if (mainKey.isDetermined()) {
 			update = new B3Update(spec.targetTable, mainKey, allCells);
 			update.execute();
-		}
+		}*/
 	}
 	
 	public static void main(String[] args) {

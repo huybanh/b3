@@ -5,9 +5,6 @@ package com.betbrain.b3.data;
  *
  */
 public class B3KeyEvent extends B3Key {
-	
-	private final String MARKER_EVENT = "E";
-	private final String MARKER_EVENTPART = "P";
 
 	final Long sportId;
 	
@@ -42,15 +39,16 @@ public class B3KeyEvent extends B3Key {
 			return null;
 		}
 		if (eventTypeId == null) {
-			return sportId + SEP;
+			return sportId + B3Table.KEY_SEP;
 		}
 		if (eventPartFlag == null) {
-			return sportId + SEP + eventTypeId + SEP;
+			return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP;
 		}
-		String eventPartMarker = eventPartFlag ? MARKER_EVENTPART : MARKER_EVENT;
+		String eventPartMarker = eventPartFlag ? 
+				B3Table.EVENTKEY_MARKER_EVENTPART : B3Table.EVENTKEY_MARKER_EVENT;
 		if (eventId == null) {
-			return sportId + SEP + eventTypeId + SEP + eventPartMarker + SEP;
+			return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventPartMarker + B3Table.KEY_SEP;
 		}
-		return sportId + SEP + eventTypeId + SEP + eventPartMarker + eventId; 
+		return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventPartMarker + eventId; 
 	}
 }
