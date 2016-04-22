@@ -2,9 +2,9 @@ package com.betbrain.b3.model;
 
 import java.util.HashMap;
 
+import com.betbrain.b3.data.EntityInitialPutHandler;
 import com.betbrain.b3.data.EntityLink;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
-import com.betbrain.sepc.connector.sportsmodel.Outcome;
 
 public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 
@@ -24,25 +24,27 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 	abstract public void buildDownlinks(HashMap<String, HashMap<Long, Entity>> masterMap);
 	
 	@SuppressWarnings("rawtypes")
-	static <E extends B3Entity, F> E build(Long id, E e,
+	static <E extends B3Entity, F> E build(Long id, E e, Class<? extends Entity> clazz,
 			HashMap<String, HashMap<Long, Entity>> masterMap) {
 		
-		return build(id, e, masterMap, true);
+		return build(id, e, clazz,masterMap, true);
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	static <E extends B3Entity, F> E build(Long id, E e,
+	static <E extends B3Entity> E build(Long id, E e, Class<? extends Entity> clazz,
 			HashMap<String, HashMap<Long, Entity>> masterMap, boolean depthBuilding) {
 		
 		if (id == null) {
 			return null;
 		}
-		HashMap<Long, Entity> subMap = masterMap.get(Outcome.class.getName());
+		HashMap<Long, Entity> subMap = masterMap.get(clazz.getName());
 		if (subMap == null) {
+			EntityInitialPutHandler.linkingErrors.add("Found zero entities of " + clazz.getName());
 			return null;
 		}
 		Entity one = subMap.get(id);
 		if (one == null) {
+			EntityInitialPutHandler.linkingErrors.add("Missed ID " + id + " of " + clazz.getName());
 			return null;
 		}
 		e.entity = one;
