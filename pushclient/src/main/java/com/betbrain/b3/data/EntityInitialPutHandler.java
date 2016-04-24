@@ -19,8 +19,8 @@ public class EntityInitialPutHandler {
 	
 	public static LinkedList<String> linkingErrors = new LinkedList<String>();
 	
-	public EntityInitialPutHandler(HashMap<String, HashMap<Long, Entity>> masterMap,
-			HashMap<Long, Long> eventPartToEventMap) {
+	public EntityInitialPutHandler(HashMap<String, HashMap<Long, Entity>> masterMap/*,
+			HashMap<Long, Long> eventPartToEventMap*/) {
 		
 		this.masterMap = masterMap;
 		//this.eventPartToEventMap = eventPartToEventMap;
@@ -30,7 +30,10 @@ public class EntityInitialPutHandler {
 		
 		//BettingOffer table (and lookup too)
 		HashMap<Long, Entity> allOffers = masterMap.get(BettingOffer.class.getName());
+		int offerCount = allOffers.size();
+		int i = 0;
 		for (Entity entity : allOffers.values()) {
+			System.out.println("Offer " + ++i + " of " + offerCount);
 			B3BettingOffer offer = new B3BettingOffer();
 			offer.entity = (BettingOffer) entity;
 			offer.buildDownlinks(masterMap);
@@ -179,7 +182,7 @@ public class EntityInitialPutHandler {
 		masterMap.put(Event.class.getName(), subMap);
 		subMap.put(event.getId(), event);
 		//String json = JsonMapper.Serialize(event);
-		new EntityInitialPutHandler(masterMap, null).initialPut();
+		new EntityInitialPutHandler(masterMap/*, null*/).initialPut();
 
 		/*
 		UPDATE lookup: (0, EV/1099), EVsportId:long 0, EVstatusId:long 0, EVrootPartId:long 0, 

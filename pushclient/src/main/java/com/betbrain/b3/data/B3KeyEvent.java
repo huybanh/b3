@@ -28,11 +28,6 @@ public class B3KeyEvent extends B3Key {
 	}
 	
 	@Override
-	Integer getHashKey() {
-		return 0; //TODO modulo of eventId?
-	}
-	
-	@Override
 	String getRangeKey() {
 		
 		if (sportId == null) {
