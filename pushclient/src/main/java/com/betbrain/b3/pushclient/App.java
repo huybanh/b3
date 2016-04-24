@@ -12,7 +12,7 @@ public class App {
 	public static void main(String[] args) {
 		System.out.println("Hello B3!");
 		SEPCConnector pushConnector = new SEPCPushConnector("sept.betbrain.com", 7000);
-		pushConnector.addConnectorListener(new PushListener());
+		pushConnector.addConnectorListener(new InitialPushListener());
 		pushConnector.setEntityChangeBatchProcessingMonitor(new BatchMonitor());
 		pushConnector.start("OddsHistory");
 

@@ -20,7 +20,7 @@ public class JsonMapper {
 	private static JSONSerializer flexSer = new JSONSerializer();
 	private static JSONDeserializer flexDe = new JSONDeserializer();
 
-	public static String SerializeF(Entity entity) {
+	public static String SerializeF(Object entity) {
 		String jsonString = "[]";
 		jsonString = flexSer.serialize(entity);
 		return jsonString;
