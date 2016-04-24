@@ -12,3 +12,5 @@ pushclient/.classpath
 pushclient/.project
 
 *.prefs
+
+pushclient/initial_dump1.json

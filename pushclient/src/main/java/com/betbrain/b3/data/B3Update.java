@@ -53,6 +53,19 @@ class B3Update {
 	}
 
 	public void execute() {
-		System.out.println(this);
+		
+		DynamoWorker.put(this);
+		/*if (cells == null || cells.length == 0) {
+			DynamoWorker.put(dynaTable, hashKey, rangeKey, null, null);
+			System.out.println(this);
+		} else {
+			for (int i = 0; i < cells.length; i++) {
+				//String s = cells[i].columnName + ":" + cells[i].getTypeName() + " " + cells[i].value;
+				//if (cells[i] instanceof B3CellString) {
+					DynamoWorker.put(dynaTable, hashKey, rangeKey, cells[i].columnName, ((B3CellString) cells[i]).value);
+					System.out.println(this);
+				//}
+			}
+		}*/
 	}
 }

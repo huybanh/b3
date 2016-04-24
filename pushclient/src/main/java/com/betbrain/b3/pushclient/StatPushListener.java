@@ -7,11 +7,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 
-import com.betbrain.sepc.connector.sdql.SEPCConnectorListener;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityChange;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
 import com.betbrain.sepc.connector.sportsmodel.EntityUpdate;
+import com.betbrain.sepc.connector.sdql.SEPCConnectorListener;
 
 public class StatPushListener implements SEPCConnectorListener {
 	
