@@ -17,6 +17,8 @@ public class DynamoWorker {
 	public static Table offerTable;
 	public static Table eventTable;
 	public static Table lookupTable;
+	public static Table linkTable;
+	public static Table entityTable;
 	
 	public static void initialize() {
 
@@ -26,21 +28,25 @@ public class DynamoWorker {
 		offerTable = dynamoDB.getTable("offer");
 		eventTable = dynamoDB.getTable("event");
 		lookupTable = dynamoDB.getTable("lookup");
+		linkTable = dynamoDB.getTable("link");
+		entityTable = dynamoDB.getTable("entity");
 	}
 	
 	public static void put(B3Update update) {
-		
 
-		Table dynaTable = null;
+		Table dynaTable;
 		if (update.table == B3Table.BettingOffer) {
-			dynaTable = DynamoWorker.offerTable;
+			dynaTable = offerTable;
 		} else if (update.table == B3Table.Event) {
-			dynaTable = DynamoWorker.eventTable;
+			dynaTable = eventTable;
 		} else if (update.table == B3Table.Lookup) {
-			dynaTable = DynamoWorker.lookupTable;
-		}
-		if (dynaTable == null) {
-			return;
+			dynaTable = lookupTable;
+		} else if (update.table == B3Table.Link) {
+			dynaTable = linkTable;
+		} else if (update.table == B3Table.Entity) {
+			dynaTable = entityTable;
+		} else {
+			throw new RuntimeException("Unmapped table: " + update.table);
 		}
 		/*Item item = new Item().withPrimaryKey("hash", hash, "range", range);
 		if (cell != null) {
@@ -51,12 +57,13 @@ public class DynamoWorker {
 				"hash", update.key.getHashKey(), "range", update.key.getRangeKey());
 		if (update.cells != null) {
 			for (B3Cell<?> c : update.cells) {
-				us = us.withAttributeUpdate(new AttributeUpdate(c.columnName).put(c.value));
+				us = us.addAttributeUpdate(new AttributeUpdate(c.columnName).put(c.value));
 			}
 		}
 		
 		int colCount = update.cells == null ? 0 : update.cells.length;
-		System.out.println(update.table.name + ": " + update.key.getRangeKey() + ", cols: " + colCount);
+		System.out.println(update.table.name + ": " + update.key.getRangeKey() + "@" + 
+				update.key.getRangeKey() + ", cols: " + colCount);
 		dynaTable.updateItem(us);
 	}
 

@@ -7,5 +7,9 @@ public abstract class B3Key {
 	abstract String getRangeKey();
 	
 	abstract String getHashKey();
+	
+	/*protected int module(int l, int m) {
+		return Math.abs(l % m);
+	}*/
 
 }

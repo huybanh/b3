@@ -9,10 +9,7 @@ public class B3KeyLookup extends B3Key {
 
 	public B3KeyLookup(Entity entity, B3Table targetTable, String targetHash, String targetRange) {
 		super();
-		//EntitySpec<?, ?> spec = EntitySpecMapping.getSpec(entity.getClass().getName());
-		//rangeKey = targetTable.shortName + spec.getPrefix() + entity.getId();
-		this.hashKey = ModelShortName.get(entity.getClass().getName()) + entity.getId() +
-				B3Table.CELL_LOCATOR_SEP + targetTable.shortName;
+		this.hashKey = ModelShortName.get(entity.getClass().getName()) + targetTable.shortName + entity.getId();
 		this.rangeKey = targetHash + B3Table.CELL_LOCATOR_SEP + targetRange;
 	}
 

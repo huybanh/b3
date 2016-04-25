@@ -40,7 +40,8 @@ public class B3KeyEvent extends B3Key {
 		String eventPartMarker = eventPartFlag ? 
 				B3Table.EVENTKEY_MARKER_EVENTPART : B3Table.EVENTKEY_MARKER_EVENT;
 
-		return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventPartMarker + B3Table.KEY_SEP;
+		return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventPartMarker +
+				Math.abs(eventId.hashCode() % 100);
 	}
 	
 	@Override
