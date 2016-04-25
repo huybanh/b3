@@ -23,6 +23,7 @@ public class InitialDumpLocalReader {
 		BufferedInputStream in = new BufferedInputStream(fis);
 		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 		
+		int count = 0;
 		while (true) {
 			String line = reader.readLine();
 			if (line == null) {
@@ -35,10 +36,14 @@ public class InitialDumpLocalReader {
 				masterMap.put(entity.getClass().getName(), subMap);
 			}
 			subMap.put(entity.getId(), entity);
+			if (++count % 100000 == 0) {
+				System.out.println("Read line: " + count);
+			}
 		}
 		reader.close();
 		in.close();
 		fis.close();
+		System.out.println("Total line count: " + count);
 		
 		System.out.println("Got all entities in memory");
 		for (Entry<String, HashMap<Long, Entity>> entry : masterMap.entrySet()) {

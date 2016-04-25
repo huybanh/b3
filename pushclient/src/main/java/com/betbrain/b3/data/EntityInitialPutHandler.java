@@ -47,7 +47,11 @@ public class EntityInitialPutHandler {
 					offer.outcome.entity.getId(),
 					offer.entity.getBettingTypeId(),
 					offer.entity.getId());
-			initialPut(B3Table.BettingOffer, offerKey, null, offer);
+			
+			LinkedList<B3Cell<?>> offerCells = new LinkedList<B3Cell<?>>();
+			initialPut(B3Table.BettingOffer, offerKey, offerCells, null, offer);
+			B3Update update = new B3Update(B3Table.BettingOffer, offerKey, offerCells.toArray(new B3CellString[offerCells.size()]));
+			update.execute();
 		}
 		
 		//Event table (and lookup too)
@@ -62,7 +66,11 @@ public class EntityInitialPutHandler {
 					event.entity.getTypeId(),
 					false,
 					event.entity.getId());
-			initialPut(B3Table.Event, eventKey, null, event);
+
+			LinkedList<B3Cell<?>> eventCells = new LinkedList<B3Cell<?>>();
+			initialPut(B3Table.Event, eventKey, eventCells, null, event);
+			B3Update update = new B3Update(B3Table.BettingOffer, eventKey, eventCells.toArray(new B3CellString[eventCells.size()]));
+			update.execute();
 		}
 
 		if (linkingErrors.isEmpty()) {
@@ -78,7 +86,7 @@ public class EntityInitialPutHandler {
 	//private LinkedList<String> loggedMissingSpecs = new LinkedList<String>();
 	
 	private <E extends Entity>void initialPut(
-			B3Table table, B3Key mainKey, final String cellName, B3Entity<?> b3entity) {
+			B3Table mainTable, B3Key mainKey, LinkedList<B3Cell<?>> mainCells, final String cellName, B3Entity<?> b3entity) {
 		
 		/*@SuppressWarnings("unchecked")
 		EntitySpec<E, ?> spec = (EntitySpec<E, ?>) EntitySpecMapping.getSpec(entity.getClass().getName());
@@ -103,14 +111,15 @@ public class EntityInitialPutHandler {
 		
 		//put event to main
 		B3CellString jsonCell = new B3CellString(thisCellName, JsonMapper.SerializeF(b3entity.entity));
-		B3Update update = new B3Update(table, mainKey, jsonCell);
-		update.execute();
+		//B3Update update = new B3Update(table, mainKey, jsonCell);
+		//update.execute();
+		mainCells.add(jsonCell);
 		
 		//put event to lookup
 		//B3CellInt hashCell = new B3CellInt(B3Table.LOOKUP_CELL_TARGET_HASH, mainKey.getHashKey());
 		//B3CellString rangeCell = new B3CellString(B3Table.LOOKUP_CELL_TARGET_RANGE, mainKey.getRangeKey());
-		B3KeyLookup lookupKey = new B3KeyLookup(b3entity.entity, table, mainKey.getHashKey(), mainKey.getRangeKey());
-		update = new B3Update(B3Table.Lookup, lookupKey);
+		B3KeyLookup lookupKey = new B3KeyLookup(b3entity.entity, mainTable, mainKey.getHashKey(), mainKey.getRangeKey());
+		B3Update update = new B3Update(B3Table.Lookup, lookupKey);
 		update.execute();
 		
 		EntityLink[] linkedEntities = b3entity.getDownlinkedEntities();
@@ -122,7 +131,8 @@ public class EntityInitialPutHandler {
 				} else {
 					childCellName = cellName + B3Table.CELL_LOCATOR_SEP + link.name;
 				}
-				initialPut(table, mainKey, childCellName, link.linkedEntity);
+				link.linkedEntity.buildDownlinks(masterMap);
+				initialPut(mainTable, mainKey, mainCells, childCellName, link.linkedEntity);
 			}
 		}
 		

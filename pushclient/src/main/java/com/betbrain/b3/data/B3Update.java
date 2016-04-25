@@ -9,6 +9,8 @@ class B3Update {
 	final String rangeKey;
 	
 	final B3Cell<?>[] cells;
+	
+	//LinkedList<B3Cell<?>> cellList;
 
 	/*B3Update(B3Table table, B3Key key, B3Cell<?>... cell) {
 		this(table, key, new B3Cell<?>[] {cell});

@@ -54,8 +54,9 @@ public class DynamoWorker {
 				us = us.withAttributeUpdate(new AttributeUpdate(c.columnName).put(c.value));
 			}
 		}
-		System.out.println(update.table.name + ": " + update.rangeKey + ", cols: " + 
-				update.cells == null ? 0 : update.cells.length);
+		
+		int colCount = update.cells == null ? 0 : update.cells.length;
+		System.out.println(update.table.name + ": " + update.rangeKey + ", cols: " + colCount);
 		dynaTable.updateItem(us);
 	}
 

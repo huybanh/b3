@@ -1,6 +1,7 @@
 package com.betbrain.b3.model;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 
 import com.betbrain.b3.data.EntityInitialPutHandler;
 import com.betbrain.b3.data.EntityLink;
@@ -19,7 +20,24 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 	
 	//abstract public K getB3KeyMain();
 	
-	abstract public EntityLink[] getDownlinkedEntities();
+	private LinkedList<EntityLink> downlinks;
+	
+	abstract protected void getDownlinkedEntitiesInternal();
+	
+	protected final void addDownlink(String name, B3Entity<?> linkedEntity) {
+		if (linkedEntity == null) {
+			return;
+		}
+		downlinks.add(new EntityLink(name, linkedEntity));
+	}
+	
+	public final EntityLink[] getDownlinkedEntities() {
+		downlinks = new LinkedList<EntityLink>();
+		getDownlinkedEntitiesInternal();
+		EntityLink[] links = downlinks.toArray(new EntityLink[downlinks.size()]);
+		downlinks = null;
+		return links;
+	}
 	
 	abstract public void buildDownlinks(HashMap<String, HashMap<Long, Entity>> masterMap);
 	

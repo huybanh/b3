@@ -25,6 +25,15 @@ public class B3KeyEvent extends B3Key {
 	@Override
 	boolean isDetermined() {
 		return sportId != null && eventTypeId != null && eventPartFlag != null & eventId != null;
+	} 
+	
+	protected Integer getHashKey() {
+		String r = getRangeKey();
+		if (r == null) {
+			return null;
+		}
+		int h = r.hashCode() % 100;
+		return Math.abs(h);
 	}
 	
 	@Override
