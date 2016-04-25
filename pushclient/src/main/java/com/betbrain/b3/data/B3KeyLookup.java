@@ -21,11 +21,6 @@ public class B3KeyLookup extends B3Key {
 	}
 
 	@Override
-	Integer getHashKey() {
-		return 0; //TODO proper hashing
-	}
-
-	@Override
 	String getRangeKey() {
 		return rangeKey;
 	}

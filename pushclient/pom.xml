@@ -47,6 +47,13 @@
             <artifactId>flexjson</artifactId>
             <version>3.0</version> <!-- This may not be the current version. Check the above link -->
         </dependency>
+        
+        <dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-dynamodb</artifactId>
+			<version>1.10.71</version>
+		</dependency>
+        
 		
 	</dependencies>
 </project>

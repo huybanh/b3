@@ -32,11 +32,6 @@ public class B3KeyOffer extends B3KeyEvent {
 	}
 	
 	@Override
-	Integer getHashKey() {
-		return 0; //TODO modulo of eventId?
-	}
-	
-	@Override
 	String getRangeKey() {
 		
 		String eventRange = super.getRangeKey();

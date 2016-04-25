@@ -4,21 +4,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
+import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.data.EntityInitialPutHandler;
 import com.betbrain.b3.data.ModelShortName;
-import com.betbrain.sepc.connector.sdql.SEPCConnector;
-import com.betbrain.sepc.connector.sdql.SEPCConnectorListener;
-import com.betbrain.sepc.connector.sdql.SEPCPushConnector;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
 import com.betbrain.sepc.connector.sportsmodel.Event;
+import com.betbrain.sepc.connector.sdql.SEPCConnector;
+import com.betbrain.sepc.connector.sdql.SEPCConnectorListener;
+import com.betbrain.sepc.connector.sdql.SEPCPushConnector;
 
 public class InitialPushListener implements SEPCConnectorListener {
 	
 	public static void main(String[] args) {
 		SEPCConnector pushConnector = new SEPCPushConnector("sept.betbrain.com", 7000);
 		pushConnector.addConnectorListener(new InitialPushListener());
-		pushConnector.setEntityChangeBatchProcessingMonitor(new BatchMonitor());
+		//pushConnector.setEntityChangeBatchProcessingMonitor(new BatchMonitor());
 		pushConnector.start("OddsHistory");
 	}
 
@@ -51,9 +52,10 @@ public class InitialPushListener implements SEPCConnectorListener {
 		}
 		
 		ModelShortName.initialize();
+		DynamoWorker.initialize();
 		new Thread() {
 			public void run() {
-				new EntityInitialPutHandler(masterMap, eventPartToEventMap).initialPut();
+				new EntityInitialPutHandler(masterMap/*, eventPartToEventMap*/).initialPut();
 			}
 		}.start();
 	}

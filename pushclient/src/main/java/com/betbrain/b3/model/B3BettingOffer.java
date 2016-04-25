@@ -4,7 +4,11 @@ import java.util.HashMap;
 
 import com.betbrain.b3.data.EntityLink;
 import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
+import com.betbrain.sepc.connector.sportsmodel.BettingType;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
+import com.betbrain.sepc.connector.sportsmodel.Outcome;
+import com.betbrain.sepc.connector.sportsmodel.Provider;
+import com.betbrain.sepc.connector.sportsmodel.Source;
 
 public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 	
@@ -14,9 +18,34 @@ public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 	
 	public B3Outcome outcome;
 	
-	/*public B3BettingOffer(BettingOffer offer) {
-		super(offer);
-	}*/
+	public B3BettingType bettingType;
+
+	@Override
+	public EntityLink[] getDownlinkedEntities() {
+		return new EntityLink[] {
+				new EntityLink(BettingOffer.PROPERTY_NAME_providerId, provider),
+				new EntityLink(BettingOffer.PROPERTY_NAME_sourceId, source),
+				new EntityLink(BettingOffer.PROPERTY_NAME_outcomeId, outcome),
+				new EntityLink(BettingOffer.PROPERTY_NAME_bettingTypeId, bettingType)
+		};
+	}
+	
+	@Override
+	public void buildDownlinks(HashMap<String, HashMap<Long, Entity>> masterMap) {
+		
+		this.provider = build(entity.getProviderId(), new B3Provider(), Provider.class, masterMap);
+		this.source = build(entity.getSourceId(), new B3Source(), Source.class, masterMap);
+		this.outcome = build(entity.getOutcomeId(), new B3Outcome(), Outcome.class, masterMap);
+		this.bettingType = build(entity.getBettingTypeId(), new B3BettingType(), BettingType.class, masterMap);
+		
+		/*Entity one = masterMap.get(Outcome.class.getName()).get(entity.getOutcomeId());
+		this.outcome = new B3Outcome((Outcome) one);
+		this.outcome.buildDownlinks(masterMap);
+		
+		one = masterMap.get(Provider.class.getName()).get(entity.getProviderId());
+		this.provider = new B3Provider((Provider) one);
+		this.provider.buildDownlinks(masterMap);*/
+	}
 
 	/*@Override
 	public B3KeyOffer getB3KeyMain() {
@@ -32,30 +61,4 @@ public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 				this.entity.getBettingTypeId(),
 				this.entity.getId());
 	}*/
-
-	@Override
-	public EntityLink[] getDownlinkedEntities() {
-		return new EntityLink[] {new EntityLink(BettingOffer.PROPERTY_NAME_outcomeId, outcome)};
-	}
-	
-	@Override
-	public void buildDownlinks(HashMap<String, HashMap<Long, Entity>> masterMap) {
-		
-		/*Entity one = masterMap.get(Outcome.class.getName()).get(entity.getOutcomeId());
-		this.outcome = new B3Outcome((Outcome) one);
-		this.outcome.buildDownlinks(masterMap);
-		
-		one = masterMap.get(Provider.class.getName()).get(entity.getProviderId());
-		this.provider = new B3Provider((Provider) one);
-		this.provider.buildDownlinks(masterMap);*/
-		
-		this.provider = build(entity.getProviderId(), new B3Provider(), masterMap);
-		this.source = build(entity.getSourceId(), new B3Source(), masterMap);
-		this.outcome = build(entity.getOutcomeId(), new B3Outcome(), masterMap);
-	}
-}
-
-class EntityBuilder<E> {
-
-	
 }

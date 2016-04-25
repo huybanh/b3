@@ -3,10 +3,10 @@ package com.betbrain.b3.model;
 import java.util.HashMap;
 
 import com.betbrain.b3.data.EntityLink;
+import com.betbrain.sepc.connector.sportsmodel.BettingType;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
-import com.betbrain.sepc.connector.sportsmodel.Source;
 
-public class B3Source extends B3Entity<Source> {
+public class B3BettingType extends B3Entity<BettingType> {
 
 	@Override
 	public EntityLink[] getDownlinkedEntities() {
