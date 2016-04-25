@@ -5,7 +5,8 @@ public enum B3Table {
 	InitialDump("initial_name", null),
 	ChangeBatch("change_batch", null),
 	Lookup("lookup", null),
-	Relation("Relation", null),
+	Entity("entity", null),
+	Link("entity_links", null),
 	Event("event", "E"),
 	BettingOffer("betting_offer", "B");
 	
@@ -13,6 +14,8 @@ public enum B3Table {
 	
 	//exact one character
 	public final String shortName;
+	
+	static final int DIST_FACTOR = 100;
 	
 	static final String CELL_LOCATOR_THIZ = "THIZ";
 	static final String CELL_LOCATOR_SEP = "_";

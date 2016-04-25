@@ -5,7 +5,15 @@ package com.betbrain.b3.data;
  *           /outcomeTypeId/outcomeId/bettingTypeId/offerId
  *
  */
-public class B3KeyOffer extends B3KeyEvent {
+public class B3KeyOffer extends B3Key {
+
+	final Long sportId;
+	
+	final Long eventTypeId;
+	
+	final Boolean eventPartFlag;
+	
+	final Long eventId;
 
 	final Long outcomeTypeId;
 	
@@ -17,8 +25,12 @@ public class B3KeyOffer extends B3KeyEvent {
 
 	public B3KeyOffer(Long sportId, Long eventTypeId, Boolean eventPart, Long eventId,
 			Long outcomeTypeId, Long outcomeId, Long bettingTypeId, Long offerId) {
+
+		this.sportId = sportId;
+		this.eventTypeId = eventTypeId;
+		this.eventPartFlag = eventPart;
+		this.eventId = eventId;
 		
-		super(sportId, eventId, eventPart, eventId);
 		this.outcomeTypeId = outcomeTypeId;
 		this.outcomeId = outcomeId;
 		this.bettingTypeId = bettingTypeId;
@@ -27,33 +39,45 @@ public class B3KeyOffer extends B3KeyEvent {
 	
 	@Override
 	boolean isDetermined() {
-		return super.isDetermined() && outcomeTypeId != null && outcomeId != null &&
-				bettingTypeId != null && offerId != null;
+		return sportId != null && eventTypeId != null && eventPartFlag != null & eventId != null &&
+				outcomeTypeId != null && outcomeId != null && bettingTypeId != null && offerId != null;
+	}
+	
+	@Override
+	String getHashKey() {
+		if (sportId == null) {
+			return null;
+		}
+		if (eventTypeId == null) {
+			return sportId + B3Table.KEY_SEP;
+		}
+		if (eventPartFlag == null) {
+			return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP;
+		}
+		String eventPartMarker = eventPartFlag ? 
+				B3Table.EVENTKEY_MARKER_EVENTPART : B3Table.EVENTKEY_MARKER_EVENT;
+		if (eventId == null) {
+			return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventPartMarker;
+		}
+		return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventPartMarker + eventId;
 	}
 	
 	@Override
 	String getRangeKey() {
-		
-		String eventRange = super.getRangeKey();
-		if (eventPartFlag == null) {
+		if (outcomeTypeId == null) {
 			return null;
 		}
-		
-		if (outcomeTypeId == null) {
-			return eventRange + B3Table.KEY_SEP;
-		}
 		if (outcomeId == null) {
-			return eventRange + B3Table.KEY_SEP + outcomeTypeId + B3Table.KEY_SEP;
+			return String.valueOf(outcomeTypeId);
 		}
 		if (bettingTypeId == null) {
-			return eventRange + B3Table.KEY_SEP + outcomeTypeId + B3Table.KEY_SEP +
-					outcomeId + B3Table.KEY_SEP;
+			return outcomeTypeId + B3Table.KEY_SEP + outcomeId;
 		}
 		if (offerId == null) {
-			return eventRange + B3Table.KEY_SEP + outcomeTypeId + B3Table.KEY_SEP +
-					outcomeId + B3Table.KEY_SEP + bettingTypeId + B3Table.KEY_SEP;
+			return outcomeTypeId + B3Table.KEY_SEP + outcomeId + 
+					B3Table.KEY_SEP + bettingTypeId;
 		}
-		return eventRange + B3Table.KEY_SEP + outcomeTypeId + B3Table.KEY_SEP +
-				outcomeId + B3Table.KEY_SEP + bettingTypeId + B3Table.KEY_SEP + offerId; 
+		return outcomeTypeId + B3Table.KEY_SEP + outcomeId + 
+				B3Table.KEY_SEP + bettingTypeId + B3Table.KEY_SEP + offerId; 
 	}
 }

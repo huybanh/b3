@@ -6,11 +6,18 @@ public enum ModelShortName {
 
 	//Short names are exact-two-character 
 	BettingOffer("BO", com.betbrain.sepc.connector.sportsmodel.BettingOffer.class.getName()),
+	BettingOfferStatus("BS", com.betbrain.sepc.connector.sportsmodel.BettingOfferStatus.class.getName()),
 	BettingOfferType("BT", com.betbrain.sepc.connector.sportsmodel.BettingType.class.getName()),
 	Event("EV", com.betbrain.sepc.connector.sportsmodel.Event.class.getName()),
+	EventPart("EP", com.betbrain.sepc.connector.sportsmodel.EventPart.class.getName()),
+	EventStatus("ES", com.betbrain.sepc.connector.sportsmodel.EventStatus.class.getName()),
+	EventTemplate("EM", com.betbrain.sepc.connector.sportsmodel.EventTemplate.class.getName()),
+	EventType("ET", com.betbrain.sepc.connector.sportsmodel.EventType.class.getName()),
 	Outcome("OC", com.betbrain.sepc.connector.sportsmodel.Outcome.class.getName()),
-	Provider("BO", com.betbrain.sepc.connector.sportsmodel.Provider.class.getName()),
-	Source("OC", com.betbrain.sepc.connector.sportsmodel.Source.class.getName()),
+	OutcomeStatus("OS", com.betbrain.sepc.connector.sportsmodel.OutcomeStatus.class.getName()),
+	OutcomeType("OT", com.betbrain.sepc.connector.sportsmodel.OutcomeType.class.getName()),
+	Provider("PR", com.betbrain.sepc.connector.sportsmodel.Provider.class.getName()),
+	Source("SO", com.betbrain.sepc.connector.sportsmodel.Source.class.getName()),
 	Sport("SP", com.betbrain.sepc.connector.sportsmodel.Sport.class.getName());
 	
 	public final String shortName;
@@ -36,6 +43,7 @@ public enum ModelShortName {
 			return null;
 		}
 		return n.shortName;
+		//return allShortNames.get(entityClassName).shortName;
 	}
 
 }

@@ -21,6 +21,9 @@ public class EntityLink {
 	}
 	
 	public EntityLink(String name, B3Entity<?> linkedEntity) {
+		if (linkedEntity == null) {
+			throw new NullPointerException();
+		}
 		this.name = name;
 		this.targetId = linkedEntity.entity.getId();
 		this.targetClass = linkedEntity.entity.getClass();

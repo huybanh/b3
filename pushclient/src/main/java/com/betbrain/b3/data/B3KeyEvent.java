@@ -25,11 +25,9 @@ public class B3KeyEvent extends B3Key {
 	@Override
 	boolean isDetermined() {
 		return sportId != null && eventTypeId != null && eventPartFlag != null & eventId != null;
-	}
+	} 
 	
-	@Override
-	String getRangeKey() {
-		
+	protected String getHashKey() {
 		if (sportId == null) {
 			return null;
 		}
@@ -41,9 +39,15 @@ public class B3KeyEvent extends B3Key {
 		}
 		String eventPartMarker = eventPartFlag ? 
 				B3Table.EVENTKEY_MARKER_EVENTPART : B3Table.EVENTKEY_MARKER_EVENT;
-		if (eventId == null) {
-			return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventPartMarker + B3Table.KEY_SEP;
-		}
-		return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventPartMarker + eventId; 
+
+		return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventPartMarker +
+				Math.abs(eventId.hashCode() % 100);
+	}
+	
+	@Override
+	String getRangeKey() {
+		
+		return String.valueOf(eventId);
+		//return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventPartMarker + eventId; 
 	}
 }
