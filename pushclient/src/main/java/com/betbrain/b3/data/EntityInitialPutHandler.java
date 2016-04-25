@@ -109,6 +109,10 @@ public class EntityInitialPutHandler {
 				if (start + count > end) {
 					break;
 				}
+				String shortName = ModelShortName.get(entity.getClass().getName());
+				if (shortName == null) {
+					continue;
+				}
 				B3KeyEntity entityKey = new B3KeyEntity(entity);
 				B3Update update = new B3Update(B3Table.Entity, entityKey, 
 						new B3CellString(B3Table.CELL_LOCATOR_THIZ, JsonMapper.SerializeF(entity)));
