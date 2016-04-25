@@ -31,9 +31,13 @@ public class EntityInitialPutHandler {
 		//BettingOffer table (and lookup too)
 		HashMap<Long, Entity> allOffers = masterMap.get(BettingOffer.class.getName());
 		int offerCount = allOffers.size();
-		int i = 0;
+		int count = 0;
 		for (Entity entity : allOffers.values()) {
-			System.out.println("Offer " + ++i + " of " + offerCount);
+			count++;
+			if (count > 100) {
+				break;
+			}
+			System.out.println("Offer " + count + " of " + offerCount);
 			B3BettingOffer offer = new B3BettingOffer();
 			offer.entity = (BettingOffer) entity;
 			offer.buildDownlinks(masterMap);
@@ -69,7 +73,7 @@ public class EntityInitialPutHandler {
 
 			LinkedList<B3Cell<?>> eventCells = new LinkedList<B3Cell<?>>();
 			initialPut(B3Table.Event, eventKey, eventCells, null, event);
-			B3Update update = new B3Update(B3Table.BettingOffer, eventKey, eventCells.toArray(new B3CellString[eventCells.size()]));
+			B3Update update = new B3Update(B3Table.Event, eventKey, eventCells.toArray(new B3CellString[eventCells.size()]));
 			update.execute();
 		}
 

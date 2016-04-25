@@ -48,7 +48,7 @@ public class DynamoWorker {
 		}*/
 		
 		UpdateItemSpec us = new UpdateItemSpec().withPrimaryKey(
-				"hash", update.hashKey, "range", update.rangeKey);
+				"hash", update.key.getHashKey(), "range", update.key.getRangeKey());
 		if (update.cells != null) {
 			for (B3Cell<?> c : update.cells) {
 				us = us.withAttributeUpdate(new AttributeUpdate(c.columnName).put(c.value));
@@ -56,7 +56,7 @@ public class DynamoWorker {
 		}
 		
 		int colCount = update.cells == null ? 0 : update.cells.length;
-		System.out.println(update.table.name + ": " + update.rangeKey + ", cols: " + colCount);
+		System.out.println(update.table.name + ": " + update.key.getRangeKey() + ", cols: " + colCount);
 		dynaTable.updateItem(us);
 	}
 

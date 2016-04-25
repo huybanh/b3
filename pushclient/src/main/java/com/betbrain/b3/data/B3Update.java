@@ -4,9 +4,7 @@ class B3Update {
 
 	final B3Table table;
 	
-	final int hashKey;
-	
-	final String rangeKey;
+	final B3Key key;
 	
 	final B3Cell<?>[] cells;
 	
@@ -27,15 +25,14 @@ class B3Update {
 	B3Update(B3Table table, B3Key key, B3Cell<?>... cells) {
 		super();
 		this.table = table;
-		this.hashKey = key.getHashKey();
-		this.rangeKey = key.getRangeKey();
+		this.key = key;
 		this.cells = cells;
 	}
 
 	@Override
 	public String toString() {
 		
-		String head = "UPDATE " + table.name + ": (" + hashKey + ", " + rangeKey + ")";
+		String head = "UPDATE " + table.name + ": (" + key.getHashKey() + ", " + key.getRangeKey() + ")";
 		String tail = null;
 		if (cells != null) {
 			for (int i = 0; i < cells.length; i++) {
