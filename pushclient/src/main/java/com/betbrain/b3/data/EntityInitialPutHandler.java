@@ -3,14 +3,17 @@ package com.betbrain.b3.data;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map.Entry;
 
 import com.betbrain.b3.model.B3BettingOffer;
 import com.betbrain.b3.model.B3Entity;
 import com.betbrain.b3.model.B3Event;
+import com.betbrain.b3.model.B3EventInfo;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Event;
+import com.betbrain.sepc.connector.sportsmodel.EventInfo;
 
 public class EntityInitialPutHandler {
 
@@ -31,9 +34,15 @@ public class EntityInitialPutHandler {
 		//BettingOffer table (and lookup too)
 		HashMap<Long, Entity> allOffers = masterMap.get(BettingOffer.class.getName());
 		int offerCount = allOffers.size();
-		int i = 0;
+		final int start = 0;
+		final int end = 100;
+		int count = 0;
 		for (Entity entity : allOffers.values()) {
-			System.out.println("Offer " + ++i + " of " + offerCount);
+			count++;
+			if (start + count > end) {
+				break;
+			}
+			System.out.println("Offer " + (start + count) + " of " + offerCount);
 			B3BettingOffer offer = new B3BettingOffer();
 			offer.entity = (BettingOffer) entity;
 			offer.buildDownlinks(masterMap);
@@ -47,12 +56,28 @@ public class EntityInitialPutHandler {
 					offer.outcome.entity.getId(),
 					offer.entity.getBettingTypeId(),
 					offer.entity.getId());
-			initialPut(B3Table.BettingOffer, offerKey, null, offer);
+			
+			LinkedList<B3Cell<?>> offerCells = new LinkedList<B3Cell<?>>();
+			initialPut(B3Table.BettingOffer, offerKey, offerCells, null, offer);
+			B3Update update = new B3Update(B3Table.BettingOffer, offerKey, offerCells.toArray(new B3CellString[offerCells.size()]));
+			update.execute();
+			
+			//entity table
+			B3KeyEntity entityKey = new B3KeyEntity(entity);
+			update = new B3Update(B3Table.Entity, entityKey, 
+					new B3CellString(B3Table.CELL_LOCATOR_THIZ, JsonMapper.SerializeF(entity)));
+			update.execute();
 		}
 		
 		//Event table (and lookup too)
+		count = 0;
 		HashMap<Long, Entity> allEvents = masterMap.get(Event.class.getName());
 		for (Entity entity : allEvents.values()) {
+			count++;
+			if (start + count > end) {
+				break;
+			}
+			System.out.println("Event " + (start + count) + " of " + offerCount);
 			B3Event event = new B3Event();
 			event.entity = (Event) entity;
 			event.buildDownlinks(masterMap);
@@ -62,7 +87,72 @@ public class EntityInitialPutHandler {
 					event.entity.getTypeId(),
 					false,
 					event.entity.getId());
-			initialPut(B3Table.Event, eventKey, null, event);
+
+			LinkedList<B3Cell<?>> eventCells = new LinkedList<B3Cell<?>>();
+			initialPut(B3Table.Event, eventKey, eventCells, null, event);
+			B3Update update = new B3Update(B3Table.Event, eventKey, eventCells.toArray(new B3CellString[eventCells.size()]));
+			update.execute();
+			
+			//entity table
+			B3KeyEntity entityKey = new B3KeyEntity(entity);
+			update = new B3Update(B3Table.Entity, entityKey, 
+					new B3CellString(B3Table.CELL_LOCATOR_THIZ, JsonMapper.SerializeF(entity)));
+			update.execute();
+		}
+		
+		//Event table (and lookup too)
+		count = 0;
+		HashMap<Long, Entity> allEventInfos = masterMap.get(EventInfo.class.getName());
+		for (Entity entity : allEventInfos.values()) {
+			count++;
+			if (start + count > end) {
+				break;
+			}
+			System.out.println("EventInfo " + (start + count) + " of " + offerCount);
+			B3EventInfo eventInfo = new B3EventInfo();
+			eventInfo.entity = (EventInfo) entity;
+			eventInfo.buildDownlinks(masterMap);
+			
+			B3KeyEventInfo eventInfoKey = new B3KeyEventInfo(
+					eventInfo.event.entity.getSportId(),
+					eventInfo.event.entity.getTypeId(),
+					false,
+					eventInfo.event.entity.getId(),
+					eventInfo.entity.getTypeId(),
+					eventInfo.entity.getId());
+
+			LinkedList<B3Cell<?>> eventInfoCells = new LinkedList<B3Cell<?>>();
+			initialPut(B3Table.EventInfo, eventInfoKey, eventInfoCells, null, eventInfo);
+			B3Update update = new B3Update(B3Table.EventInfo, eventInfoKey, eventInfoCells.toArray(new B3CellString[eventInfoCells.size()]));
+			update.execute();
+			
+			//entity table
+			B3KeyEntity entityKey = new B3KeyEntity(entity);
+			update = new B3Update(B3Table.Entity, entityKey, 
+					new B3CellString(B3Table.CELL_LOCATOR_THIZ, JsonMapper.SerializeF(entity)));
+			update.execute();
+		}
+		
+		for (Entry<String, HashMap<Long, Entity>> entry : masterMap.entrySet()) {
+			if (BettingOffer.class.getName().equals(entry.getKey()) ||
+					Event.class.getName().equals(entry.getKey())) {
+				continue;
+			}
+			count = 0;
+			for (Entity entity : entry.getValue().values()) {
+				count++;
+				if (start + count > end) {
+					break;
+				}
+				String shortName = ModelShortName.get(entity.getClass().getName());
+				if (shortName == null) {
+					continue;
+				}
+				B3KeyEntity entityKey = new B3KeyEntity(entity);
+				B3Update update = new B3Update(B3Table.Entity, entityKey, 
+						new B3CellString(B3Table.CELL_LOCATOR_THIZ, JsonMapper.SerializeF(entity)));
+				update.execute();
+			}
 		}
 
 		if (linkingErrors.isEmpty()) {
@@ -78,21 +168,7 @@ public class EntityInitialPutHandler {
 	//private LinkedList<String> loggedMissingSpecs = new LinkedList<String>();
 	
 	private <E extends Entity>void initialPut(
-			B3Table table, B3Key mainKey, final String cellName, B3Entity<?> b3entity) {
-		
-		/*@SuppressWarnings("unchecked")
-		EntitySpec<E, ?> spec = (EntitySpec<E, ?>) EntitySpecMapping.getSpec(entity.getClass().getName());
-		if (spec == null) {
-			if (!loggedMissingSpecs.contains(entity.getClass().getName())) {
-				loggedMissingSpecs.add(entity.getClass().getName());
-				linkingErrors.add("Missed entity spec for " + entity.getClass().getName());
-			}
-			return;
-		}
-		B3Key mainKey = spec.getB3KeyMain(entity);
-		if (mainKey == null) {
-			mainKey = spec.getB3KeyMainInitially(entity, masterMap, eventPartToEventMap);
-		}*/
+			B3Table mainTable, B3Key mainKey, LinkedList<B3Cell<?>> mainCells, final String cellName, B3Entity<?> b3entity) {
 		
 		String thisCellName;
 		if (cellName == null) {
@@ -103,60 +179,33 @@ public class EntityInitialPutHandler {
 		
 		//put event to main
 		B3CellString jsonCell = new B3CellString(thisCellName, JsonMapper.SerializeF(b3entity.entity));
-		B3Update update = new B3Update(table, mainKey, jsonCell);
-		update.execute();
+		mainCells.add(jsonCell);
 		
 		//put event to lookup
-		//B3CellInt hashCell = new B3CellInt(B3Table.LOOKUP_CELL_TARGET_HASH, mainKey.getHashKey());
-		//B3CellString rangeCell = new B3CellString(B3Table.LOOKUP_CELL_TARGET_RANGE, mainKey.getRangeKey());
-		B3KeyLookup lookupKey = new B3KeyLookup(b3entity.entity, table, mainKey.getHashKey(), mainKey.getRangeKey());
-		update = new B3Update(B3Table.Lookup, lookupKey);
+		B3KeyLookup lookupKey = new B3KeyLookup(b3entity.entity, mainTable, mainKey.getHashKey(), mainKey.getRangeKey());
+		B3Update update = new B3Update(B3Table.Lookup, lookupKey);
 		update.execute();
 		
 		EntityLink[] linkedEntities = b3entity.getDownlinkedEntities();
 		if (linkedEntities != null) {
 			for (EntityLink link : linkedEntities) {
+				
+				link.linkedEntity.buildDownlinks(masterMap);
+				
+				//put event to table link
+				B3KeyLink linkKey = new B3KeyLink(link.linkedEntity.entity, b3entity.entity); //reverse link direction
+				update = new B3Update(B3Table.Link, linkKey);
+				update.execute();
+
 				String childCellName;
 				if (cellName == null) {
 					childCellName = link.name;
 				} else {
 					childCellName = cellName + B3Table.CELL_LOCATOR_SEP + link.name;
 				}
-				initialPut(table, mainKey, childCellName, link.linkedEntity);
+				initialPut(mainTable, mainKey, mainCells, childCellName, link.linkedEntity);
 			}
 		}
-		
-		/*LinkedList<EntityLink> downLinks = new LinkedList<EntityLink>();
-		spec.getAllDownlinks(entity, downLinks);
-		for (EntityLink link : downLinks) {
-			HashMap<Long, Entity> subMap = masterMap.get(link.targetClass.getName());
-			if (subMap == null) {
-				linkingErrors.add("Found zero entities of type: " + link.targetClass.getName());
-				continue;
-			}
-			if (link.targetId == null) {
-				continue;
-			}
-			Entity linkedEntity = subMap.get(link.targetId);
-			if (linkedEntity == null) {
-				if (missedDownlinkCount < 10) {
-					linkingErrors.add("Missed downlink: " + link.targetClass.getName() + "@" + link.targetId);
-					missedDownlinkCount++;
-					if (missedDownlinkCount == 10) {
-						linkingErrors.add("There maybe more missed downlinks but not logged");
-					}
-				}
-				continue;
-			}
-			
-			String childCellName;
-			if (cellName == null) {
-				childCellName = link.name;
-			} else {
-				childCellName = cellName + B3Table.CELL_LOCATOR_SEP + link.name;
-			}
-			initialPut(table, childCellName, linkedEntity);
-		}*/
 	}
 	
 	//private int missedDownlinkCount;
