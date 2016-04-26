@@ -22,7 +22,9 @@ public class JsonMapper {
 
 	public static String SerializeF(Object entity) {
 		String jsonString = "[]";
-		jsonString = flexSer.exclude("beanInfo").serialize(entity);
+		jsonString = flexSer.exclude("beanInfo")
+				.transform(new ExcludeTransformer(), void.class)
+				.serialize(entity);
 		return jsonString;
 	}
 	
