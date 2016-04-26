@@ -9,6 +9,8 @@ public enum ModelShortName {
 	BettingOfferStatus("BS", com.betbrain.sepc.connector.sportsmodel.BettingOfferStatus.class.getName()),
 	BettingOfferType("BT", com.betbrain.sepc.connector.sportsmodel.BettingType.class.getName()),
 	Event("EV", com.betbrain.sepc.connector.sportsmodel.Event.class.getName()),
+	EventInfo("EI", com.betbrain.sepc.connector.sportsmodel.EventInfo.class.getName()),
+	EventInfoType("EF", com.betbrain.sepc.connector.sportsmodel.EventInfoType.class.getName()),
 	EventPart("EP", com.betbrain.sepc.connector.sportsmodel.EventPart.class.getName()),
 	EventStatus("ES", com.betbrain.sepc.connector.sportsmodel.EventStatus.class.getName()),
 	EventTemplate("EM", com.betbrain.sepc.connector.sportsmodel.EventTemplate.class.getName()),

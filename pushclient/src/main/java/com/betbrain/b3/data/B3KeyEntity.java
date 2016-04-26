@@ -77,6 +77,12 @@ public class B3KeyEntity extends B3Key {
 		return list;
 	}
 
+	public static <E extends Entity> ArrayList<E> load(Class<E> clazz, long id) {
+		ArrayList<Long> idList = new ArrayList<Long>();
+		idList.add(id);
+		return load(clazz, idList);
+	}
+
 	public static <E extends Entity> ArrayList<E> load(Class<E> clazz, ArrayList<Long> idList) {
 		ArrayList<E> list = new ArrayList<E>();
 		for (Long id : idList) {

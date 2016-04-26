@@ -8,6 +8,7 @@ public enum B3Table {
 	Entity("entity", null),
 	Link("entity_links", null),
 	Event("event", "E"),
+	EventInfo("event_info", "I"),
 	BettingOffer("betting_offer", "B");
 	
 	public final String name;

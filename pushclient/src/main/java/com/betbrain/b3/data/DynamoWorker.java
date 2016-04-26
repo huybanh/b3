@@ -21,6 +21,7 @@ public class DynamoWorker {
 	
 	public static Table offerTable;
 	public static Table eventTable;
+	public static Table eventInfoTable;
 	public static Table lookupTable;
 	public static Table linkTable;
 	public static Table entityTable;
@@ -32,6 +33,7 @@ public class DynamoWorker {
 		dynamoDB = new DynamoDB(dynaClient);
 		offerTable = dynamoDB.getTable("offer");
 		eventTable = dynamoDB.getTable("event");
+		eventInfoTable = dynamoDB.getTable("event_info");
 		lookupTable = dynamoDB.getTable("lookup");
 		linkTable = dynamoDB.getTable("link");
 		entityTable = dynamoDB.getTable("entity");
@@ -43,6 +45,8 @@ public class DynamoWorker {
 			return offerTable;
 		} else if (b3table == B3Table.Event) {
 			return eventTable;
+		} else if (b3table == B3Table.EventInfo) {
+			return eventInfoTable;
 		} else if (b3table == B3Table.Lookup) {
 			return lookupTable;
 		} else if (b3table == B3Table.Link) {
