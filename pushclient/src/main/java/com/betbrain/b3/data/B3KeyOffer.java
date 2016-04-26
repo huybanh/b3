@@ -5,7 +5,7 @@ package com.betbrain.b3.data;
  *           /outcomeTypeId/outcomeId/bettingTypeId/offerId
  *
  */
-public class B3KeyOffer extends B3Key {
+public class B3KeyOffer extends B3KeyEntitySupport {
 
 	final Long sportId;
 	

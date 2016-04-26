@@ -222,18 +222,23 @@ public class EntityInitialPutHandler {
 			}
 		});
 
-		final int start = 0;
-		final int end = 100;
+		//final int start = 0;
+		//final int end = 100;
 		for (Entry<String, HashMap<Long, Entity>> entry : masterMap.entrySet()) {
 			if (BettingOffer.class.getName().equals(entry.getKey()) ||
 					Event.class.getName().equals(entry.getKey())) {
 				continue;
 			}
 			int count = 0;
+			int total = entry.getValue().size();
+			System.out.println(entry.getKey() + ": " + total);
 			for (Entity entity : entry.getValue().values()) {
 				count++;
-				if (start + count > end) {
-					break;
+				//if (start + count > end) {
+				//	break;
+				//}
+				if (count % 1000 == 0) {
+					System.out.println(entity.getClass().getName() + " " + count + " of " + total);
 				}
 				String shortName = ModelShortName.get(entity.getClass().getName());
 				if (shortName == null) {
@@ -274,15 +279,15 @@ public class EntityInitialPutHandler {
 
 		HashMap<Long, Entity> allEntities = masterMap.get(entityClazz.getName());
 		int entityCount = allEntities.size();
-		final int start = 0;
-		final int end = 100;
+		//final int start = 0;
+		//final int end = 100;
 		int count = 0;
 		for (Entity entity : allEntities.values()) {
 			count++;
-			if (start + count > end) {
-				break;
-			}
-			System.out.println(entityClazz.getName() + " " + (start + count) + " of " + entityCount);
+			//if (start + count > end) {
+			//	break;
+			//}
+			System.out.println(entityClazz.getName() + " " + count + " of " + entityCount);
 			B3Entity<E> b3entity = keyBuilder.newB3Entity();
 			b3entity.entity = (E) entity;
 			b3entity.buildDownlinks(masterMap);
@@ -328,7 +333,7 @@ public class EntityInitialPutHandler {
 				
 				//put event to table link
 				//B3KeyLink linkKey = new B3KeyLink(link.linkedEntity.entity, b3entity.entity); //reverse link direction
-				B3KeyLink linkKey = new B3KeyLink(link.linkedEntity.entity, link.name, b3entity.entity.getId()); //reverse link direction
+				B3KeyLink linkKey = new B3KeyLink(link.linkedEntity.entity, b3entity.entity, link.name); //reverse link direction
 				update = new B3Update(B3Table.Link, linkKey);
 				update.execute();
 

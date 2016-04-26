@@ -4,7 +4,7 @@ package com.betbrain.b3.data;
  * Key spec: sportId/eventTypeId/[EVENT|EVENTPART]/eventId
  *
  */
-public class B3KeyEventInfo extends B3Key {
+public class B3KeyEventInfo extends B3KeyEntitySupport {
 
 	final Long sportId;
 	
@@ -47,14 +47,15 @@ public class B3KeyEventInfo extends B3Key {
 		String eventPartMarker = eventPartFlag ? 
 				B3Table.EVENTKEY_MARKER_EVENTPART : B3Table.EVENTKEY_MARKER_EVENT;
 
-		return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventPartMarker +
-				Math.abs(eventId.hashCode() % 100);
+		/*return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventPartMarker +
+				Math.abs(eventId.hashCode() % 100);*/
+		return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventPartMarker + eventId;
 	}
 	
 	@Override
 	String getRangeKey() {
 		
-		return eventId + B3Table.KEY_SEP + eventInfoTypeId + B3Table.KEY_SEP + eventInfoId;
+		return eventInfoTypeId + B3Table.KEY_SEP + eventInfoId;
 		//return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventPartMarker + eventId; 
 	}
 }

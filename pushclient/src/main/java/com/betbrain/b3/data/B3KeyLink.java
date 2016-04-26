@@ -20,36 +20,36 @@ public class B3KeyLink extends B3Key {
 	
 	final String linkName;
 	
-	//final String linkedClassShortName;
+	final String linkedClassShortName;
 	
 	final Long linkedEntityId;
 
-	public B3KeyLink(Entity entity, /*Class<? extends Entity> clazz*/String linkName) {
+	public B3KeyLink(Entity entity, Class<? extends Entity> clazz, String linkName) {
 		super();
 		classShortName = ModelShortName.get(entity.getClass().getName()); 
 		id = entity.getId();
-		//linkedClassShortName = ModelShortName.get(clazz.getName());
+		linkedClassShortName = ModelShortName.get(clazz.getName());
 		this.linkName = linkName;
 		linkedEntityId = null;
 	}
 
-	public B3KeyLink(Class<?> entityClazz, long entityId, /*Class<?> linkedClazz*/String linkName) {
+	public B3KeyLink(Class<?> entityClazz, long entityId, Class<?> linkedClazz, String linkName) {
 		super();
 		classShortName = ModelShortName.get(entityClazz.getName()); 
 		id = entityId;
-		//linkedClassShortName = ModelShortName.get(linkedClazz.getName());
+		linkedClassShortName = ModelShortName.get(linkedClazz.getName());
 		this.linkName = linkName;
 		linkedEntityId = null;
 	}
 
-	public B3KeyLink(Entity entity, String linkName, long linkedEntityId) {
+	public B3KeyLink(Entity entity, Entity linkedEntity, String linkName) {
 		super();
 		classShortName = ModelShortName.get(entity.getClass().getName()); 
 		id = entity.getId();
-		//linkedClassShortName = ModelShortName.get(linkedEntity.getClass().getName());
+		linkedClassShortName = ModelShortName.get(linkedEntity.getClass().getName());
 		this.linkName = linkName;
-		//linkedId = linkedEntity.getId();
-		this.linkedEntityId = linkedEntityId;
+		this.linkedEntityId = linkedEntity.getId();
+		//this.linkedEntityId = linkedEntityId;
 	}
 	
 	@Override
@@ -59,7 +59,7 @@ public class B3KeyLink extends B3Key {
 	
 	protected String getHashKey() {
 		//return classShortName + linkedClassShortName + id;
-		return classShortName + linkName + id;
+		return classShortName + linkedClassShortName + linkName + B3Table.KEY_SEP + id;
 	}
 	
 	@Override
