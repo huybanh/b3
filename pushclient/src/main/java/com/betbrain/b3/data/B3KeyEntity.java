@@ -87,16 +87,32 @@ public class B3KeyEntity extends B3Key {
 		ArrayList<E> list = new ArrayList<E>();
 		for (Long id : idList) {
 			B3KeyEntity key = new B3KeyEntity(clazz, id);
-			Item item = DynamoWorker.get(B3Table.Entity, key.getHashKey(), key.getRangeKey());
+			/*Item item = DynamoWorker.get(B3Table.Entity, key.getHashKey(), key.getRangeKey());
 			if (item == null) {
 				continue;
 			}
 			String json = item.getString(B3Table.CELL_LOCATOR_THIZ);
 			@SuppressWarnings("unchecked")
 			E entity = (E) JsonMapper.DeserializeF(json);
-			System.out.println(entity);
-			list.add(entity);
+			System.out.println(entity);*/
+			E entity = key.load();
+			//let clients may need to know if an entity is missing
+			//if (entity != null) {
+				list.add(entity);
+			//}
 		}
 		return list;
+	}
+
+	public <E extends Entity> E load() {
+		Item item = DynamoWorker.get(B3Table.Entity, getHashKey(), getRangeKey());
+		if (item == null) {
+			return null;
+		}
+		String json = item.getString(B3Table.CELL_LOCATOR_THIZ);
+		@SuppressWarnings("unchecked")
+		E entity = (E) JsonMapper.DeserializeF(json);
+		System.out.println(entity);
+		return entity;
 	}
 }

@@ -52,7 +52,7 @@ public class InitialDumpLocalReader {
 		
 		ModelShortName.initialize();
 		DynamoWorker.initialize();
-		new EntityInitialPutHandler(masterMap).initialPut();
+		new EntityInitialPutHandler(masterMap).initialPutMaster();
 	}
 
 }

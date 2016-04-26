@@ -4,7 +4,7 @@ package com.betbrain.b3.data;
  * Key spec: sportId/eventTypeId/[EVENT|EVENTPART]/eventId
  *
  */
-public class B3KeyEvent extends B3Key {
+public class B3KeyEvent extends B3KeyEntitySupport {
 
 	final Long sportId;
 	
@@ -41,7 +41,7 @@ public class B3KeyEvent extends B3Key {
 				B3Table.EVENTKEY_MARKER_EVENTPART : B3Table.EVENTKEY_MARKER_EVENT;
 
 		return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventPartMarker +
-				Math.abs(eventId.hashCode() % 100);
+				Math.abs(eventId.hashCode() % B3Table.DIST_FACTOR);
 	}
 	
 	@Override

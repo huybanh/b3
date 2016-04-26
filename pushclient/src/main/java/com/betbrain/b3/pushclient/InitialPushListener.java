@@ -55,7 +55,7 @@ public class InitialPushListener implements SEPCConnectorListener {
 		DynamoWorker.initialize();
 		new Thread() {
 			public void run() {
-				new EntityInitialPutHandler(masterMap/*, eventPartToEventMap*/).initialPut();
+				new EntityInitialPutHandler(masterMap/*, eventPartToEventMap*/).initialPutMaster();
 			}
 		}.start();
 	}
