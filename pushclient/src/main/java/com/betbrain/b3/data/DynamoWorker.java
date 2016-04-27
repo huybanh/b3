@@ -72,10 +72,10 @@ public class DynamoWorker {
 				us = us.addAttributeUpdate(new AttributeUpdate(c.columnName).put(c.value));
 			}
 		}
-		
-		int colCount = update.cells == null ? 0 : update.cells.length;
+
+		/*int colCount = update.cells == null ? 0 : update.cells.length;
 		System.out.println(update.table.name + ": " + update.key.getRangeKey() + "@" + 
-				update.key.getRangeKey() + ", cols: " + colCount);
+				update.key.getRangeKey() + ", cols: " + colCount);*/
 		dynaTable.updateItem(us);
 	}
 	

@@ -31,6 +31,13 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		downlinks.add(new EntityLink(name, linkedEntity));
 	}
 	
+	protected final void addDownlink(String name, Class<?> linkedEntityClazz, Long linkedEntityId) {
+		if (linkedEntityId == null) {
+			return;
+		}
+		downlinks.add(new EntityLink(name, linkedEntityClazz, linkedEntityId));
+	}
+	
 	public final EntityLink[] getDownlinkedEntities() {
 		downlinks = new LinkedList<EntityLink>();
 		getDownlinkedEntitiesInternal();

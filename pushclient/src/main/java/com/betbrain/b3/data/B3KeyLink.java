@@ -42,6 +42,15 @@ public class B3KeyLink extends B3Key {
 		linkedEntityId = null;
 	}
 
+	public B3KeyLink(Class<?> entityClazz, long entityId, Entity linkedEntity, String linkName) {
+		super();
+		classShortName = ModelShortName.get(entityClazz.getName()); 
+		id = entityId;
+		linkedClassShortName = ModelShortName.get(linkedEntity.getClass().getName());
+		linkedEntityId = linkedEntity.getId();
+		this.linkName = linkName;
+	}
+
 	public B3KeyLink(Entity entity, Entity linkedEntity, String linkName) {
 		super();
 		classShortName = ModelShortName.get(entity.getClass().getName()); 

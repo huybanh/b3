@@ -28,147 +28,10 @@ public class EntityInitialPutHandler {
 		this.masterMap = masterMap;
 		//this.eventPartToEventMap = eventPartToEventMap;
 	}
-
-	/*public void initialPutMaster() {
-		
-		//BettingOffer table (and lookup too)
-		HashMap<Long, Entity> allOffers = masterMap.get(BettingOffer.class.getName());
-		int offerCount = allOffers.size();
-		final int start = 0;
-		final int end = 100;
-		int count = 0;
-		for (Entity entity : allOffers.values()) {
-			count++;
-			if (start + count > end) {
-				break;
-			}
-			System.out.println("Offer " + (start + count) + " of " + offerCount);
-			B3BettingOffer offer = new B3BettingOffer();
-			offer.entity = (BettingOffer) entity;
-			offer.buildDownlinks(masterMap);
-			
-			B3KeyOffer offerKey = new B3KeyOffer(
-					offer.outcome.event.entity.getSportId(),
-					offer.outcome.event.entity.getTypeId(),
-					false,
-					offer.outcome.event.entity.getId(),
-					offer.outcome.entity.getTypeId(),
-					offer.outcome.entity.getId(),
-					offer.entity.getBettingTypeId(),
-					offer.entity.getId());
-			
-			LinkedList<B3Cell<?>> offerCells = new LinkedList<B3Cell<?>>();
-			initialPutOne(B3Table.BettingOffer, offerKey, offerCells, null, offer);
-			B3Update update = new B3Update(B3Table.BettingOffer, offerKey, offerCells.toArray(new B3CellString[offerCells.size()]));
-			update.execute();
-			
-			//entity table
-			B3KeyEntity entityKey = new B3KeyEntity(entity);
-			update = new B3Update(B3Table.Entity, entityKey, 
-					new B3CellString(B3Table.CELL_LOCATOR_THIZ, JsonMapper.SerializeF(entity)));
-			update.execute();
-		}
-		
-		//Event table (and lookup too)
-		count = 0;
-		HashMap<Long, Entity> allEvents = masterMap.get(Event.class.getName());
-		for (Entity entity : allEvents.values()) {
-			count++;
-			if (start + count > end) {
-				break;
-			}
-			System.out.println("Event " + (start + count) + " of " + offerCount);
-			B3Event event = new B3Event();
-			event.entity = (Event) entity;
-			event.buildDownlinks(masterMap);
-			
-			B3KeyEvent eventKey = new B3KeyEvent(
-					event.entity.getSportId(),
-					event.entity.getTypeId(),
-					false,
-					event.entity.getId());
-
-			LinkedList<B3Cell<?>> eventCells = new LinkedList<B3Cell<?>>();
-			initialPutOne(B3Table.Event, eventKey, eventCells, null, event);
-			B3Update update = new B3Update(B3Table.Event, eventKey, eventCells.toArray(new B3CellString[eventCells.size()]));
-			update.execute();
-			
-			//entity table
-			B3KeyEntity entityKey = new B3KeyEntity(entity);
-			update = new B3Update(B3Table.Entity, entityKey, 
-					new B3CellString(B3Table.CELL_LOCATOR_THIZ, JsonMapper.SerializeF(entity)));
-			update.execute();
-		}
-		
-		//Event table (and lookup too)
-		count = 0;
-		HashMap<Long, Entity> allEventInfos = masterMap.get(EventInfo.class.getName());
-		for (Entity entity : allEventInfos.values()) {
-			count++;
-			if (start + count > end) {
-				break;
-			}
-			System.out.println("EventInfo " + (start + count) + " of " + offerCount);
-			B3EventInfo eventInfo = new B3EventInfo();
-			eventInfo.entity = (EventInfo) entity;
-			eventInfo.buildDownlinks(masterMap);
-			
-			B3KeyEventInfo eventInfoKey = new B3KeyEventInfo(
-					eventInfo.event.entity.getSportId(),
-					eventInfo.event.entity.getTypeId(),
-					false,
-					eventInfo.event.entity.getId(),
-					eventInfo.entity.getTypeId(),
-					eventInfo.entity.getId());
-
-			LinkedList<B3Cell<?>> eventInfoCells = new LinkedList<B3Cell<?>>();
-			initialPutOne(B3Table.EventInfo, eventInfoKey, eventInfoCells, null, eventInfo);
-			B3Update update = new B3Update(B3Table.EventInfo, eventInfoKey, eventInfoCells.toArray(new B3CellString[eventInfoCells.size()]));
-			update.execute();
-			
-			//entity table
-			B3KeyEntity entityKey = new B3KeyEntity(entity);
-			update = new B3Update(B3Table.Entity, entityKey, 
-					new B3CellString(B3Table.CELL_LOCATOR_THIZ, JsonMapper.SerializeF(entity)));
-			update.execute();
-		}
-
-		for (Entry<String, HashMap<Long, Entity>> entry : masterMap.entrySet()) {
-			if (BettingOffer.class.getName().equals(entry.getKey()) ||
-					Event.class.getName().equals(entry.getKey())) {
-				continue;
-			}
-			count = 0;
-			for (Entity entity : entry.getValue().values()) {
-				count++;
-				if (start + count > end) {
-					break;
-				}
-				String shortName = ModelShortName.get(entity.getClass().getName());
-				if (shortName == null) {
-					continue;
-				}
-				B3KeyEntity entityKey = new B3KeyEntity(entity);
-				B3Update update = new B3Update(B3Table.Entity, entityKey, 
-						new B3CellString(B3Table.CELL_LOCATOR_THIZ, JsonMapper.SerializeF(entity)));
-				update.execute();
-			}
-		}
-
-		if (linkingErrors.isEmpty()) {
-			System.out.println("Completed all initial puts without any linking errors found");
-		} else {
-			System.out.println("Completed all initial puts with linking errors found:");
-			for (String err : linkingErrors) {
-				System.out.println(err);
-			}
-		}
-	}*/
 	
 	public void initialPutMaster() {
-
 		
-		initialPutAll(B3Table.BettingOffer, 45000, null, BettingOffer.class, new B3KeyBuilder<BettingOffer>() {
+		initialPutAll(B3Table.BettingOffer, 0, null, BettingOffer.class, new B3KeyBuilder<BettingOffer>() {
 
 			public B3BettingOffer newB3Entity() {
 				return new B3BettingOffer();
@@ -262,12 +125,6 @@ public class EntityInitialPutHandler {
 	}
 	
 	//private LinkedList<String> loggedMissingSpecs = new LinkedList<String>();
-	
-	/*private interface B3KeyBuilder<E1 extends B3Entity<E2>, E2 extends Entity> {
-		
-		E1 newB3Entity();
-		B3Key buildKey(E2 entity);
-	}*/
 
 	private interface B3KeyBuilder<E extends Entity> {
 		B3Entity<E> newB3Entity();
@@ -338,11 +195,13 @@ public class EntityInitialPutHandler {
 			for (EntityLink link : linkedEntities) {
 				
 				//link: From main entity -> linked entities
-				link.linkedEntity.buildDownlinks(masterMap);
+				if (link.linkedEntity != null) {
+					link.linkedEntity.buildDownlinks(masterMap);
+				}
 				
 				//put event to table link
-				//B3KeyLink linkKey = new B3KeyLink(link.linkedEntity.entity, b3entity.entity); //reverse link direction
-				B3KeyLink linkKey = new B3KeyLink(link.linkedEntity.entity, b3entity.entity, link.name); //reverse link direction
+				//B3KeyLink linkKey = new B3KeyLink(link.linkedEntity.entity, b3entity.entity, link.name); //reverse link direction
+				B3KeyLink linkKey = new B3KeyLink(link.linkedEntityClazz, link.linkedEntityId, b3entity.entity, link.name); //reverse link direction
 				update = new B3Update(B3Table.Link, linkKey);
 				update.execute();
 				
@@ -351,13 +210,15 @@ public class EntityInitialPutHandler {
 				update = new B3Update(B3Table.Lookup, lookupKey);
 				update.execute();
 
-				String childCellName;
-				if (cellName == null) {
-					childCellName = link.name;
-				} else {
-					childCellName = cellName + B3Table.CELL_LOCATOR_SEP + link.name;
+				if (link.linkedEntity != null) {
+					String childCellName;
+					if (cellName == null) {
+						childCellName = link.name;
+					} else {
+						childCellName = cellName + B3Table.CELL_LOCATOR_SEP + link.name;
+					}
+					initialPutOne(mainTable, mainKey, mainCells, childCellName, link.linkedEntity);
 				}
-				initialPutOne(mainTable, mainKey, mainCells, childCellName, link.linkedEntity);
 			}
 		}
 	}
