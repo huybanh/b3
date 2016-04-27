@@ -148,7 +148,7 @@ public class DynamoWorker {
 			}
 		}
 
-		dynaTable.updateItem(us);
+		//dynaTable.updateItem(us);
 		/*int colCount = update.cells == null ? 0 : update.cells.length;
 		System.out.println(update.table.name + ": " + bundleId + update.key.getRangeKey() + "@" + 
 				update.key.getRangeKey() + ", cols: " + colCount);*/

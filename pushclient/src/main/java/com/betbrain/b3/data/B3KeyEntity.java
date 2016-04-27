@@ -18,6 +18,8 @@ public class B3KeyEntity extends B3Key {
 	final String classShortName;
 	
 	final Long id;
+	
+	private JsonMapper jsonMapper = new JsonMapper();
 
 	public B3KeyEntity(Entity entity) {
 		super();
@@ -69,7 +71,7 @@ public class B3KeyEntity extends B3Key {
 				}
 				Item item = it.next();
 				String json = item.getString(B3Table.CELL_LOCATOR_THIZ);
-				Entity entity = JsonMapper.DeserializeF(json);
+				Entity entity = jsonMapper.deserialize(json);
 				System.out.println(entity);
 				list.add((E) entity);
 			}
@@ -112,7 +114,7 @@ public class B3KeyEntity extends B3Key {
 		}
 		String json = item.getString(B3Table.CELL_LOCATOR_THIZ);
 		@SuppressWarnings("unchecked")
-		E entity = (E) JsonMapper.DeserializeF(json);
+		E entity = (E) jsonMapper.deserialize(json);
 		System.out.println(entity);
 		return entity;
 	}

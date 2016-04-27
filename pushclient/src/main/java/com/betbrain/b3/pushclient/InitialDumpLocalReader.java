@@ -24,12 +24,13 @@ public class InitialDumpLocalReader {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 		
 		int count = 0;
+		JsonMapper jsonMapper = new JsonMapper();
 		while (true) {
 			String line = reader.readLine();
 			if (line == null) {
 				break;
 			}
-			Entity entity = JsonMapper.DeserializeF(line);
+			Entity entity = jsonMapper.deserialize(line);
 			HashMap<Long, Entity> subMap = masterMap.get(entity.getClass().getName());
 			if (subMap == null) {
 				subMap = new HashMap<Long, Entity>();
