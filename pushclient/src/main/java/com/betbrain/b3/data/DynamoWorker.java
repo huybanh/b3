@@ -12,10 +12,8 @@ import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.dynamodbv2.document.TableCollection;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
-import com.amazonaws.services.dynamodbv2.model.ListTablesResult;
 
 public class DynamoWorker {
 	
@@ -96,11 +94,12 @@ public class DynamoWorker {
 		if (currentIndex < 0) {
 			throw new RuntimeException("Unknown current bundle id: " + currentId);
 		}
-		int proposedIndex = currentIndex + 1;
+		int proposedIndex = currentIndex;
 		int count = 0;
 		String availBundleId;
 		while (true) {
-			proposedIndex = proposedIndex <= BUNDLEIDS.length ? proposedIndex : 0; //round robin
+			proposedIndex++;
+			proposedIndex = proposedIndex < BUNDLEIDS.length ? proposedIndex : 0; //round robin
 			String status = getBundleStatus(BUNDLEIDS[proposedIndex]);
 			if (status == null || status.equals(BUNDLE_STATUS_UNUSED)) {
 				availBundleId = BUNDLEIDS[proposedIndex];
@@ -154,6 +153,11 @@ public class DynamoWorker {
 		System.out.println(update.table.name + ": " + bundleId + update.key.getRangeKey() + "@" + 
 				update.key.getRangeKey() + ", cols: " + colCount);*/
 	}
+
+	public static Item get(B3Table b3table, String hashKey, String rangeKey) {
+		Table table = getTable(b3table);
+		return table.getItem(HASH, hashKey, RANGE, rangeKey);
+	}
 	
 	public static ItemCollection<QueryOutcome> query(B3Table b3table, String hashKey) {
 		
@@ -188,18 +192,14 @@ public class DynamoWorker {
 
 	public static void main(String[] args) {
 		initialize();
-		TableCollection<ListTablesResult> x = dynamoDB.listTables();
+		/*TableCollection<ListTablesResult> x = dynamoDB.listTables();
 		System.out.println(x);
 		for (Table i : x) {
 			System.out.println(i);
 		}
 		Table table = dynamoDB.getTable("fbook");
 		System.out.println(table);
-		table.deleteItem(HASH, "o3641", RANGE, "p_1005123616170333/1005123616170333_1094715557211138");
-	}
-
-	public static Item get(B3Table b3table, String hashKey, String rangeKey) {
-		Table table = getTable(b3table);
-		return table.getItem(HASH, hashKey, RANGE, rangeKey);
+		table.deleteItem(HASH, "o3641", RANGE, "p_1005123616170333/1005123616170333_1094715557211138");*/
+		System.out.println(allocateBundleForInitialDump());
 	}
 }
