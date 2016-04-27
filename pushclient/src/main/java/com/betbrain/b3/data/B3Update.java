@@ -51,9 +51,9 @@ class B3Update {
 		}
 	}
 
-	public void execute() {
+	public void execute(String bundleId) {
 		
-		DynamoWorker.put(this);
+		DynamoWorker.put(bundleId, this);
 		/*if (cells == null || cells.length == 0) {
 			DynamoWorker.put(dynaTable, hashKey, rangeKey, null, null);
 			System.out.println(this);

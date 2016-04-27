@@ -16,6 +16,8 @@ import com.betbrain.sepc.connector.sportsmodel.Event;
 import com.betbrain.sepc.connector.sportsmodel.EventInfo;
 
 public class EntityInitialPutHandler {
+	
+	private final String bundleId;
 
 	private final HashMap<String, HashMap<Long, Entity>> masterMap;
 	//private final HashMap<Long, Long> eventPartToEventMap;
@@ -27,6 +29,8 @@ public class EntityInitialPutHandler {
 		
 		this.masterMap = masterMap;
 		//this.eventPartToEventMap = eventPartToEventMap;
+		
+		bundleId = DynamoWorker.allocateBundleForInitialDump();
 	}
 	
 	public void initialPutMaster() {
@@ -110,7 +114,7 @@ public class EntityInitialPutHandler {
 				B3KeyEntity entityKey = new B3KeyEntity(entity);
 				B3Update update = new B3Update(B3Table.Entity, entityKey, 
 						new B3CellString(B3Table.CELL_LOCATOR_THIZ, JsonMapper.SerializeF(entity)));
-				update.execute();
+				update.execute(bundleId);
 			}
 		}
 
@@ -161,7 +165,7 @@ public class EntityInitialPutHandler {
 			
 			//put main entity to main table
 			B3Update update = new B3Update(table, b3key, b3Cells.toArray(new B3CellString[b3Cells.size()]));
-			update.execute();
+			update.execute(bundleId);
 			
 			//entity table
 			/*B3KeyEntity entityKey = new B3KeyEntity(entity);
@@ -188,7 +192,7 @@ public class EntityInitialPutHandler {
 		//put event to lookup
 		B3KeyLookup lookupKey = new B3KeyLookup(b3entity.entity, mainTable, mainKey.getHashKey(), mainKey.getRangeKey());
 		B3Update update = new B3Update(B3Table.Lookup, lookupKey);
-		update.execute();
+		update.execute(bundleId);
 		
 		EntityLink[] linkedEntities = b3entity.getDownlinkedEntities();
 		if (linkedEntities != null) {
@@ -203,12 +207,12 @@ public class EntityInitialPutHandler {
 				//B3KeyLink linkKey = new B3KeyLink(link.linkedEntity.entity, b3entity.entity, link.name); //reverse link direction
 				B3KeyLink linkKey = new B3KeyLink(link.linkedEntityClazz, link.linkedEntityId, b3entity.entity, link.name); //reverse link direction
 				update = new B3Update(B3Table.Link, linkKey);
-				update.execute();
+				update.execute(bundleId);
 				
 				//also, put link to lookup: Main entity -> link location
 				lookupKey = new B3KeyLookup(b3entity.entity, B3Table.Link, linkKey.getHashKey(), linkKey.getRangeKey());
 				update = new B3Update(B3Table.Lookup, lookupKey);
-				update.execute();
+				update.execute(bundleId);
 
 				if (link.linkedEntity != null) {
 					String childCellName;
