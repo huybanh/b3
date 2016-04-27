@@ -225,10 +225,10 @@ public class EntityInitialPutHandler {
 		//final int start = 0;
 		//final int end = 100;
 		for (Entry<String, HashMap<Long, Entity>> entry : masterMap.entrySet()) {
-			if (BettingOffer.class.getName().equals(entry.getKey()) ||
+			/*if (BettingOffer.class.getName().equals(entry.getKey()) ||
 					Event.class.getName().equals(entry.getKey())) {
 				continue;
-			}
+			}*/
 			int count = 0;
 			int total = entry.getValue().size();
 			System.out.println(entry.getKey() + ": " + total);
@@ -298,15 +298,19 @@ public class EntityInitialPutHandler {
 			B3Key b3key = keyBuilder.buildKey(b3entity);
 			
 			LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
+			
+			//put linked entities to table main, lookup, link
 			initialPutOne(table, b3key, b3Cells, null, b3entity);
+			
+			//put main entity to main table
 			B3Update update = new B3Update(table, b3key, b3Cells.toArray(new B3CellString[b3Cells.size()]));
 			update.execute();
 			
 			//entity table
-			B3KeyEntity entityKey = new B3KeyEntity(entity);
+			/*B3KeyEntity entityKey = new B3KeyEntity(entity);
 			update = new B3Update(B3Table.Entity, entityKey, 
 					new B3CellString(B3Table.CELL_LOCATOR_THIZ, JsonMapper.SerializeF(entity)));
-			update.execute();
+			update.execute();*/
 		}
 	}
 	
@@ -333,12 +337,18 @@ public class EntityInitialPutHandler {
 		if (linkedEntities != null) {
 			for (EntityLink link : linkedEntities) {
 				
+				//link: From main entity -> linked entities
 				link.linkedEntity.buildDownlinks(masterMap);
 				
 				//put event to table link
 				//B3KeyLink linkKey = new B3KeyLink(link.linkedEntity.entity, b3entity.entity); //reverse link direction
 				B3KeyLink linkKey = new B3KeyLink(link.linkedEntity.entity, b3entity.entity, link.name); //reverse link direction
 				update = new B3Update(B3Table.Link, linkKey);
+				update.execute();
+				
+				//also, put link to lookup: Main entity -> link location
+				lookupKey = new B3KeyLookup(b3entity.entity, B3Table.Link, linkKey.getHashKey(), linkKey.getRangeKey());
+				update = new B3Update(B3Table.Lookup, lookupKey);
 				update.execute();
 
 				String childCellName;
