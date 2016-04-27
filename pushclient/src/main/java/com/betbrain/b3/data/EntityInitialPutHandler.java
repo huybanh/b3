@@ -168,7 +168,7 @@ public class EntityInitialPutHandler {
 	public void initialPutMaster() {
 
 		
-		initialPutAll(B3Table.BettingOffer, BettingOffer.class, new B3KeyBuilder<BettingOffer>() {
+		initialPutAll(B3Table.BettingOffer, 45000, null, BettingOffer.class, new B3KeyBuilder<BettingOffer>() {
 
 			public B3BettingOffer newB3Entity() {
 				return new B3BettingOffer();
@@ -188,7 +188,7 @@ public class EntityInitialPutHandler {
 			}
 		});
 		
-		initialPutAll(B3Table.Event, Event.class, new B3KeyBuilder<Event>() {
+		initialPutAll(B3Table.Event, 0, null, Event.class, new B3KeyBuilder<Event>() {
 
 			public B3Entity<Event> newB3Entity() {
 				return new B3Event();
@@ -204,7 +204,7 @@ public class EntityInitialPutHandler {
 			}
 		});
 		
-		initialPutAll(B3Table.EventInfo, EventInfo.class, new B3KeyBuilder<EventInfo>() {
+		initialPutAll(B3Table.EventInfo, 0, null, EventInfo.class, new B3KeyBuilder<EventInfo>() {
 
 			public B3Entity<EventInfo> newB3Entity() {
 				return new B3EventInfo();
@@ -275,7 +275,8 @@ public class EntityInitialPutHandler {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private <E extends Entity> void initialPutAll(B3Table table, Class<E> entityClazz, B3KeyBuilder<E> keyBuilder) {
+	private <E extends Entity> void initialPutAll(B3Table table, int start, Integer end,
+			Class<E> entityClazz, B3KeyBuilder<E> keyBuilder) {
 
 		HashMap<Long, Entity> allEntities = masterMap.get(entityClazz.getName());
 		int entityCount = allEntities.size();
@@ -284,9 +285,12 @@ public class EntityInitialPutHandler {
 		int count = 0;
 		for (Entity entity : allEntities.values()) {
 			count++;
-			//if (start + count > end) {
-			//	break;
-			//}
+			if (count < start) {
+				continue;
+			}
+			if (end != null && start + count > end) {
+				break;
+			}
 			System.out.println(entityClazz.getName() + " " + count + " of " + entityCount);
 			B3Entity<E> b3entity = keyBuilder.newB3Entity();
 			b3entity.entity = (E) entity;
