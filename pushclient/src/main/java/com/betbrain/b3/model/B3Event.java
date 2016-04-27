@@ -4,6 +4,7 @@ import java.util.HashMap;
 
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Event;
+import com.betbrain.sepc.connector.sportsmodel.EventPart;
 import com.betbrain.sepc.connector.sportsmodel.EventStatus;
 import com.betbrain.sepc.connector.sportsmodel.EventTemplate;
 import com.betbrain.sepc.connector.sportsmodel.EventType;
@@ -20,8 +21,10 @@ public class B3Event extends B3Entity<Event> {
 	public void getDownlinkedEntitiesInternal() {
 		
 		//unfollowed-link: same type
-		//addDownlink(Event.PROPERTY_NAME_currentPartId, currentPart),
-		//addDownlink(Event.PROPERTY_NAME_rootPartId, linkedEntity),
+		addDownlink(Event.PROPERTY_NAME_parentId, Event.class, entity.getParentId());
+		addDownlink(Event.PROPERTY_NAME_parentPartId, EventPart.class, entity.getParentPartId());
+		addDownlink(Event.PROPERTY_NAME_currentPartId, EventPart.class, entity.getCurrentPartId());
+		addDownlink(Event.PROPERTY_NAME_rootPartId, EventPart.class, entity.getRootPartId());
 		
 		addDownlink(Event.PROPERTY_NAME_sportId, sport); 
 		addDownlink(Event.PROPERTY_NAME_statusId, status);

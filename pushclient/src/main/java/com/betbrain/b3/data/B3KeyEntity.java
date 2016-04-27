@@ -107,6 +107,7 @@ public class B3KeyEntity extends B3Key {
 	public <E extends Entity> E load() {
 		Item item = DynamoWorker.get(B3Table.Entity, getHashKey(), getRangeKey());
 		if (item == null) {
+			System.out.println("ID not found: " + getHashKey() + "@" + getRangeKey());
 			return null;
 		}
 		String json = item.getString(B3Table.CELL_LOCATOR_THIZ);

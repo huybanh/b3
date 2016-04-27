@@ -6,17 +6,26 @@ public class EntityLink {
 
 	final String name;
 	
-	final Long targetId;
+	final Long linkedEntityId;
 	
-	final Class<?> targetClass;
+	final Class<?> linkedEntityClazz;
 	
 	final B3Entity<?> linkedEntity;
 
-	public EntityLink(String name, Long targetId, Class<?> targetClass) {
+	//for SPECs : no longer used
+	public EntityLink(String name, Long targetId, Class<?> linkedEntityClazz) {
 		super();
 		this.name = name;
-		this.targetId = targetId;
-		this.targetClass = targetClass;
+		this.linkedEntityId = targetId;
+		this.linkedEntityClazz = linkedEntityClazz;
+		linkedEntity = null;
+	}
+	
+	public EntityLink(String name, Class<?> linkedEntityClazz, long linkedEntityId) {
+		super();
+		this.name = name;
+		this.linkedEntityClazz = linkedEntityClazz;
+		this.linkedEntityId = linkedEntityId;
 		linkedEntity = null;
 	}
 	
@@ -25,8 +34,8 @@ public class EntityLink {
 			throw new NullPointerException();
 		}
 		this.name = name;
-		this.targetId = linkedEntity.entity.getId();
-		this.targetClass = linkedEntity.entity.getClass();
+		this.linkedEntityId = linkedEntity.entity.getId();
+		this.linkedEntityClazz = linkedEntity.entity.getClass();
 		this.linkedEntity = linkedEntity;
 	}
 }
