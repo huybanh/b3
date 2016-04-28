@@ -226,16 +226,17 @@ public class EntityInitialPutHandler {
 					link.linkedEntity.buildDownlinks(masterMap);
 				}
 				
-				//put event to table link
+				//put linked entity to table link
 				//B3KeyLink linkKey = new B3KeyLink(link.linkedEntity.entity, b3entity.entity, link.name); //reverse link direction
 				B3KeyLink linkKey = new B3KeyLink(link.linkedEntityClazz, link.linkedEntityId, b3entity.entity, link.name); //reverse link direction
 				update = new B3Update(B3Table.Link, linkKey);
 				DynamoWorker.put(bundleId, update);
 				
+				//commented out, as we can always find a link without information from lookup table
 				//also, put link to lookup: Main entity -> link location
-				lookupKey = new B3KeyLookup(b3entity.entity, B3Table.Link, linkKey.getHashKey(), linkKey.getRangeKey());
-				update = new B3Update(B3Table.Lookup, lookupKey);
-				DynamoWorker.put(bundleId, update);
+				//lookupKey = new B3KeyLookup(b3entity.entity, B3Table.Link, linkKey.getHashKey(), linkKey.getRangeKey());
+				//update = new B3Update(B3Table.Lookup, lookupKey);
+				//DynamoWorker.put(bundleId, update);
 
 				if (link.linkedEntity != null) {
 					String childCellName;
