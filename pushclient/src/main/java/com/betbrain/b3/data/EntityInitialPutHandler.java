@@ -44,7 +44,7 @@ public class EntityInitialPutHandler {
 			public B3Key buildKey(B3Entity<BettingOffer> b3entity) {
 				B3BettingOffer offer = (B3BettingOffer) b3entity;
 				return new B3KeyOffer(
-						offer.outcome.event.entity.getSportId(),
+						offer.outcome.event.entity.getSportId(), //TODO what if outcome is eventPart based
 						offer.outcome.event.entity.getTypeId(),
 						false,
 						offer.outcome.event.entity.getId(),
