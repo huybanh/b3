@@ -13,6 +13,12 @@ public class B3KeyLookup extends B3Key {
 		this.rangeKey = targetHash + B3Table.CELL_LOCATOR_SEP + targetRange;
 	}
 
+	public B3KeyLookup(Class<?> entityClazz, long entityId, B3Table targetTable) {
+		super();
+		this.hashKey = ModelShortName.get(entityClazz.getName()) + targetTable.shortName + entityId;
+		this.rangeKey = null;
+	}
+
 	@Override
 	boolean isDetermined() {
 		return true;

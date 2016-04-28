@@ -2,13 +2,18 @@ package com.betbrain.b3.report;
 
 import java.util.ArrayList;
 
+import com.betbrain.b3.data.B3Bundle;
 import com.betbrain.b3.data.B3KeyEntity;
 import com.betbrain.b3.data.B3KeyEvent;
 import com.betbrain.b3.data.B3KeyEventInfo;
 import com.betbrain.b3.data.B3KeyLink;
+import com.betbrain.b3.data.B3KeyLookup;
 import com.betbrain.b3.data.B3KeyOffer;
+import com.betbrain.b3.data.B3KeyOutcome;
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.data.ModelShortName;
+import com.betbrain.b3.model.B3Outcome;
+import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
 import com.betbrain.sepc.connector.sportsmodel.Event;
 import com.betbrain.sepc.connector.sportsmodel.EventInfo;
@@ -19,54 +24,65 @@ import com.betbrain.sepc.connector.sportsmodel.OutcomeType;
 import com.betbrain.sepc.connector.sportsmodel.Sport;
 
 public class DetailedOddsTable {
+	
+	private JsonMapper jsonMapper = new JsonMapper();
 
 	public static void main(String[] args) {
 		
 		ModelShortName.initialize();
 		DynamoWorker.initialize();
+		B3Bundle bundle = DynamoWorker.getBundleCurrent();
 		
-		//B3KeyEntity key  = new B3KeyEntity(EventPart.class, 1);
-		//key.listEntities();
-		//key.load();
+		//long matchId = 217410074;
+		//long outcomeId = 2691102520l;
+		long outcomeId = 2890001650l;
 		
-		B3KeyLink key = new B3KeyLink(Sport.class, IDs.SPORT_FOOTBALL, Event.class, "sportId");
-		ArrayList<Long> ids = key.listLinks();
-		B3KeyEntity.load(Event.class, ids);
-		
-		//B3KeyEvent key = new B3KeyEvent(IDs.SPORT_FOOTBALL, eventTypeId, eventPart, eventId)
-		//b3key.listEntities();
-
-		long eventId = 1; //input
-		Long outcomeId1x2 = 1l; //TODO correct me
-		//new DetailedOddsTable().run(eventId, outcomeId1x2);
+		new DetailedOddsTable().run(bundle, outcomeId);
 	}
 	
-	public void run(long eventId, long outcomeId) {
+	public void run(B3Bundle bundle, long outcomeId) {
 
-		long sportIdFootball = 1;
+		//TODO use lookup table
+		B3KeyEntity entityKey = new B3KeyEntity(Outcome.class, outcomeId);
+		Outcome outcome = (Outcome) entityKey.load(bundle);
+		
+		entityKey = new B3KeyEntity(Event.class, outcome.getEventId());
+		Event event = entityKey.load(bundle);
+		
+		//B3KeyLookup lookupKey = new B3KeyLookup(entity, targetTable, targetHash, targetRange)
+		
+		B3KeyOutcome outcomeKey = new B3KeyOutcome(event.getSportId(), event.getTypeId(), false, event.getId(), 
+				outcome.getTypeId(), outcome.getId());
+		B3Outcome b3outcome = outcomeKey.loadFull(bundle);
+		
+		/*long sportId = 1; //outcome.gets
+		long eventId = outcome.getEventId();
+		
 		long eventTypeIdMatch = 0; //TODO correct me
 		long eventInfoTypeIdScore = 1;
-		long eventInfoTypeIdCurrentStatus = 92;
+		long eventInfoTypeIdCurrentStatus = 92;*/
 		
 		//match statuses
 		B3KeyEventInfo eventInfoKey = new B3KeyEventInfo(
-				sportIdFootball, eventTypeIdMatch, false, eventId, eventInfoTypeIdCurrentStatus, null/*eventInfoId*/);
-		ArrayList<EventInfo> matchStatuses = eventInfoKey.listEntities();
+				event.getSportId(), event.getTypeId(), false, event.getId(), 
+				IDs.EVENTINFOTYPE_CURRENTSTATUS, null/*eventInfoId*/);
+		ArrayList<EventInfo> matchStatuses = eventInfoKey.listEntities(bundle, jsonMapper);
 		
 		//scores
 		eventInfoKey = new B3KeyEventInfo(
-				sportIdFootball, eventTypeIdMatch, false, eventId, eventInfoTypeIdScore, null/*eventInfoId*/);
-		ArrayList<EventInfo> matchScores = eventInfoKey.listEntities();
+				event.getSportId(), event.getTypeId(), false, event.getId(), 
+				IDs.EVENTINFOTYPE_SCORE, null/*eventInfoId*/);
+		ArrayList<EventInfo> matchScores = eventInfoKey.listEntities(bundle, jsonMapper);
 		
 		//odds
-		B3KeyEntity b3key  = new B3KeyEntity(Outcome.class, outcomeId);
-		Long outcomeTypeId = b3key.load().getId();
+		//B3KeyEntity b3key  = new B3KeyEntity(Outcome.class, outcomeId);
+		//Long outcomeTypeId = b3key.load(bundle).getId();
 		
-		Long offerIdNull = null; //all offers
+		/*Long offerIdNull = null; //all offers
 		Long bettingTypeIdAsianHandicap = 0l; //TODO correct me
 		B3KeyOffer offerKey = new B3KeyOffer(
-				sportIdFootball, eventTypeIdMatch, false, eventId, 
-				outcomeTypeId, outcomeId, bettingTypeIdAsianHandicap, offerIdNull);
-		ArrayList<BettingOffer> allOffers = offerKey.listEntities();
+				event.getSportId(), event.getTypeId(), false, event.getId(), 
+				outcome.getTypeId(), outcomeId, outcome.get;, offerIdNull);
+		ArrayList<BettingOffer> allOffers = offerKey.listEntities();*/
 	}
 }
