@@ -2,6 +2,7 @@ package com.betbrain.b3.data;
 
 import java.util.ArrayList;
 
+import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Event;
 import com.betbrain.sepc.connector.sportsmodel.EventInfo;
@@ -15,7 +16,9 @@ public class BettrainReport {
 		DynamoWorker.initialize();
 		String SportFilter = "Football";
 		//all sports
-		ArrayList<Entity> sports = new B3KeyEntity(Sport.class).listEntities();
+		B3Bundle bundle = DynamoWorker.getBundleCurrent(); 
+		JsonMapper jsonMapper = new JsonMapper();
+		ArrayList<Entity> sports = new B3KeyEntity(Sport.class).listEntities(bundle, jsonMapper);
 		Entity SportEntity = null;
 		//Sport Filter
 		for(Entity e : sports) {
@@ -29,13 +32,13 @@ public class BettrainReport {
 		
 		ArrayList<Long> ids;
 		
-		ids = new B3KeyLink(Sport.class, SportEntity.getId(), Event.class, "sportId").listLinks();
-		ArrayList<Event> lstEvent = B3KeyEntity.load(Event.class, ids);
+		ids = new B3KeyLink(Sport.class, SportEntity.getId(), Event.class, "sportId").listLinks(bundle);
+		ArrayList<Event> lstEvent = B3KeyEntity.load(bundle, Event.class, ids);
 		
 		System.out.println(lstEvent.size());
 		
 		//all event types
-		ArrayList<Entity> events = new B3KeyEntity(Event.class).listEntities();
+		ArrayList<Entity> events = new B3KeyEntity(Event.class).listEntities(bundle, jsonMapper);
 		System.out.println(events.size());
 
 		//Why all number of event is 49 but number of event where sportid is 1 = 49 
@@ -44,8 +47,8 @@ public class BettrainReport {
 		//new B3KeyEntity(EventStatus.class).listEntities();
 		
 		//event to outcome
-		ids = new B3KeyLink(Event.class, 217409474, EventInfo.class, "eventId").listLinks();
-		ArrayList<EventInfo> lstEventInfo = B3KeyEntity.load(EventInfo.class, ids);
+		ids = new B3KeyLink(Event.class, 217409474, EventInfo.class, "eventId").listLinks(bundle);
+		ArrayList<EventInfo> lstEventInfo = B3KeyEntity.load(bundle, EventInfo.class, ids);
 		for(EventInfo item : lstEventInfo){
 			System.out.println(item.toString());
 		}

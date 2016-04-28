@@ -2,6 +2,9 @@ package com.betbrain.b3.model;
 
 import java.util.HashMap;
 
+import com.amazonaws.services.dynamodbv2.document.Item;
+import com.betbrain.b3.data.B3Table;
+import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Event;
 import com.betbrain.sepc.connector.sportsmodel.EventPart;
@@ -45,21 +48,12 @@ public class B3Outcome extends B3Entity<Outcome> {
 		this.type = build(entity.getTypeId(),
 				new B3OutcomeType(), OutcomeType.class, masterMap, true);
 	}
-
-	/*@Override
-	public B3KeyOffer getB3KeyMain() {
-		
-		return null;
-		//sportId, eventTypeId, eventPart, eventId, outcomeTypeId, outcomeId, bettingTypeId, offerId
-		return new B3KeyOffer(
-				event.entity.getSportId(),
-				event.entity.getTypeId(),
-				false,
-				event.entity.getId(),
-				entity.getTypeId(),
-				entity.getId(),
-				null,
-				null);
-	}*/
+	
+	public void loadFull(Item item) {
+		JsonMapper mapper = new JsonMapper();
+		deserialize(mapper, item, this, B3Table.CELL_LOCATOR_THIZ);
+		this.status = (B3OutcomeStatus) deserialize(mapper, item, new B3OutcomeStatus(), Outcome.PROPERTY_NAME_statusId);
+		this.type = (B3OutcomeType) deserialize(mapper, item, new B3OutcomeType(), Outcome.PROPERTY_NAME_typeId);
+	}
 
 }

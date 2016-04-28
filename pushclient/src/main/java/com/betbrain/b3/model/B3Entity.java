@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 import com.betbrain.b3.data.InitialPutHandler;
+import com.betbrain.b3.pushclient.JsonMapper;
+import com.amazonaws.services.dynamodbv2.document.Item;
 import com.betbrain.b3.data.EntityLink;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 
@@ -77,6 +79,15 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 			e.buildDownlinks(masterMap);
 		}
 		return e;
+	}
+	
+	@SuppressWarnings("unchecked")
+	static <E extends Entity> B3Entity<E> deserialize(JsonMapper mapper, Item item, B3Entity<E> b3entity, String propertyName) {
+		String json = item.getString(propertyName);
+		if (json != null) {
+			b3entity.entity = (E) mapper.deserialize(json);
+		}
+		return b3entity;
 	}
 
 }

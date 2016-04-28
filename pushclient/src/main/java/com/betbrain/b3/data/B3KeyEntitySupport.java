@@ -13,13 +13,13 @@ public abstract class B3KeyEntitySupport extends B3Key {
 	
 	static final int hardLimit = 50;
 	
-	private JsonMapper jsonMapper = new JsonMapper();
+	//private JsonMapper jsonMapper = new JsonMapper();
 	
 	@SuppressWarnings("unchecked")
-	public <E extends Entity> ArrayList<E> listEntities() {
+	public <E extends Entity> ArrayList<E> listEntities(B3Bundle bundle, JsonMapper jsonMapper ) {
 		ArrayList<E> list = new ArrayList<E>();
 		int i = hardLimit;
-		ItemCollection<QueryOutcome> coll = DynamoWorker.query(B3Table.Entity, getHashKey());
+		ItemCollection<QueryOutcome> coll = DynamoWorker.query(bundle, B3Table.Entity, getHashKey());
 		IteratorSupport<Item, QueryOutcome> it = coll.iterator();
 		while (it.hasNext()) {
 			if (--i <= 0) {

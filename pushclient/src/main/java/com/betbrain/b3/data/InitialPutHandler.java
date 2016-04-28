@@ -11,17 +11,19 @@ import com.betbrain.b3.model.B3BettingOffer;
 import com.betbrain.b3.model.B3Entity;
 import com.betbrain.b3.model.B3Event;
 import com.betbrain.b3.model.B3EventInfo;
+import com.betbrain.b3.model.B3Outcome;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Event;
 import com.betbrain.sepc.connector.sportsmodel.EventInfo;
+import com.betbrain.sepc.connector.sportsmodel.Outcome;
 
 public class InitialPutHandler {
 	
 	//private static final int CONCURRENT_FACTOR = 20;
 	
-	private final String bundleId;
+	private final B3Bundle bundle;
 
 	private final HashMap<String, HashMap<Long, Entity>> masterMap;
 	//private final HashMap<Long, Long> eventPartToEventMap;
@@ -36,6 +38,8 @@ public class InitialPutHandler {
 			new LinkedList<Runnable>(),
 			//eventIno
 			new LinkedList<Runnable>(),
+			//outcome
+			new LinkedList<Runnable>(),
 			//offer
 			new LinkedList<Runnable>()
 	};
@@ -43,7 +47,8 @@ public class InitialPutHandler {
 	private LinkedList<Runnable> entityRunners = runners[0];
 	private LinkedList<Runnable> eventRunners = runners[1];
 	private LinkedList<Runnable> eventInfoRunners = runners[2];
-	private LinkedList<Runnable> offerRunners = runners[3];
+	private LinkedList<Runnable> outcomeRunners = runners[3];
+	private LinkedList<Runnable> offerRunners = runners[4];
 	private int runnerTypeIndex = 0;
 	
 	public InitialPutHandler(HashMap<String, HashMap<Long, Entity>> masterMap/*,
@@ -52,7 +57,7 @@ public class InitialPutHandler {
 		this.masterMap = masterMap;
 		//this.eventPartToEventMap = eventPartToEventMap;
 		
-		bundleId = DynamoWorker.allocateBundleForInitialDump();
+		bundle = DynamoWorker.getBundleUnused(DynamoWorker.BUNDLE_STATUS_INITIALDUMP);
 	}
 	
 	public void initialPutMaster() {
@@ -60,6 +65,7 @@ public class InitialPutHandler {
 		initialPutAllEntities();
 		initialPutAllEvents();
 		initialPutAllEventInfos();
+		initialPutAllOutcomes();
 		initialPutAllOffers();
 		
 		//System.out.println("Total runner count: " + runners.size());
@@ -145,6 +151,28 @@ public class InitialPutHandler {
 		
 	}
 	
+	public void initialPutAllOutcomes() {
+		
+		initialPutAll(outcomeRunners, B3Table.Outcome, 0, null, Outcome.class, new B3KeyBuilder<Outcome>() {
+
+			public B3Outcome newB3Entity() {
+				return new B3Outcome();
+			}
+
+			public B3Key buildKey(B3Entity<Outcome> b3entity) {
+				B3Outcome outcome = (B3Outcome) b3entity;
+				return new B3KeyOutcome(
+						outcome.event.entity.getSportId(), //TODO what if outcome is eventPart based
+						outcome.event.entity.getTypeId(),
+						false,
+						outcome.event.entity.getId(),
+						outcome.entity.getTypeId(),
+						outcome.entity.getId());
+			}
+		});
+		
+	}
+	
 	public void initialPutAllOffers() {
 		
 		initialPutAll(offerRunners, B3Table.BettingOffer, 0, null, BettingOffer.class, new B3KeyBuilder<BettingOffer>() {
@@ -220,7 +248,7 @@ public class InitialPutHandler {
 							B3KeyEntity entityKey = new B3KeyEntity(entity);
 							B3Update update = new B3Update(B3Table.Entity, entityKey, 
 									new B3CellString(B3Table.CELL_LOCATOR_THIZ, jsonMapper.serialize(entity)));
-							DynamoWorker.put(bundleId, update);
+							DynamoWorker.put(bundle, update);
 						}
 					}
 				});
@@ -270,7 +298,7 @@ public class InitialPutHandler {
 						
 						//put main entity to main table
 						B3Update update = new B3Update(table, b3key, b3Cells.toArray(new B3CellString[b3Cells.size()]));
-						DynamoWorker.put(bundleId, update);
+						DynamoWorker.put(bundle, update);
 						
 						//entity table
 						/*B3KeyEntity entityKey = new B3KeyEntity(entity);
@@ -306,7 +334,7 @@ public class InitialPutHandler {
 		//put event to lookup
 		B3KeyLookup lookupKey = new B3KeyLookup(b3entity.entity, mainTable, mainKey.getHashKey(), mainKey.getRangeKey());
 		B3Update update = new B3Update(B3Table.Lookup, lookupKey);
-		DynamoWorker.put(bundleId, update);
+		DynamoWorker.put(bundle, update);
 		
 		EntityLink[] linkedEntities = b3entity.getDownlinkedEntities();
 		if (linkedEntities != null) {
@@ -321,7 +349,7 @@ public class InitialPutHandler {
 				//B3KeyLink linkKey = new B3KeyLink(link.linkedEntity.entity, b3entity.entity, link.name); //reverse link direction
 				B3KeyLink linkKey = new B3KeyLink(link.linkedEntityClazz, link.linkedEntityId, b3entity.entity, link.name); //reverse link direction
 				update = new B3Update(B3Table.Link, linkKey);
-				DynamoWorker.put(bundleId, update);
+				DynamoWorker.put(bundle, update);
 				
 				//commented out, as we can always find a link without information from lookup table
 				//also, put link to lookup: Main entity -> link location

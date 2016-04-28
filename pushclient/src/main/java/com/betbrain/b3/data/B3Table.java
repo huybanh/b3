@@ -9,6 +9,7 @@ public enum B3Table {
 	Link("entity_links", null),
 	Event("event", "E"),
 	EventInfo("event_info", "I"),
+	Outcome("outcome", "C"),
 	BettingOffer("betting_offer", "B");
 	
 	public final String name;
@@ -18,7 +19,7 @@ public enum B3Table {
 	
 	static final int DIST_FACTOR = 200;
 	
-	static final String CELL_LOCATOR_THIZ = "THIZ";
+	public static final String CELL_LOCATOR_THIZ = "THIZ";
 	static final String CELL_LOCATOR_SEP = "_";
 	
 	static final String KEY_SEP = "/";

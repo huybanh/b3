@@ -76,9 +76,9 @@ public class B3KeyLink extends B3Key {
 		return String.valueOf(linkedEntityId); 
 	}
 	
-	public ArrayList<Long> listLinks() {
+	public ArrayList<Long> listLinks(B3Bundle bundle) {
 		ArrayList<Long> list = new ArrayList<Long>();
-		ItemCollection<QueryOutcome> coll = DynamoWorker.query(B3Table.Link, getHashKey());
+		ItemCollection<QueryOutcome> coll = DynamoWorker.query(bundle, B3Table.Link, getHashKey());
 		IteratorSupport<Item, QueryOutcome> it = coll.iterator();
 		int i = B3KeyEntity.hardLimit;
 		while (it.hasNext()) {
