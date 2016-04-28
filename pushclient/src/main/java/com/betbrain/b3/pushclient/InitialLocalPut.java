@@ -9,11 +9,11 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 
 import com.betbrain.b3.data.DynamoWorker;
-import com.betbrain.b3.data.EntityInitialPutHandler;
+import com.betbrain.b3.data.InitialPutHandler;
 import com.betbrain.b3.data.ModelShortName;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 
-public class InitialDumpLocalReader {
+public class InitialLocalPut {
 	
 	private static HashMap<String, HashMap<Long, Entity>> masterMap = new HashMap<String, HashMap<Long,Entity>>();
 	
@@ -24,12 +24,13 @@ public class InitialDumpLocalReader {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 		
 		int count = 0;
+		JsonMapper jsonMapper = new JsonMapper();
 		while (true) {
 			String line = reader.readLine();
 			if (line == null) {
 				break;
 			}
-			Entity entity = JsonMapper.DeserializeF(line);
+			Entity entity = jsonMapper.deserialize(line);
 			HashMap<Long, Entity> subMap = masterMap.get(entity.getClass().getName());
 			if (subMap == null) {
 				subMap = new HashMap<Long, Entity>();
@@ -52,7 +53,7 @@ public class InitialDumpLocalReader {
 		
 		ModelShortName.initialize();
 		DynamoWorker.initialize();
-		new EntityInitialPutHandler(masterMap).initialPutMaster();
+		new InitialPutHandler(masterMap).initialPutMaster();
 	}
 
 }

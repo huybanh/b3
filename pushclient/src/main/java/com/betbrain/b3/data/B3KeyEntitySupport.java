@@ -13,6 +13,8 @@ public abstract class B3KeyEntitySupport extends B3Key {
 	
 	static final int hardLimit = 50;
 	
+	private JsonMapper jsonMapper = new JsonMapper();
+	
 	@SuppressWarnings("unchecked")
 	public <E extends Entity> ArrayList<E> listEntities() {
 		ArrayList<E> list = new ArrayList<E>();
@@ -25,7 +27,7 @@ public abstract class B3KeyEntitySupport extends B3Key {
 			}
 			Item item = it.next();
 			String json = item.getString(B3Table.CELL_LOCATOR_THIZ);
-			Entity entity = JsonMapper.DeserializeF(json);
+			Entity entity = jsonMapper.deserialize(json);
 			System.out.println(entity);
 			list.add((E) entity);
 		}

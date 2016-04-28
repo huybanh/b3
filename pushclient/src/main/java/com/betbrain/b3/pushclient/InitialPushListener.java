@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import com.betbrain.b3.data.DynamoWorker;
-import com.betbrain.b3.data.EntityInitialPutHandler;
+import com.betbrain.b3.data.InitialPutHandler;
 import com.betbrain.b3.data.ModelShortName;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
@@ -55,7 +55,7 @@ public class InitialPushListener implements SEPCConnectorListener {
 		DynamoWorker.initialize();
 		new Thread() {
 			public void run() {
-				new EntityInitialPutHandler(masterMap/*, eventPartToEventMap*/).initialPutMaster();
+				new InitialPutHandler(masterMap/*, eventPartToEventMap*/).initialPutMaster();
 			}
 		}.start();
 	}

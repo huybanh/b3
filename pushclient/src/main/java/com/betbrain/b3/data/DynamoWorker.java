@@ -43,6 +43,7 @@ public class DynamoWorker {
 	public static Table lookupTable;
 	public static Table linkTable;
 	public static Table entityTable;
+	public static Table bundleTable;
 	
 	public static void initialize() {
 
@@ -54,7 +55,8 @@ public class DynamoWorker {
 		eventInfoTable = dynamoDB.getTable("event_info");
 		lookupTable = dynamoDB.getTable("lookup");
 		linkTable = dynamoDB.getTable("link");
-		entityTable = dynamoDB.getTable("entity");
+		entityTable = dynamoDB.getTable("entity2");
+		bundleTable = dynamoDB.getTable("entity");
 	}
 	
 	private static Table getTable(B3Table b3table) {
@@ -80,7 +82,7 @@ public class DynamoWorker {
 		GetItemSpec spec = new GetItemSpec()
 				.withPrimaryKey(HASH, BUNDLE_HASH, RANGE, BUNDLE_RANGE_CURRENT)
 				.withAttributesToGet(BUNDLE_CELL_ID);
-		Item item = entityTable.getItem(spec);
+		Item item = bundleTable.getItem(spec);
 		if (item == null) {
 			return BUNDLEIDS[0];
 		}		
@@ -114,7 +116,7 @@ public class DynamoWorker {
 		UpdateItemSpec us = new UpdateItemSpec()
 				.withPrimaryKey(HASH, BUNDLE_HASH, RANGE, availBundleId)
 				.addAttributeUpdate(new AttributeUpdate(BUNDLE_CELL_STATUS).put(BUNDLE_STATUS_INITIALDUMP));
-		entityTable.updateItem(us);
+		bundleTable.updateItem(us);
 		return availBundleId;
 	}
 	
@@ -122,7 +124,7 @@ public class DynamoWorker {
 		GetItemSpec spec = new GetItemSpec()
 				.withPrimaryKey(HASH, BUNDLE_HASH, RANGE, bundleId)
 				.withAttributesToGet(BUNDLE_CELL_STATUS);
-		Item item = entityTable.getItem(spec);
+		Item item = bundleTable.getItem(spec);
 		if (item == null) {
 			return null;
 		}
@@ -134,6 +136,42 @@ public class DynamoWorker {
 	}
 	
 	public static void put(String bundleId, B3Update update) {
+		/*Table dynaTable = getTable(update.table);
+		UpdateItemSpec us = new UpdateItemSpec().withPrimaryKey(
+				HASH, bundleId + update.key.getHashKey(), RANGE, update.key.getRangeKey());
+		if (update.cells != null) {
+			for (B3Cell<?> c : update.cells) {
+				us = us.addAttributeUpdate(new AttributeUpdate(c.columnName).put(c.value));
+			}
+		}*/
+		
+		Table dynaTable = getTable(update.table);
+		String rangeKey = update.key.getRangeKey();
+		Item item ;
+		if (rangeKey != null) {
+			item = new Item().withPrimaryKey(HASH, bundleId + update.key.getHashKey(), RANGE, update.key.getRangeKey());
+		} else {
+			item = new Item().withPrimaryKey(HASH, bundleId + update.key.getHashKey());
+		}
+		if (update.cells != null) {
+			for (B3Cell<?> c : update.cells) {
+				if (c instanceof B3CellString) {
+					item = item.withString(c.columnName, ((B3CellString) c).value);
+				} else if (c instanceof B3CellLong) {
+					item = item.withLong(c.columnName, ((B3CellLong) c).value);
+				} else if (c instanceof B3CellInt) {
+					item = item.withInt(c.columnName, ((B3CellInt) c).value);
+				} else {
+					throw new RuntimeException("Unknown B3Cell: " + c);
+				}
+			}
+		}
+
+		dynaTable.putItem(item);
+		//System.out.println(update + ": " + update.toString().length());
+	}
+
+	public static void updatex(String bundleId, B3Update update) {
 		/*Item item = new Item().withPrimaryKey(HASH, hash, RANGE, range);
 		if (cell != null) {
 			item = item.withString(cell, value);
@@ -149,6 +187,7 @@ public class DynamoWorker {
 		}
 
 		dynaTable.updateItem(us);
+		
 		/*int colCount = update.cells == null ? 0 : update.cells.length;
 		System.out.println(update.table.name + ": " + bundleId + update.key.getRangeKey() + "@" + 
 				update.key.getRangeKey() + ", cols: " + colCount);*/

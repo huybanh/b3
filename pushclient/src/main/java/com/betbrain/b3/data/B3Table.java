@@ -16,7 +16,7 @@ public enum B3Table {
 	//exact one character
 	public final String shortName;
 	
-	static final int DIST_FACTOR = 100;
+	static final int DIST_FACTOR = 200;
 	
 	static final String CELL_LOCATOR_THIZ = "THIZ";
 	static final String CELL_LOCATOR_SEP = "_";

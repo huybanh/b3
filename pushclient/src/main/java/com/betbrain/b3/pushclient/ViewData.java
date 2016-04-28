@@ -3,11 +3,7 @@ package com.betbrain.b3.pushclient;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map.Entry;
 
-import com.betbrain.b3.data.DynamoWorker;
-import com.betbrain.b3.data.EntityInitialPutHandler;
-import com.betbrain.b3.data.ModelShortName;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
 import com.betbrain.sepc.connector.sportsmodel.Event;
@@ -33,6 +29,8 @@ public class ViewData implements SEPCConnectorListener {
 	
 	//eventPartId -> eventId
 	private HashMap<Long, Long> eventPartToEventMap = new HashMap<Long, Long>();
+	
+	private JsonMapper jsonMapper = new JsonMapper();
 
 	public void notifyInitialDump(List<? extends Entity> entityList) {
 		int iEventPart = 0;
@@ -40,7 +38,7 @@ public class ViewData implements SEPCConnectorListener {
 		int iOutcome = 0;
 		int iLocation = 0;
 		int iEventAction = 0;
-		int iEventInfo = 0;
+		//int iEventInfo = 0;
 		
 		for (Entity e : entityList) {
 			HashMap<Long, Entity> subMap = masterMap.get(e.getClass().getName());
@@ -60,7 +58,7 @@ public class ViewData implements SEPCConnectorListener {
 				if(iEventPart > LIMIT_RECORD) continue;
 				System.out.println("cautch EventPart Entity");
 				ReadWriteTextFileWithEncoding io = new ReadWriteTextFileWithEncoding("EventPart.txt", "UTF-8");
-				io.setsOutput(JsonMapper.SerializeExcludeClassName(e));
+				io.setsOutput(jsonMapper.serialize(e));
 				try {
 					io.write();
 				} catch (IOException e1) {
@@ -73,7 +71,7 @@ public class ViewData implements SEPCConnectorListener {
 				if(iProvider > LIMIT_RECORD) continue;				
 				System.out.println("cautch Provider Entity");
 				ReadWriteTextFileWithEncoding io = new ReadWriteTextFileWithEncoding("Provider.txt", "UTF-8");
-				io.setsOutput(JsonMapper.SerializeExcludeClassName(e));
+				io.setsOutput(jsonMapper.serialize(e));
 				try {
 					io.write();
 				} catch (IOException e1) {
@@ -86,7 +84,7 @@ public class ViewData implements SEPCConnectorListener {
 				if(iOutcome > LIMIT_RECORD) continue;	
 				System.out.println("cautch Outcome Entity");
 				ReadWriteTextFileWithEncoding io = new ReadWriteTextFileWithEncoding("OutCome.txt", "UTF-8");
-				io.setsOutput(JsonMapper.SerializeExcludeClassName(e));
+				io.setsOutput(jsonMapper.serialize(e));
 				try {
 					io.write();
 				} catch (IOException e1) {
@@ -99,7 +97,7 @@ public class ViewData implements SEPCConnectorListener {
 				if(iLocation > LIMIT_RECORD) continue;		
 				System.out.println("cautch Location Entity");
 				ReadWriteTextFileWithEncoding io = new ReadWriteTextFileWithEncoding("Location.txt", "UTF-8");
-				io.setsOutput(JsonMapper.SerializeExcludeClassName(e));
+				io.setsOutput(jsonMapper.serialize(e));
 				try {
 					io.write();
 				} catch (IOException e1) {
@@ -112,7 +110,7 @@ public class ViewData implements SEPCConnectorListener {
 				if(iEventAction > LIMIT_RECORD) continue;		
 				System.out.println("cautch Location Entity");
 				ReadWriteTextFileWithEncoding io = new ReadWriteTextFileWithEncoding("EventAction.txt", "UTF-8");
-				io.setsOutput(JsonMapper.SerializeExcludeClassName(e));
+				io.setsOutput(jsonMapper.serialize(e));
 				try {
 					io.write();
 				} catch (IOException e1) {
@@ -121,11 +119,11 @@ public class ViewData implements SEPCConnectorListener {
 			}
 			
 			else if (e instanceof com.betbrain.sepc.connector.sportsmodel.EventInfo) {
-				iEventInfo++;
+				//iEventInfo++;
 				if(iEventAction > LIMIT_RECORD) continue;		
 				System.out.println("cautch EventInfo Entity");
 				ReadWriteTextFileWithEncoding io = new ReadWriteTextFileWithEncoding("EventInfo.txt", "UTF-8");
-				io.setsOutput(JsonMapper.SerializeExcludeClassName(e));
+				io.setsOutput(jsonMapper.serialize(e));
 				try {
 					io.write();
 				} catch (IOException e1) {
@@ -136,7 +134,7 @@ public class ViewData implements SEPCConnectorListener {
 			else if (e instanceof com.betbrain.sepc.connector.sportsmodel.EventInfoType) {	
 				System.out.println("cautch EventInfoType Entity");
 				ReadWriteTextFileWithEncoding io = new ReadWriteTextFileWithEncoding("EventInfoType.txt", "UTF-8");
-				io.setsOutput(JsonMapper.SerializeExcludeClassName(e));
+				io.setsOutput(jsonMapper.serialize(e));
 				try {
 					io.write();
 				} catch (IOException e1) {

@@ -18,8 +18,8 @@ public class B3Outcome extends B3Entity<Outcome> {
 
 	@Override
 	public void getDownlinkedEntitiesInternal() {
-		addDownlink(Outcome.PROPERTY_NAME_eventId, event);
-		addDownlink(Outcome.PROPERTY_NAME_eventPartId, eventPart);
+		//addDownlink(Outcome.PROPERTY_NAME_eventId, event);
+		//addDownlink(Outcome.PROPERTY_NAME_eventPartId, eventPart);
 		addDownlink(Outcome.PROPERTY_NAME_statusId, status);
 		addDownlink(Outcome.PROPERTY_NAME_typeId, type);
 	}
@@ -34,11 +34,11 @@ public class B3Outcome extends B3Entity<Outcome> {
 		//this.event.buildDownlinks(masterMap);
 		
 		//we don't want event graph going into BettingOffer table: depthBuilding = false
-		boolean depthBuilding = false; 
+		//boolean depthBuilding = false; 
 		this.event = build(entity.getEventId(), 
-				new B3Event(), Event.class, masterMap, depthBuilding);
+				new B3Event(), Event.class, masterMap, true);
 		this.eventPart = build(entity.getEventPartId(), 
-				new B3EventPart(), EventPart.class, masterMap, depthBuilding);
+				new B3EventPart(), EventPart.class, masterMap, true);
 		
 		this.status = build(entity.getStatusId(),
 				new B3OutcomeStatus(), OutcomeStatus.class, masterMap, true);
