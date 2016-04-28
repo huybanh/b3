@@ -3,7 +3,7 @@ package com.betbrain.b3.model;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-import com.betbrain.b3.data.EntityInitialPutHandler;
+import com.betbrain.b3.data.InitialPutHandler;
 import com.betbrain.b3.data.EntityLink;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 
@@ -64,12 +64,12 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		}
 		HashMap<Long, Entity> subMap = masterMap.get(clazz.getName());
 		if (subMap == null) {
-			EntityInitialPutHandler.linkingErrors.add("Found zero entities of " + clazz.getName());
+			InitialPutHandler.linkingErrors.add("Found zero entities of " + clazz.getName());
 			return null;
 		}
 		Entity one = subMap.get(id);
 		if (one == null) {
-			EntityInitialPutHandler.linkingErrors.add("Missed ID " + id + " of " + clazz.getName());
+			InitialPutHandler.linkingErrors.add("Missed ID " + id + " of " + clazz.getName());
 			return null;
 		}
 		e.entity = one;

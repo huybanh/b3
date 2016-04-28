@@ -26,7 +26,7 @@ public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 	public void getDownlinkedEntitiesInternal() {
 		addDownlink(BettingOffer.PROPERTY_NAME_providerId, provider);
 		addDownlink(BettingOffer.PROPERTY_NAME_sourceId, source);
-		addDownlink(BettingOffer.PROPERTY_NAME_outcomeId, outcome);
+		//addDownlink(BettingOffer.PROPERTY_NAME_outcomeId, outcome);
 		addDownlink(BettingOffer.PROPERTY_NAME_bettingTypeId, bettingType);
 		addDownlink(BettingOffer.PROPERTY_NAME_statusId, status);
 	}
