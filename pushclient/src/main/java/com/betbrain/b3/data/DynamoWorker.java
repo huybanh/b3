@@ -134,6 +134,35 @@ public class DynamoWorker {
 	}
 	
 	public static void put(String bundleId, B3Update update) {
+		/*Table dynaTable = getTable(update.table);
+		UpdateItemSpec us = new UpdateItemSpec().withPrimaryKey(
+				HASH, bundleId + update.key.getHashKey(), RANGE, update.key.getRangeKey());
+		if (update.cells != null) {
+			for (B3Cell<?> c : update.cells) {
+				us = us.addAttributeUpdate(new AttributeUpdate(c.columnName).put(c.value));
+			}
+		}*/
+		
+		Table dynaTable = getTable(update.table);
+		Item item = new Item().withPrimaryKey(HASH, bundleId + update.key.getHashKey(), RANGE, update.key.getRangeKey());
+		if (update.cells != null) {
+			for (B3Cell<?> c : update.cells) {
+				if (c instanceof B3CellString) {
+					item = item.withString(c.columnName, ((B3CellString) c).value);
+				} else if (c instanceof B3CellLong) {
+					item = item.withLong(c.columnName, ((B3CellLong) c).value);
+				} else if (c instanceof B3CellInt) {
+					item = item.withInt(c.columnName, ((B3CellInt) c).value);
+				} else {
+					throw new RuntimeException("Unknown B3Cell: " + c);
+				}
+			}
+		}
+
+		dynaTable.putItem(item);
+	}
+
+	public static void update(String bundleId, B3Update update) {
 		/*Item item = new Item().withPrimaryKey(HASH, hash, RANGE, range);
 		if (cell != null) {
 			item = item.withString(cell, value);
