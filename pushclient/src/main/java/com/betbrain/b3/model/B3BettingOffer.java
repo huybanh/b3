@@ -24,9 +24,12 @@ public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 
 	@Override
 	public void getDownlinkedEntitiesInternal() {
+		
+		//unfollowed links
+		addDownlink(BettingOffer.PROPERTY_NAME_outcomeId, Outcome.class, entity.getOutcomeId());
+		
 		addDownlink(BettingOffer.PROPERTY_NAME_providerId, provider);
 		addDownlink(BettingOffer.PROPERTY_NAME_sourceId, source);
-		//addDownlink(BettingOffer.PROPERTY_NAME_outcomeId, outcome);
 		addDownlink(BettingOffer.PROPERTY_NAME_bettingTypeId, bettingType);
 		addDownlink(BettingOffer.PROPERTY_NAME_statusId, status);
 	}

@@ -24,8 +24,8 @@ public class B3EventInfo extends B3Entity<EventInfo> {
 	public void getDownlinkedEntitiesInternal() {
 		
 		//skip event/eventpart
-		//addDownlink(EventInfo.PROPERTY_NAME_eventId, );
-		//addDownlink(EventInfo.PROPERTY_NAME_eventPartId, );
+		addDownlink(EventInfo.PROPERTY_NAME_eventId, Event.class, entity.getEventId());
+		addDownlink(EventInfo.PROPERTY_NAME_eventPartId, EventPart.class, entity.getEventPartId());
 		
 		addDownlink(EventInfo.PROPERTY_NAME_providerId, provider);
 		addDownlink(EventInfo.PROPERTY_NAME_sourceId, source);

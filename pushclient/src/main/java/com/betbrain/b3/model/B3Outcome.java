@@ -21,8 +21,11 @@ public class B3Outcome extends B3Entity<Outcome> {
 
 	@Override
 	public void getDownlinkedEntitiesInternal() {
-		//addDownlink(Outcome.PROPERTY_NAME_eventId, event);
-		//addDownlink(Outcome.PROPERTY_NAME_eventPartId, eventPart);
+		
+		//unfollowed links
+		addDownlink(Outcome.PROPERTY_NAME_eventId, Event.class, entity.getEventId());
+		addDownlink(Outcome.PROPERTY_NAME_eventPartId, EventPart.class, entity.getEventPartId());
+		
 		addDownlink(Outcome.PROPERTY_NAME_statusId, status);
 		addDownlink(Outcome.PROPERTY_NAME_typeId, type);
 	}

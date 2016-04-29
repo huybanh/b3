@@ -57,7 +57,7 @@ public class InitialPutHandler {
 		this.masterMap = masterMap;
 		//this.eventPartToEventMap = eventPartToEventMap;
 		
-		bundle = DynamoWorker.getBundleUnused(DynamoWorker.BUNDLE_STATUS_INITIALDUMP);
+		bundle = DynamoWorker.getBundleUnused(DynamoWorker.BUNDLE_STATUS_DEPLOYING);
 	}
 	
 	public void initialPutMaster() {
