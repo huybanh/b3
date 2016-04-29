@@ -90,6 +90,8 @@ public class DynamoWorker {
 			return linkTable;
 		} else if (b3table == B3Table.Entity) {
 			return entityTable;
+		} else if (b3table == B3Table.SEPC) {
+			return sepcTable;
 		} else {
 			throw new RuntimeException("Unmapped table: " + b3table);
 		}

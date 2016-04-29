@@ -2,6 +2,7 @@ package com.betbrain.b3.pushclient;
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map.Entry;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.ItemCollection;
@@ -26,17 +27,21 @@ public class PushDeployer {
 		ModelShortName.initialize();
 		final JsonMapper mapper = new JsonMapper();
 		
-		final B3Bundle bundle = DynamoWorker.getBundleUnused(DynamoWorker.BUNDLE_STATUS_INITIALPUT);
+		final B3Bundle bundle = DynamoWorker.getBundleByStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYWAIT);
 		if (bundle == null) {
 			System.out.println("Found no bundles for depoying");
 			return;
 		}
+		DynamoWorker.setBundleStatus(bundle, DynamoWorker.BUNDLE_STATUS_DEPLOYING);
 
 		final HashMap<String, HashMap<Long, Entity>> masterMap = new HashMap<String, HashMap<Long,Entity>>();		
 		final Runnable[] masterRunner = new Runnable[1];
 		masterRunner[0] = new Runnable() {
 			
 			public void run() {
+				for (Entry<String, HashMap<Long, Entity>> entry : masterMap.entrySet()) {
+					System.out.println(entry.getKey() + ": " + entry.getValue().size());
+				}
 				new InitialPutHandler(bundle, masterMap).initialPutMaster(threads);
 			}
 		};
@@ -49,20 +54,24 @@ public class PushDeployer {
 					ItemCollection<QueryOutcome> coll = DynamoWorker.query(
 							bundle, B3Table.SEPC, DynamoWorker.SEPC_INITIAL + distFinal);
 
-					int count = 0;
 					IteratorSupport<Item, QueryOutcome> iter = coll.iterator();
+					int itemCount = 0;
 					while (iter.hasNext()) {
 						Item item = iter.next();
 						String json = item.getString(DynamoWorker.SEPC_CELLNAME_JSON);
 						Entity entity = mapper.deserialize(json);
-						HashMap<Long, Entity> subMap = masterMap.get(entity.getClass().getName());
-						if (subMap == null) {
-							subMap = new HashMap<Long, Entity>();
-							masterMap.put(entity.getClass().getName(), subMap);
+						synchronized (masterMap) {
+							HashMap<Long, Entity> subMap = masterMap.get(entity.getClass().getName());
+							if (subMap == null) {
+								subMap = new HashMap<Long, Entity>();
+								masterMap.put(entity.getClass().getName(), subMap);
+							}
+							subMap.put(entity.getId(), entity);
 						}
-						subMap.put(entity.getId(), entity);
-						if (++count % 100000 == 0) {
-							System.out.println("Read line: " + count);
+						itemCount++;
+						//System.out.println("Read count: " + itemCount);
+						if (itemCount % 10000 == 0) {
+							System.out.println("Read count: " + itemCount);
 						}
 					}
 				}
@@ -72,19 +81,22 @@ public class PushDeployer {
 		for (int i = 0; i < threads; i++) {
 			new Thread() {
 				public void run() {
-					Runnable oneRunner;
-					synchronized (runners) {
-						if (runners.isEmpty()) {
-							if (masterRunner[0] == null) {
-								return;
+					while (true) {
+						Runnable oneRunner;
+						synchronized (runners) {
+							System.out.println("Remaining runners: " + runners.size());
+							if (runners.isEmpty()) {
+								if (masterRunner[0] == null) {
+									return;
+								}
+								oneRunner = masterRunner[0];
+								masterRunner[0] = null;
+							} else {
+								oneRunner = runners.remove();
 							}
-							oneRunner = masterRunner[0];
-							masterRunner[0] = null;
-						} else {
-							oneRunner = runners.remove();
 						}
+						oneRunner.run();
 					}
-					oneRunner.run();
 				}
 			}.start();
 		}
