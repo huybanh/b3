@@ -51,16 +51,15 @@ public class InitialPutHandler {
 	private LinkedList<Runnable> offerRunners = runners[4];
 	private int runnerTypeIndex = 0;
 	
-	public InitialPutHandler(HashMap<String, HashMap<Long, Entity>> masterMap/*,
+	public InitialPutHandler(B3Bundle bundle, HashMap<String, HashMap<Long, Entity>> masterMap/*,
 			HashMap<Long, Long> eventPartToEventMap*/) {
-		
+
+		this.bundle = bundle;
 		this.masterMap = masterMap;
 		//this.eventPartToEventMap = eventPartToEventMap;
-		
-		bundle = DynamoWorker.getBundleUnused(DynamoWorker.BUNDLE_STATUS_DEPLOYING);
 	}
 	
-	public void initialPutMaster() {
+	public void initialPutMaster(int threads) {
 
 		initialPutAllEntities();
 		initialPutAllEvents();
@@ -69,7 +68,7 @@ public class InitialPutHandler {
 		initialPutAllOffers();
 		
 		//System.out.println("Total runner count: " + runners.size());
-		for (int i = 0; i < 50; i++) {
+		for (int i = 0; i < threads; i++) {
 			new Thread() {
 				public void run() {
 					do {
@@ -394,7 +393,7 @@ public class InitialPutHandler {
 		subMap.put(event.getId(), event);
 		//String json = JsonMapper.Serialize(event);
 		//new EntityInitialPutHandler(masterMap).initialPutMaster();
-		new InitialPutHandler(masterMap).initialPutAllEntities();
+		//new InitialPutHandler(masterMap).initialPutAllEntities();
 
 		/*
 		UPDATE lookup: (0, EV/1099), EVsportId:long 0, EVstatusId:long 0, EVrootPartId:long 0, 

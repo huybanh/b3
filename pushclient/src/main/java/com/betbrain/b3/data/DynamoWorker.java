@@ -25,21 +25,23 @@ public class DynamoWorker {
 	
 	private static String[] BUNDLEIDS = {"X", "Y", "Z", "T", "U"};
 	
-	public static final String BUNDLE_STATUS_INITIALPUT = "INITIAL_PUT";
-	public static final String BUNDLE_STATUS_DEPLOYWAIT= "DEPLOY_WAIT";
+	public static final String BUNDLE_STATUS_INITIALPUT = "INITIAL-PUT";
+	public static final String BUNDLE_STATUS_DEPLOYWAIT= "DEPLOY-WAIT";
 	public static final String BUNDLE_STATUS_DEPLOYING = "DEPLOYING";
 	public static final String BUNDLE_STATUS_PUSHING = "PUSHING";
-	public static final String BUNDLE_STATUS_PUSHING_INTERRUPTED = "PUSHING_INTERRUPTED";
 	public static final String BUNDLE_STATUS_CEASED = "CEASED";
 	public static final String BUNDLE_STATUS_DELETING = "DELETING";
 	public static final String BUNDLE_STATUS_UNUSED = "UNUSED";
+
+	public static final String BUNDLE_PUSHSTATUS_ONGOING = "ONGOING";
+	public static final String BUNDLE_PUSHSTATUS_INTERRUPTED = "INTERRUPTED";
 	
 	private static final String BUNDLE_HASH = "BUNDLE";
 	private static final String BUNDLE_RANGE_CURRENT = "CURRENT";
 	private static final String BUNDLE_CELL_ID = "ID";
 	private static final String BUNDLE_CELL_STATUS = "STATUS";
 	
-	public static final String SEPC_CELLNAME = "JSON";
+	public static final String SEPC_CELLNAME_JSON = "JSON";
 	public static final String SEPC_INITIAL = "I";
 	public static final String SEPC_CHANGEBATCH = "B";
 	
@@ -147,6 +149,28 @@ public class DynamoWorker {
 		return new B3Bundle(availBundleId);
 	}
 	
+	public static B3Bundle getBundleByStatus(String requiredStatus) {
+		int proposedIndex = 0;
+		int count = 0;
+		String foundBundleId;
+		while (true) {
+			proposedIndex++;
+			proposedIndex = proposedIndex < BUNDLEIDS.length ? proposedIndex : 0; //round robin
+			String oneStatus = getBundleStatus(BUNDLEIDS[proposedIndex]);
+			if (oneStatus != null && oneStatus.equals(requiredStatus)) {
+				foundBundleId = BUNDLEIDS[proposedIndex];
+				break;
+			}
+			count++;
+			if (count >= BUNDLEIDS.length) {
+				//throw new RuntimeException("Found no bundles with status of " + requiredStatus);
+				return null;
+			}
+		}
+		
+		return new B3Bundle(foundBundleId);
+	}
+	
 	private static String getBundleStatus(String bundleId) {
 		GetItemSpec spec = new GetItemSpec()
 				.withPrimaryKey(HASH, BUNDLE_HASH, RANGE, bundleId)
@@ -201,9 +225,14 @@ public class DynamoWorker {
 		//System.out.println(update + ": " + update.toString().length());
 	}
 	
-	public static void putSepc(B3Bundle bundle, String hash, String name, String value) {
+	public static void putSepc(B3Bundle bundle, String hashKey, String rangeKey, String[]... nameValuePairs ) {
 		
-		Item item = new Item().withPrimaryKey(HASH, bundle.id + hash).withString(name, value);
+		Item item = new Item().withPrimaryKey(HASH, bundle.id + hashKey, RANGE, rangeKey);
+		if (nameValuePairs != null) {
+			for (String[] onePair : nameValuePairs) {
+				item = item.withString(onePair[0], onePair[1]);
+			}
+		}
 		sepcTable.putItem(item);
 		//System.out.println("SEPC: " + bundle.id + hash + "@" + value);
 	}
@@ -306,6 +335,7 @@ public class DynamoWorker {
 		//setBundleCurrent("Y");
 		//System.out.println(getBundleUnused(null).id);
 		
-		deleteBundle(B3Table.BettingOffer, "Y");
+		//deleteBundle(B3Table.BettingOffer, "Y");
+		System.out.println(getBundleByStatus(BUNDLE_STATUS_DEPLOYWAIT).id);
 	}
 }

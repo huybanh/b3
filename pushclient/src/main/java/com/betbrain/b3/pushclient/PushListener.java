@@ -7,6 +7,7 @@ import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityChange;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
 import com.betbrain.b3.data.B3Bundle;
+import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.data.ModelShortName;
 import com.betbrain.sepc.connector.sdql.SEPCConnector;
@@ -84,18 +85,21 @@ class BatchWorker implements Runnable {
 					continue;
 				}
 				batch = batches.remove();
-				if (printCount++ == 100) {
+				if (printCount++ == 1000) {
 					printCount = 0;
 					System.out.println("Batches: " + batches.size());
 				}
 			}
 
-			final String hashKey = DynamoWorker.SEPC_CHANGEBATCH + batch.getId();
-			DynamoWorker.putSepc(bundle, hashKey, "BATCH", mapper.serialize(batch));
+			String rangeKey = String.valueOf(batch.getId());
+			String hashKey = DynamoWorker.SEPC_CHANGEBATCH + Math.abs(rangeKey.hashCode() % B3Table.DIST_FACTOR);
+			//DynamoWorker.putSepc(bundle, hashKey, "BATCH", mapper.serialize(batch));
+			LinkedList<String[]> nameValuePairs = new LinkedList<String[]>();
 			int i = 0;
 			for (EntityChange change : batch.getEntityChanges()) {
-				DynamoWorker.putSepc(bundle, hashKey, String.valueOf(i++), mapper.serialize(change));
+				nameValuePairs.add(new String[] {String.valueOf(i++), mapper.serialize(change)});
 			}
+			DynamoWorker.putSepc(bundle, hashKey, rangeKey, nameValuePairs.toArray(new String[nameValuePairs.size()][]));
 		}
 	}
 }
@@ -133,9 +137,12 @@ class InitialWorker implements Runnable {
 					System.out.println("Initial remains: " + initialList.size());
 				}
 			}
-			DynamoWorker.putSepc(bundle, 
-					DynamoWorker.SEPC_INITIAL + entity.getClass().getName().substring(prefixLength) + "/" + entity.getId(),
-					DynamoWorker.SEPC_CELLNAME, mapper.serialize(entity));
+			
+			String rangeKey = entity.getClass().getName().substring(prefixLength) + "/" + entity.getId();
+			String hashKey = DynamoWorker.SEPC_INITIAL + Math.abs(rangeKey.hashCode() % B3Table.DIST_FACTOR);
+			String json = mapper.serialize(entity);
+			String[] nameValue = new String[] {DynamoWorker.SEPC_CELLNAME_JSON, json};
+			DynamoWorker.putSepc(bundle, hashKey, rangeKey, nameValue);
 		}
 	}
 }

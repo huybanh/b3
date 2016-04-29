@@ -10,14 +10,15 @@ public enum B3Table {
 	Event("event", "E"),
 	EventInfo("event_info", "I"),
 	Outcome("outcome", "C"),
-	BettingOffer("betting_offer", "B");
+	BettingOffer("betting_offer", "B"),
+	SEPC("sepc", null);
 	
 	public final String name;
 	
 	//exact one character
 	public final String shortName;
 	
-	static final int DIST_FACTOR = 200;
+	public static final int DIST_FACTOR = 200;
 	
 	public static final String CELL_LOCATOR_THIZ = "THIZ";
 	static final String CELL_LOCATOR_SEP = "_";
