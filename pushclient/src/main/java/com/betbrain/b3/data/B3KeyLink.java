@@ -86,7 +86,7 @@ public class B3KeyLink extends B3Key {
 			//String json = item.getString(B3Table.CELL_LOCATOR_THIZ);
 			//Entity entity = JsonMapper.DeserializeF(json);
 			Long linkedId = item.getLong("range");
-			System.out.println(this.linkName + ": " + linkedId);
+			System.out.println(this.linkedClassShortName + ": " + linkedId);
 			list.add(linkedId);
 			if (--i <= 0) {
 				break;
