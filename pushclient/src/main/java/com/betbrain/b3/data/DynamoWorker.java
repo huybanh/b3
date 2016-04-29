@@ -1,7 +1,8 @@
 package com.betbrain.b3.data;
 
 import java.util.Arrays;
-import java.util.function.Consumer;
+import java.util.HashMap;
+import java.util.Iterator;
 
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.regions.Region;
@@ -30,6 +31,7 @@ public class DynamoWorker {
 	public static final String BUNDLE_STATUS_DEPLOYING = "DEPLOYING";
 	public static final String BUNDLE_STATUS_PUSHING = "PUSHING";
 	public static final String BUNDLE_STATUS_CEASED = "CEASED";
+	public static final String BUNDLE_STATUS_GARBAGE = "GARBAGE";
 	public static final String BUNDLE_STATUS_DELETING = "DELETING";
 	public static final String BUNDLE_STATUS_UNUSED = "UNUSED";
 
@@ -273,7 +275,36 @@ public class DynamoWorker {
 		}
 	}
 	
-	private static void deleteBundle(B3Table b3table, final String bundleId) {
+	public static void deleteParallel(B3Table b3table, B3Bundle bundle, int segment, int totalSegments) {
+		
+		HashMap<String, String> nameMap = new HashMap<String, String>();
+		nameMap.put("h", "hash");
+		
+		ScanSpec spec = new ScanSpec()
+            //.withMaxResultSize(10)
+            .withTotalSegments(totalSegments)
+            .withSegment(segment)
+            //.withAttributesToGet(RANGE, HASH)
+            .withNameMap(nameMap)
+            .withFilterExpression(":h = y");
+        
+		Table table = getTable(b3table);
+        ItemCollection<ScanOutcome> items = table.scan(spec);
+        Iterator<Item> iterator = items.iterator();
+        Item currentItem = null;
+        while (iterator.hasNext()) {
+            currentItem = iterator.next();
+            String hashKey = currentItem.getString(HASH);
+            System.out.print("Scanning " + hashKey);
+			if (!hashKey.startsWith(bundle.id)) {
+				return;
+			}
+			System.out.println(hashKey);
+			//table.deleteItem(HASH, hashKey, RANGE, currentItem.getString(RANGE));
+        }
+	}
+	
+	/*private static void deleteBundle(B3Table b3table, final String bundleId) {
 		final Table table = getTable(b3table);
 		ScanSpec spec = new ScanSpec().withAttributesToGet(HASH, RANGE);
 		ItemCollection<ScanOutcome> coll = table.scan(spec);
@@ -289,7 +320,7 @@ public class DynamoWorker {
 			}
 		});
 		//table.deleteItem(HASH, hashKey);
-	}
+	}*/
 	
 	public static ItemCollection<QueryOutcome> query(B3Bundle bundle, B3Table b3table, String hashKey) {
 		

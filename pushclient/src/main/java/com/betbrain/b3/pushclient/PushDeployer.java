@@ -22,7 +22,7 @@ public class PushDeployer {
 	
 	public static void main(String[] args) {
 
-		final int threads = Integer.parseInt(args[0]);
+		final int threadCount = Integer.parseInt(args[0]);
 		DynamoWorker.initialize();
 		ModelShortName.initialize();
 		final JsonMapper mapper = new JsonMapper();
@@ -35,14 +35,14 @@ public class PushDeployer {
 		DynamoWorker.setBundleStatus(bundle, DynamoWorker.BUNDLE_STATUS_DEPLOYING);
 
 		final HashMap<String, HashMap<Long, Entity>> masterMap = new HashMap<String, HashMap<Long,Entity>>();		
-		final Runnable[] masterRunner = new Runnable[1];
-		masterRunner[0] = new Runnable() {
+		//final Runnable[] masterRunner = new Runnable[1];
+		Runnable masterRunner = new Runnable() {
 			
 			public void run() {
 				for (Entry<String, HashMap<Long, Entity>> entry : masterMap.entrySet()) {
 					System.out.println(entry.getKey() + ": " + entry.getValue().size());
 				}
-				new InitialPutHandler(bundle, masterMap).initialPutMaster(threads);
+				new InitialPutHandler(bundle, masterMap).initialPutMaster(threadCount);
 			}
 		};
 
@@ -78,28 +78,46 @@ public class PushDeployer {
 			});
 		}
 		
-		for (int i = 0; i < threads; i++) {
-			new Thread() {
-				public void run() {
-					while (true) {
-						Runnable oneRunner;
-						synchronized (runners) {
-							System.out.println("Remaining runners: " + runners.size());
-							if (runners.isEmpty()) {
-								if (masterRunner[0] == null) {
+		final LinkedList<Object> threadIds = new LinkedList<Object>();
+		LinkedList<Thread> threads = new LinkedList<Thread>();
+		for (int i = 0; i < threadCount; i++) {
+			final Object threadId = new Object();
+			threadIds.add(threadId);
+			threads.add(
+				new Thread() {
+					public void run() {
+						while (true) {
+							Runnable oneRunner;
+							synchronized (runners) {
+								System.out.println("Remaining runners: " + runners.size());
+								if (runners.isEmpty()) {
+									threadIds.remove(threadId);
+									runners.notifyAll();
 									return;
 								}
-								oneRunner = masterRunner[0];
-								masterRunner[0] = null;
-							} else {
 								oneRunner = runners.remove();
 							}
+							oneRunner.run();
 						}
-						oneRunner.run();
 					}
-				}
-			}.start();
+				});
 		}
+		for (Thread t : threads) {
+			t.start();
+		}
+		
+		while (true) {
+			synchronized (runners) {
+				if (threadIds.isEmpty()) {
+					break;
+				}
+				try {
+					runners.wait();
+				} catch (InterruptedException e) {
+				}
+			}
+		}
+		masterRunner.run();
 	}
 
 }

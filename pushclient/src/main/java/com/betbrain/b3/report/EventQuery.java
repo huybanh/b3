@@ -25,8 +25,9 @@ public class EventQuery {
 		ModelShortName.initialize();
 		DynamoWorker.initialize();
 
-		query(219387861);
+		//query(219387861);
 		//query(219501132);
+		query(218203356);
 	}
 	
 	private static void query(long eventId) {
