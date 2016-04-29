@@ -1,5 +1,6 @@
 package com.betbrain.b3.pushclient;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -10,15 +11,22 @@ import com.betbrain.b3.data.B3Bundle;
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.data.ModelShortName;
+import com.betbrain.sepc.connector.sdql.EntityChangeBatchProcessingMonitor;
 import com.betbrain.sepc.connector.sdql.SEPCConnector;
 import com.betbrain.sepc.connector.sdql.SEPCConnectorListener;
 import com.betbrain.sepc.connector.sdql.SEPCPushConnector;
 
-public class PushListener implements SEPCConnectorListener {
+public class PushListener implements SEPCConnectorListener, EntityChangeBatchProcessingMonitor {
 	
 	private B3Bundle bundle;
 	
-	final LinkedList<EntityChangeBatch> batches = new LinkedList<EntityChangeBatch>();
+	final ArrayList<EntityChangeBatch> batches = new ArrayList<EntityChangeBatch>();
+	
+	private long lastBatchId;
+	
+	private final Object initialListLock = new Object();
+	
+	private boolean started = false;
 	
 	private int initialThreads;
 	
@@ -34,7 +42,7 @@ public class PushListener implements SEPCConnectorListener {
 		listener.bundle = DynamoWorker.getBundleUnused(DynamoWorker.BUNDLE_STATUS_INITIALPUT);
 		SEPCConnector pushConnector = new SEPCPushConnector("sept.betbrain.com", 7000);
 		pushConnector.addConnectorListener(listener);
-		//pushConnector.setEntityChangeBatchProcessingMonitor(new BatchMonitor());
+		pushConnector.setEntityChangeBatchProcessingMonitor(listener);
 		pushConnector.start("OddsHistory");
 		for (int i = 0; i < batchThreads; i++) {
 			new Thread(new BatchWorker(listener.bundle, listener.batches)).start();
@@ -45,12 +53,21 @@ public class PushListener implements SEPCConnectorListener {
 		synchronized (batches) {
 			batches.add(changeBatch);
 			batches.notifyAll();
+			lastBatchId = changeBatch.getId();
 		}
 	}
 
-	public void notifyInitialDump(List<? extends Entity> entityList) {
+	public long getLastAppliedEntityChangeBatchId() {
+		return lastBatchId;
+	}
 
-		final Object initialListLock = new Object();
+	public void notifyInitialDump(List<? extends Entity> entityList) {
+		synchronized (initialListLock) {
+			if (started) {
+				return;
+			}
+			started = true;
+		}
 		for (int i = 0; i < initialThreads; i++) {
 			new Thread(new InitialWorker(bundle, initialListLock, entityList)).start();
 		}
@@ -59,13 +76,13 @@ public class PushListener implements SEPCConnectorListener {
 
 class BatchWorker implements Runnable {
 	
-	final LinkedList<EntityChangeBatch> batches;
+	final ArrayList<EntityChangeBatch> batches;
 	
 	private final B3Bundle bundle;
 	
 	private final JsonMapper mapper = new JsonMapper();
 	
-	BatchWorker(B3Bundle bundle, LinkedList<EntityChangeBatch> batches) {
+	BatchWorker(B3Bundle bundle, ArrayList<EntityChangeBatch> batches) {
 		this.bundle = bundle;
 		this.batches = batches;
 	}
@@ -84,7 +101,7 @@ class BatchWorker implements Runnable {
 					}
 					continue;
 				}
-				batch = batches.remove();
+				batch = batches.remove(0);
 				if (printCount++ == 1000) {
 					printCount = 0;
 					System.out.println("Batches: " + batches.size());

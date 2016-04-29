@@ -69,7 +69,7 @@ public class PushDeployer {
 							subMap.put(entity.getId(), entity);
 						}
 						itemCount++;
-						//System.out.println("Read count: " + itemCount);
+						//System.out.println("Entity " + itemCount + ": " + entity);
 						if (itemCount % 10000 == 0) {
 							System.out.println("Read count: " + itemCount);
 						}
