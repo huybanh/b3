@@ -56,7 +56,7 @@ public class DetailedOddsTable {
 		
 		B3KeyOutcome outcomeKey = new B3KeyOutcome(event.getSportId(), event.getTypeId(), false, event.getId(), 
 				outcome.getTypeId(), outcome.getId());
-		B3Outcome b3outcome = outcomeKey.loadFull(bundle);
+		B3Outcome b3outcome = outcomeKey.loadFull(bundle, jsonMapper);
 		
 		/*long sportId = 1; //outcome.gets
 		long eventId = outcome.getEventId();

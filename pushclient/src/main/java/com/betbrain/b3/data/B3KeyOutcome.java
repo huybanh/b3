@@ -3,7 +3,6 @@ package com.betbrain.b3.data;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.betbrain.b3.model.B3Outcome;
 import com.betbrain.b3.pushclient.JsonMapper;
-import com.betbrain.sepc.connector.sportsmodel.Outcome;
 
 /**
  * Key spec: sportId/eventTypeId/[EVENT|EVENTPART]/eventId
@@ -72,7 +71,7 @@ public class B3KeyOutcome extends B3KeyEntitySupport {
 		return outcomeTypeId + B3Table.KEY_SEP + outcomeId; 
 	}
 	
-	public B3Outcome loadFull(B3Bundle bundle) {
+	public B3Outcome loadFull(B3Bundle bundle, JsonMapper mapper) {
 		Item item = DynamoWorker.get(B3Table.Outcome, bundle, getHashKey(), getRangeKey());
 		if (item == null) {
 			System.out.println("ID not found: " + getHashKey() + "@" + getRangeKey());
@@ -80,7 +79,7 @@ public class B3KeyOutcome extends B3KeyEntitySupport {
 		}
 		
 		B3Outcome outcome = new B3Outcome();
-		outcome.loadFull(item);
+		outcome.loadFull(item, mapper);
 		return outcome;
 	}
 }
