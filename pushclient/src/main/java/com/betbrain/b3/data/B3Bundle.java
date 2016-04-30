@@ -75,21 +75,21 @@ class B3Bundle {
 	
 	static void createTables(DynamoDB dynamoDB, String id) {
 
-		createTable(dynamoDB, id, "offer", 5, 5, true);
-		createTable(dynamoDB, id, "event", 5, 5, true);
-		createTable(dynamoDB, id, "event_info", 5, 5, true);
-		createTable(dynamoDB, id, "outcome", 5, 5, true);
-		createTable(dynamoDB, id, "lookup", 5, 5, true);
-		createTable(dynamoDB, id, "link", 5, 5, true);
-		createTable(dynamoDB, id, "entity", 5, 5, false);
-		createTable(dynamoDB, id, "sepc", 5, 5, true);
+		createTable(dynamoDB, id, "offer", 1, 1, true);
+		createTable(dynamoDB, id, "event", 1, 1, true);
+		createTable(dynamoDB, id, "event_info", 1, 1, true);
+		createTable(dynamoDB, id, "outcome", 1, 1, true);
+		createTable(dynamoDB, id, "lookup", 1, 1, true);
+		createTable(dynamoDB, id, "link", 1, 1, true);
+		createTable(dynamoDB, id, "entity", 1, 200, false);
+		createTable(dynamoDB, id, "sepc", 1, 1, true);
 	}
     
     private static void createTable(DynamoDB dynamoDB, String prefix,
         String tableName, long readCapacityUnits, long writeCapacityUnits, boolean withRangeKey) {
         
         try {
-            System.out.println("Creating table " + tableName);
+            System.out.println("Creating table " + prefix + tableName);
             
             List<KeySchemaElement> keySchema = new ArrayList<KeySchemaElement>();
             keySchema.add(new KeySchemaElement()
@@ -110,19 +110,19 @@ class B3Bundle {
                       .withAttributeType("S"));
             }
 
-            Table table = dynamoDB.createTable(tableName, 
+            Table table = dynamoDB.createTable(prefix + tableName, 
                 keySchema,
                 attributeDefinitions, 
                 new ProvisionedThroughput()
                     .withReadCapacityUnits(readCapacityUnits)
                     .withWriteCapacityUnits(writeCapacityUnits));
-            System.out.println("Waiting for " + tableName
+            System.out.println("Waiting for " + prefix + tableName
                 + " to be created...this may take a while...");
             table.waitForActive();
        
             
         } catch (Exception e) {
-            System.err.println("Failed to create table " + tableName);
+            System.err.println("Failed to create table " + prefix + tableName);
             e.printStackTrace(System.err);
         }
     }

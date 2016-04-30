@@ -76,7 +76,7 @@ public class PushDeployer {
 		}
 		
 		//start initial-dump loading threads
-		/*final LinkedList<Object> threadIds = new LinkedList<Object>();
+		final LinkedList<Object> threadIds = new LinkedList<Object>();
 		for (int i = 0; i < threadCount; i++) {
 			final Object threadId = new Object();
 			threadIds.add(threadId);
@@ -113,7 +113,7 @@ public class PushDeployer {
 		}
 		
 		//start initial-dump deploying threads
-		initialDumpDeployTask.run();*/
+		initialDumpDeployTask.run();
 		
 		//all initial-dump deploying threads have finished
 		//DynamoWorker.setBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSHING);
