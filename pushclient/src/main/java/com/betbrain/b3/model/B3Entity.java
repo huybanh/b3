@@ -19,8 +19,6 @@ import com.betbrain.b3.data.B3Update;
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.data.EntityLink;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
-import com.betbrain.sepc.connector.sportsmodel.Event;
-import com.betbrain.sepc.connector.sportsmodel.EventInfo;
 
 public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 
@@ -64,17 +62,17 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 	abstract public void buildDownlinks(HashMap<String, HashMap<Long, Entity>> masterMap,
 			B3Bundle bundle, JsonMapper mapper);
 	
-	@SuppressWarnings("rawtypes")
+	/*@SuppressWarnings("rawtypes")
 	static <E extends B3Entity, F> E build(Long id, E e, Class<? extends Entity> clazz,
 			HashMap<String, HashMap<Long, Entity>> masterMap, B3Bundle bundle, JsonMapper mapper) {
 		
 		return build(id, e, clazz, masterMap, bundle, mapper, true);
-	}
+	}*/
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	static <E extends B3Entity> E build(Long id, E e, Class<? extends Entity> clazz,
 			HashMap<String, HashMap<Long, Entity>> masterMap, 
-			B3Bundle bundle, JsonMapper mapper, boolean depthBuilding) {
+			B3Bundle bundle, JsonMapper mapper/*, boolean depthBuilding*/) {
 		
 		if (id == null) {
 			return null;
@@ -90,9 +88,9 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 			return null;
 		}
 		e.entity = one;
-		if (depthBuilding) {
+		//if (depthBuilding) {
 			e.buildDownlinks(masterMap, bundle, mapper);
-		}
+		//}
 		return e;
 	}
 	

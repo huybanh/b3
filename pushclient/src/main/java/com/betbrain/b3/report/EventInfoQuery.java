@@ -30,7 +30,7 @@ public class EventInfoQuery {
 		//eventinfo - current status
 		//B3KeyEventInfo key = new B3KeyEventInfo(event.getSportId(), event.getTypeId(),
 		//		false, eventId, 4l, 17442912l);
-		B3KeyEventInfo key = new B3KeyEventInfo(1l, 1l, false, eventId, 4l, 17442912l);
+		B3KeyEventInfo key = new B3KeyEventInfo(1l, 1l, eventId, 4l, 17442912l);
 		key.listEntities(bundle, jsonMapper);
 	}
 }

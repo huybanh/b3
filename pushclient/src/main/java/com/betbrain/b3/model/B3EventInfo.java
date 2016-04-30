@@ -80,9 +80,9 @@ public class B3EventInfo extends B3Entity<EventInfo> {
 		System.out.println("Well, event info found");
 		buildDownlinks(null, bundle, mapper);
 		LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
-		boolean eventPart = false; //TODO correct this
+		//boolean eventPart = false;
 		B3KeyEventInfo infoKey = new B3KeyEventInfo(targetEvent.getSportId(), 
-				targetEvent.getTypeId(), eventPart, newEventInfo.getEventId(), 
+				targetEvent.getTypeId(), newEventInfo.getEventId(), 
 				newEventInfo.getTypeId(), newEventInfo.getId());
 		
 		//put linked entities to table lookup, link

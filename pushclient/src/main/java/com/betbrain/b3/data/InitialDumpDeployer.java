@@ -123,7 +123,7 @@ public class InitialDumpDeployer {
 	
 	public void initialPutAllEvents() {
 		
-		initialPutAllToMainTable(eventTasks, B3Table.Event, 0, null, Event.class, new B3KeyBuilder<Event>() {
+		initialPutAllToMainTable(eventTasks, B3Table.Event, Event.class, new B3KeyBuilder<Event>() {
 
 			public B3Entity<Event> newB3Entity() {
 				return new B3Event();
@@ -134,7 +134,7 @@ public class InitialDumpDeployer {
 				return new B3KeyEvent(
 						event.entity.getSportId(),
 						event.entity.getTypeId(),
-						false,
+						//false,
 						event.entity.getId());
 			}
 		});
@@ -143,7 +143,7 @@ public class InitialDumpDeployer {
 	
 	public void initialPutAllEventInfos() {
 		
-		initialPutAllToMainTable(eventInfoTasks, B3Table.EventInfo, 0, null, EventInfo.class, new B3KeyBuilder<EventInfo>() {
+		initialPutAllToMainTable(eventInfoTasks, B3Table.EventInfo, EventInfo.class, new B3KeyBuilder<EventInfo>() {
 
 			public B3Entity<EventInfo> newB3Entity() {
 				return new B3EventInfo();
@@ -154,7 +154,7 @@ public class InitialDumpDeployer {
 				return new B3KeyEventInfo(
 						eventInfo.event.entity.getSportId(),
 						eventInfo.event.entity.getTypeId(),
-						false,
+						//false,
 						eventInfo.event.entity.getId(),
 						eventInfo.entity.getTypeId(),
 						eventInfo.entity.getId());
@@ -165,7 +165,7 @@ public class InitialDumpDeployer {
 	
 	public void initialPutAllOutcomes() {
 		
-		initialPutAllToMainTable(outcomeTasks, B3Table.Outcome, 0, null, Outcome.class, new B3KeyBuilder<Outcome>() {
+		initialPutAllToMainTable(outcomeTasks, B3Table.Outcome, Outcome.class, new B3KeyBuilder<Outcome>() {
 
 			public B3Outcome newB3Entity() {
 				return new B3Outcome();
@@ -174,10 +174,11 @@ public class InitialDumpDeployer {
 			public B3Key buildKey(B3Entity<Outcome> b3entity) {
 				B3Outcome outcome = (B3Outcome) b3entity;
 				return new B3KeyOutcome(
-						outcome.event.entity.getSportId(), //TODO what if outcome is eventPart based
+						outcome.event.entity.getSportId(),
 						outcome.event.entity.getTypeId(),
-						false,
+						//false,
 						outcome.event.entity.getId(),
+						outcome.entity.getEventPartId(),
 						outcome.entity.getTypeId(),
 						outcome.entity.getId());
 			}
@@ -187,7 +188,7 @@ public class InitialDumpDeployer {
 	
 	public void initialPutAllOffers() {
 		
-		initialPutAllToMainTable(offerTasks, B3Table.BettingOffer, 0, null, BettingOffer.class, new B3KeyBuilder<BettingOffer>() {
+		initialPutAllToMainTable(offerTasks, B3Table.BettingOffer, BettingOffer.class, new B3KeyBuilder<BettingOffer>() {
 
 			public B3BettingOffer newB3Entity() {
 				return new B3BettingOffer();
@@ -198,7 +199,7 @@ public class InitialDumpDeployer {
 				return new B3KeyOffer(
 						offer.outcome.event.entity.getSportId(), //TODO what if outcome is eventPart based
 						offer.outcome.event.entity.getTypeId(),
-						false,
+						//false,
 						offer.outcome.event.entity.getId(),
 						offer.outcome.entity.getTypeId(),
 						offer.outcome.entity.getId(),
@@ -277,7 +278,7 @@ public class InitialDumpDeployer {
 	
 	@SuppressWarnings("unchecked")
 	private <E extends Entity> void initialPutAllToMainTable(LinkedList<Runnable> runnerList, 
-			final B3Table table, final int start, final Integer end,
+			final B3Table table, /*final int start, final Integer end,*/
 			final Class<E> entityClazz, final B3KeyBuilder<E> keyBuilder) {
 
 		HashMap<Long, Entity> allEntities = masterMap.get(entityClazz.getName());
@@ -293,12 +294,12 @@ public class InitialDumpDeployer {
 					int count = 0;
 					for (Entity entity : oneSubListFinal) {
 						count++;
-						if (count < start) {
+						/*if (count < start) {
 							continue;
 						}
 						if (end != null && start + count > end) {
 							break;
-						}
+						}*/
 						B3Entity<E> b3entity = keyBuilder.newB3Entity();
 						b3entity.entity = (E) entity;
 						b3entity.buildDownlinks(masterMap, null, null);

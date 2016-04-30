@@ -25,8 +25,9 @@ public class B3Outcome extends B3Entity<Outcome> {
 		
 		//unfollowed links
 		addDownlink(Outcome.PROPERTY_NAME_eventId, Event.class, entity.getEventId());
-		addDownlink(Outcome.PROPERTY_NAME_eventPartId, EventPart.class, entity.getEventPartId());
 		
+		//followed
+		addDownlink(Outcome.PROPERTY_NAME_eventPartId, eventPart);
 		addDownlink(Outcome.PROPERTY_NAME_statusId, status);
 		addDownlink(Outcome.PROPERTY_NAME_typeId, type);
 	}
@@ -41,17 +42,14 @@ public class B3Outcome extends B3Entity<Outcome> {
 		//we don't want event graph going into BettingOffer table
 		//this.event.buildDownlinks(masterMap);
 		
-		//we don't want event graph going into BettingOffer table: depthBuilding = false
-		//boolean depthBuilding = false; 
 		this.event = build(entity.getEventId(), 
-				new B3Event(), Event.class, masterMap, bundle, mapper, true);
+				new B3Event(), Event.class, masterMap, bundle, mapper);
 		this.eventPart = build(entity.getEventPartId(), 
-				new B3EventPart(), EventPart.class, masterMap, bundle, mapper, true);
-		
+				new B3EventPart(), EventPart.class, masterMap, bundle, mapper);
 		this.status = build(entity.getStatusId(),
-				new B3OutcomeStatus(), OutcomeStatus.class, masterMap, bundle, mapper, true);
+				new B3OutcomeStatus(), OutcomeStatus.class, masterMap, bundle, mapper);
 		this.type = build(entity.getTypeId(),
-				new B3OutcomeType(), OutcomeType.class, masterMap, bundle, mapper, true);
+				new B3OutcomeType(), OutcomeType.class, masterMap, bundle, mapper);
 	}
 	
 	public void loadFull(Item item, JsonMapper mapper) {

@@ -31,8 +31,8 @@ public enum B3Table {
 	//name of lookup column, which contains range key of target table
 	static final String LOOKUP_CELL_TARGET_RANGE = "R";
 	
-	static final String EVENTKEY_MARKER_EVENT = "E";
-	static final String EVENTKEY_MARKER_EVENTPART = "P";
+	//static final String EVENTKEY_MARKER_EVENT = "E";
+	//static final String EVENTKEY_MARKER_EVENTPART = "P";
 	
 	private B3Table(String tableName, String shortName) {
 		this.name = tableName;

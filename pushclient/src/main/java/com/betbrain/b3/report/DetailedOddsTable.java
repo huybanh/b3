@@ -44,9 +44,9 @@ public class DetailedOddsTable {
 		Event event = entityKey.load(bundle, jsonMapper);
 		
 		//B3KeyLookup lookupKey = new B3KeyLookup(entity, targetTable, targetHash, targetRange)
-		
-		B3KeyOutcome outcomeKey = new B3KeyOutcome(event.getSportId(), event.getTypeId(), false, event.getId(), 
-				outcome.getTypeId(), outcome.getId());
+		long eventPartOrdinaryTime = 3;
+		B3KeyOutcome outcomeKey = new B3KeyOutcome(event.getSportId(), event.getTypeId(), 
+				event.getId(), eventPartOrdinaryTime, outcome.getTypeId(), outcome.getId());
 		B3Outcome b3outcome = outcomeKey.loadFull(bundle, jsonMapper);
 		
 		/*long sportId = 1; //outcome.gets
@@ -58,13 +58,13 @@ public class DetailedOddsTable {
 		
 		//match statuses
 		B3KeyEventInfo eventInfoKey = new B3KeyEventInfo(
-				event.getSportId(), event.getTypeId(), false, event.getId(), 
+				event.getSportId(), event.getTypeId(), event.getId(), 
 				IDs.EVENTINFOTYPE_CURRENTSTATUS, null/*eventInfoId*/);
 		ArrayList<EventInfo> matchStatuses = eventInfoKey.listEntities(bundle, jsonMapper);
 		
 		//scores
 		eventInfoKey = new B3KeyEventInfo(
-				event.getSportId(), event.getTypeId(), false, event.getId(), 
+				event.getSportId(), event.getTypeId(), event.getId(), 
 				IDs.EVENTINFOTYPE_SCORE, null/*eventInfoId*/);
 		ArrayList<EventInfo> matchScores = eventInfoKey.listEntities(bundle, jsonMapper);
 		

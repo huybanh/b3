@@ -11,7 +11,7 @@ public class B3KeyOffer extends B3KeyEntitySupport {
 	
 	final Long eventTypeId;
 	
-	final Boolean eventPartFlag;
+	//final Boolean eventPartFlag;
 	
 	final Long eventId;
 
@@ -23,12 +23,12 @@ public class B3KeyOffer extends B3KeyEntitySupport {
 	
 	final Long offerId;
 
-	public B3KeyOffer(Long sportId, Long eventTypeId, Boolean eventPart, Long eventId,
+	public B3KeyOffer(Long sportId, Long eventTypeId, Long eventId,
 			Long outcomeTypeId, Long outcomeId, Long bettingTypeId, Long offerId) {
 
 		this.sportId = sportId;
 		this.eventTypeId = eventTypeId;
-		this.eventPartFlag = eventPart;
+		//this.eventPartFlag = eventPart;
 		this.eventId = eventId;
 		
 		this.outcomeTypeId = outcomeTypeId;
@@ -39,7 +39,7 @@ public class B3KeyOffer extends B3KeyEntitySupport {
 	
 	@Override
 	boolean isDetermined() {
-		return sportId != null && eventTypeId != null && eventPartFlag != null & eventId != null &&
+		return sportId != null && eventTypeId != null && eventId != null &&
 				outcomeTypeId != null && outcomeId != null && bettingTypeId != null && offerId != null;
 	}
 	
@@ -51,15 +51,15 @@ public class B3KeyOffer extends B3KeyEntitySupport {
 		if (eventTypeId == null) {
 			return sportId + B3Table.KEY_SEP;
 		}
-		if (eventPartFlag == null) {
+		/*if (eventPartFlag == null) {
 			return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP;
 		}
 		String eventPartMarker = eventPartFlag ? 
-				B3Table.EVENTKEY_MARKER_EVENTPART : B3Table.EVENTKEY_MARKER_EVENT;
+				B3Table.EVENTKEY_MARKER_EVENTPART : B3Table.EVENTKEY_MARKER_EVENT;*/
 		if (eventId == null) {
-			return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventPartMarker;
+			return sportId + B3Table.KEY_SEP + eventTypeId;
 		}
-		return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventPartMarker + eventId;
+		return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventId;
 	}
 	
 	@Override
