@@ -2,33 +2,24 @@ package com.betbrain.b3.report;
 
 import java.util.ArrayList;
 
-import com.betbrain.b3.data.B3KeyEntity;
 import com.betbrain.b3.data.B3KeyLink;
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.data.ModelShortName;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
-import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Event;
-import com.betbrain.sepc.connector.sportsmodel.EventInfo;
-import com.betbrain.sepc.connector.sportsmodel.EventInfoType;
-import com.betbrain.sepc.connector.sportsmodel.EventStatus;
-import com.betbrain.sepc.connector.sportsmodel.EventType;
 import com.betbrain.sepc.connector.sportsmodel.Outcome;
-import com.betbrain.sepc.connector.sportsmodel.OutcomeType;
-import com.betbrain.sepc.connector.sportsmodel.Sport;
 
 public class QueryTests {
 	
 	public static void main(String[] args) {
 		ModelShortName.initialize();
-		DynamoWorker.initialize();
+		DynamoWorker.initBundleCurrent(); 
+		JsonMapper jsonMapper = new JsonMapper();
 		
 		//all sports
 		//ArrayList<Entity> sports = new B3KeyEntity(Sport.class).listEntities();
 
-		DynamoWorker.initBundleCurrent(); 
-		JsonMapper jsonMapper = new JsonMapper();
 		ArrayList<Long> ids;
 		B3KeyLink keyLink = new B3KeyLink(Event.class, 206795928, Outcome.class, "eventId");
 		ArrayList<Long> outcomeIds = keyLink.listLinks();

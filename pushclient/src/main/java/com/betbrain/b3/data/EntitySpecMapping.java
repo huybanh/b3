@@ -6,6 +6,7 @@ import com.betbrain.b3.data.spec.EventSpec;
 import com.betbrain.b3.data.spec.SportSpec;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 
+@Deprecated
 public enum EntitySpecMapping {
 
 	//Entity class prefix is exact-two-character 

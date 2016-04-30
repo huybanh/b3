@@ -21,7 +21,7 @@ import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 
 public class DynamoWorker {
 	
-	private static String HASH = "hash";
+	static String HASH = "hash";
 	public static String RANGE = "range";
 	
 	private static String[] BUNDLEIDS = {"X", "Y", "Z", "T", "U"};
@@ -54,15 +54,22 @@ public class DynamoWorker {
 	
 	private static Table settingTable;
 	
-	public static void initialize() {
+	private static void initialize() {
 
 		dynaClient = new AmazonDynamoDBClient(new ProfileCredentialsProvider());
 		dynaClient.setRegion(Region.getRegion(Regions.AP_SOUTHEAST_1));
 		dynamoDB = new DynamoDB(dynaClient);
 		settingTable = dynamoDB.getTable("setting");
 	}
+	
+	static void createTables() {
+		initialize();
+		String availBundleId = findBundleUnusedId();
+		B3Bundle.createTables(dynamoDB, availBundleId);
+	}
 
 	public static void initBundleCurrent() {
+		initialize();
 		B3Bundle.initWorkingBundle(dynamoDB, getCurrentBundleId());
 	}
 	
@@ -87,6 +94,19 @@ public class DynamoWorker {
 	}
 	
 	public static void initBundleUnused(String newStatus) {
+
+		initialize();
+		String availBundleId = findBundleUnusedId();
+		if (newStatus != null) {
+			UpdateItemSpec us = new UpdateItemSpec()
+					.withPrimaryKey(HASH, BUNDLE_HASH, RANGE, availBundleId)
+					.addAttributeUpdate(new AttributeUpdate(BUNDLE_CELL_STATUS).put(newStatus));
+			settingTable.updateItem(us);
+		}
+		B3Bundle.initWorkingBundle(dynamoDB, availBundleId);
+	}
+	
+	private static String findBundleUnusedId() {
 		String currentId = getCurrentBundleId();
 		int currentIndex = Arrays.asList(BUNDLEIDS).indexOf(currentId);
 		if (currentIndex < 0) {
@@ -108,18 +128,11 @@ public class DynamoWorker {
 				throw new RuntimeException("No available bundle");
 			}
 		}
-		
-		if (newStatus != null) {
-			UpdateItemSpec us = new UpdateItemSpec()
-					.withPrimaryKey(HASH, BUNDLE_HASH, RANGE, availBundleId)
-					.addAttributeUpdate(new AttributeUpdate(BUNDLE_CELL_STATUS).put(newStatus));
-			settingTable.updateItem(us);
-		}
-		
-		B3Bundle.initWorkingBundle(dynamoDB, availBundleId);
+		return availBundleId;
 	}
 	
 	public static void initBundleByStatus(String requiredStatus) {
+		initialize();
 		int proposedIndex = 0;
 		int count = 0;
 		String foundBundleId;

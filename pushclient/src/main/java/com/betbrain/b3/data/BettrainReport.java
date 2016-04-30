@@ -12,7 +12,6 @@ public class BettrainReport {
 
 	public static void main(String[] args) {
 		ModelShortName.initialize();
-		DynamoWorker.initialize();
 		String SportFilter = "Football";
 		//all sports
 		DynamoWorker.initBundleCurrent(); 

@@ -16,7 +16,7 @@ public class EventQuery {
 	
 	public static void main(String[] args) {
 		ModelShortName.initialize();
-		DynamoWorker.initialize();
+		DynamoWorker.initBundleCurrent();
 
 		//query(219387861);
 		//query(219501132);
@@ -25,7 +25,6 @@ public class EventQuery {
 	
 	private static void query(long eventId) {
 
-		DynamoWorker.initBundleCurrent(); 
 		JsonMapper jsonMapper = new JsonMapper();
 		
 		//event

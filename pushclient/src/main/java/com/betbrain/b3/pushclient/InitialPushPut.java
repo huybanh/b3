@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
-import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.data.ModelShortName;
 import com.betbrain.sepc.connector.sdql.SEPCConnector;
 import com.betbrain.sepc.connector.sdql.SEPCConnectorListener;
@@ -51,7 +50,6 @@ public class InitialPushPut implements SEPCConnectorListener {
 		}
 		
 		ModelShortName.initialize();
-		DynamoWorker.initialize();
 		//new InitialPutHandler(masterMap).initialPutMaster();
 	}
 

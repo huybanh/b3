@@ -20,7 +20,6 @@ public class DetailedOddsTable {
 	public static void main(String[] args) {
 		
 		ModelShortName.initialize();
-		DynamoWorker.initialize();
 		DynamoWorker.initBundleCurrent();
 		
 		//long matchId = 217410074;
