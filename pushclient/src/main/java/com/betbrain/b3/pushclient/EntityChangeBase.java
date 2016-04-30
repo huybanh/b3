@@ -1,8 +1,6 @@
 package com.betbrain.b3.pushclient;
 
-import com.betbrain.b3.model.B3Entity;
+public abstract class EntityChangeBase {
 
-abstract class EntityChangeBase {
-
-	abstract B3Entity<?> createB3Entity();
+	public abstract String getEntityClassName();
 }

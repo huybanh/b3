@@ -3,7 +3,7 @@ package com.betbrain.b3.pushclient;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityCreate;
 
-public class EntityCreateWrapper {
+public class EntityCreateWrapper extends EntityChangeBase {
 	
 	private EntityCreate create;
 	
@@ -28,5 +28,13 @@ public class EntityCreateWrapper {
     	}
     	return entity;
     }
+
+	@Override
+	public String getEntityClassName() {
+		if (entity == null) {
+			return null;
+		}
+		return entity.getClass().getName();
+	}
 	
 }

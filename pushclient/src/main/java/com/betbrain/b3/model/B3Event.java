@@ -2,6 +2,8 @@ package com.betbrain.b3.model;
 
 import java.util.HashMap;
 
+import com.betbrain.b3.data.B3Bundle;
+import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Event;
 import com.betbrain.sepc.connector.sportsmodel.EventPart;
@@ -34,11 +36,16 @@ public class B3Event extends B3Entity<Event> {
 	}
 
 	@Override
-	public void buildDownlinks(HashMap<String, HashMap<Long, Entity>> masterMap) {
-		this.sport = build(entity.getSportId(), new B3Sport(), Sport.class, masterMap);
-		this.status = build(entity.getStatusId(), new B3EventStatus(), EventStatus.class, masterMap);
-		this.template = build(entity.getTemplateId(), new B3EventTemplate(), EventTemplate.class, masterMap);
-		this.type = build(entity.getTypeId(), new B3EventType(), EventType.class, masterMap);
+	public void buildDownlinks(HashMap<String, HashMap<Long, Entity>> masterMap,
+			B3Bundle bundle, JsonMapper mapper) {
+		this.sport = build(entity.getSportId(), new B3Sport(), 
+				Sport.class, masterMap, bundle, mapper);
+		this.status = build(entity.getStatusId(), new B3EventStatus(), 
+				EventStatus.class, masterMap, bundle, mapper);
+		this.template = build(entity.getTemplateId(), new B3EventTemplate(), 
+				EventTemplate.class, masterMap, bundle, mapper);
+		this.type = build(entity.getTypeId(), new B3EventType(),
+				EventType.class, masterMap, bundle, mapper);
 	}
 
 }

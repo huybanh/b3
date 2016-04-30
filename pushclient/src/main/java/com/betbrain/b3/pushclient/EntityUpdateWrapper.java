@@ -5,13 +5,12 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.betbrain.sepc.connector.sportsmodel.Entity;
-import com.betbrain.sepc.connector.sportsmodel.EntityCreate;
 import com.betbrain.sepc.connector.sportsmodel.EntityUpdate;
 import com.betbrain.sepc.connector.sportsmodel.Event;
 import com.betbrain.sepc.connector.util.StringUtil;
 import com.betbrain.sepc.connector.util.beans.BeanUtil;
 
-public class EntityUpdateWrapper {
+public class EntityUpdateWrapper extends EntityChangeBase {
 
 	private String entityClassName;
 	
@@ -35,6 +34,7 @@ public class EntityUpdateWrapper {
 		this.entityClassName = s;
 	}
 	
+	@Override
 	public String getEntityClassName() {
 		if (update != null) {
 			return update.getEntityClass().getName();

@@ -3,6 +3,7 @@ package com.betbrain.b3.model;
 import java.util.HashMap;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
+import com.betbrain.b3.data.B3Bundle;
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
@@ -31,7 +32,8 @@ public class B3Outcome extends B3Entity<Outcome> {
 	}
 
 	@Override
-	public void buildDownlinks(HashMap<String, HashMap<Long, Entity>> masterMap) {
+	public void buildDownlinks(HashMap<String, HashMap<Long, Entity>> masterMap,
+			B3Bundle bundle, JsonMapper mapper) {
 		/*HashMap<Long, Entity> allEvents = masterMap.get(Event.class.getName());
 		Event one = (Event) allEvents.get(entity.getEventId());
 		this.event = new B3Event(one);*/
@@ -42,14 +44,14 @@ public class B3Outcome extends B3Entity<Outcome> {
 		//we don't want event graph going into BettingOffer table: depthBuilding = false
 		//boolean depthBuilding = false; 
 		this.event = build(entity.getEventId(), 
-				new B3Event(), Event.class, masterMap, true);
+				new B3Event(), Event.class, masterMap, bundle, mapper, true);
 		this.eventPart = build(entity.getEventPartId(), 
-				new B3EventPart(), EventPart.class, masterMap, true);
+				new B3EventPart(), EventPart.class, masterMap, bundle, mapper, true);
 		
 		this.status = build(entity.getStatusId(),
-				new B3OutcomeStatus(), OutcomeStatus.class, masterMap, true);
+				new B3OutcomeStatus(), OutcomeStatus.class, masterMap, bundle, mapper, true);
 		this.type = build(entity.getTypeId(),
-				new B3OutcomeType(), OutcomeType.class, masterMap, true);
+				new B3OutcomeType(), OutcomeType.class, masterMap, bundle, mapper, true);
 	}
 	
 	public void loadFull(Item item, JsonMapper mapper) {

@@ -227,8 +227,8 @@ public class DynamoWorker {
 			}
 		}
 
-		dynaTable.putItem(item);
-		//System.out.println(update + ": " + update.toString().length());
+		//dynaTable.putItem(item);
+		System.out.println(update + ": " + update.toString().length());
 	}
 	
 	public static void putSepc(B3Bundle bundle, String hashKey, String rangeKey, String[]... nameValuePairs ) {

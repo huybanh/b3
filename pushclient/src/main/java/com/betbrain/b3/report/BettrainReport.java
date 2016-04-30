@@ -11,14 +11,12 @@ import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Event;
 import com.betbrain.sepc.connector.sportsmodel.EventInfo;
-import com.betbrain.sepc.connector.sportsmodel.EventType;
 import com.betbrain.sepc.connector.sportsmodel.Outcome;
 import com.betbrain.sepc.connector.sportsmodel.Sport;
 
 public class BettrainReport {
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 		ModelShortName.initialize();
 		DynamoWorker.initialize();
 		String SportFilter = "Football";
@@ -41,7 +39,7 @@ public class BettrainReport {
 		
 		//ids = new B3KeyLink(Sport.class, SportEntity.getId(), Event.class).listLinks();
 		ids = new B3KeyLink(Sport.class, SportEntity.getId(), Event.class, "sportId").listLinks(bundle);
-		ArrayList<Event> lstEvent = B3KeyEntity.load(bundle, Event.class, ids);
+		ArrayList<Event> lstEvent = B3KeyEntity.load(bundle, jsonMapper, Event.class, ids);
 		
 		System.out.println(lstEvent.size());
 		
@@ -57,7 +55,7 @@ public class BettrainReport {
 		//event to outcome
 		//ids = new B3KeyLink(Event.class, 217409474, EventInfo.class).listLinks();
 		ids = new B3KeyLink(Event.class, 217409474, Outcome.class, "eventId").listLinks(bundle);
-		ArrayList<EventInfo> lstEventInfo = B3KeyEntity.load(bundle, EventInfo.class, ids);
+		ArrayList<EventInfo> lstEventInfo = B3KeyEntity.load(bundle, jsonMapper, EventInfo.class, ids);
 		for(EventInfo item : lstEventInfo){
 			System.out.println(item.toString());
 		}

@@ -1,6 +1,5 @@
 package com.betbrain.b3.pushclient;
 
-import com.betbrain.b3.model.B3Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityDelete;
 
 public class EntityDeleteWrapper extends EntityChangeBase {
@@ -24,6 +23,7 @@ public class EntityDeleteWrapper extends EntityChangeBase {
 		this.entityClassName = className;
 	}
 	
+	@Override
 	public String getEntityClassName() {
         
 		if (delete != null) {
@@ -43,10 +43,4 @@ public class EntityDeleteWrapper extends EntityChangeBase {
     	}
         return entityId;
     }
-
-	@Override
-	B3Entity<?> createB3Entity() {
-		
-		return null;
-	}
 }

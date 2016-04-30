@@ -2,6 +2,8 @@ package com.betbrain.b3.model;
 
 import java.util.HashMap;
 
+import com.betbrain.b3.data.B3Bundle;
+import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
 import com.betbrain.sepc.connector.sportsmodel.BettingOfferStatus;
 import com.betbrain.sepc.connector.sportsmodel.BettingType;
@@ -35,15 +37,19 @@ public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 	}
 	
 	@Override
-	public void buildDownlinks(HashMap<String, HashMap<Long, Entity>> masterMap) {
+	public void buildDownlinks(HashMap<String, HashMap<Long, Entity>> masterMap,
+			B3Bundle bundle, JsonMapper mapper) {
 		
-		this.provider = build(entity.getProviderId(), new B3Provider(), Provider.class, masterMap);
-		this.source = build(entity.getSourceId(), new B3Source(), Source.class, masterMap);
-		this.outcome = build(entity.getOutcomeId(), new B3Outcome(), Outcome.class, masterMap);
+		this.provider = build(entity.getProviderId(), new B3Provider(), 
+				Provider.class, masterMap, bundle, mapper);
+		this.source = build(entity.getSourceId(), new B3Source(), 
+				Source.class, masterMap, bundle, mapper);
+		this.outcome = build(entity.getOutcomeId(), new B3Outcome(), 
+				Outcome.class, masterMap, bundle, mapper);
 		this.bettingType = build(entity.getBettingTypeId(), 
-				new B3BettingType(), BettingType.class, masterMap);
+				new B3BettingType(), BettingType.class, masterMap, bundle, mapper);
 		this.status = build(entity.getStatusId(), 
-				new B3BettingOfferStatus(), BettingOfferStatus.class, masterMap);
+				new B3BettingOfferStatus(), BettingOfferStatus.class, masterMap, bundle, mapper);
 		
 		/*Entity one = masterMap.get(Outcome.class.getName()).get(entity.getOutcomeId());
 		this.outcome = new B3Outcome((Outcome) one);
@@ -53,19 +59,4 @@ public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 		this.provider = new B3Provider((Provider) one);
 		this.provider.buildDownlinks(masterMap);*/
 	}
-
-	/*@Override
-	public B3KeyOffer getB3KeyMain() {
-		
-		//sportId, eventTypeId, eventPart, eventId, outcomeTypeId, outcomeId, bettingTypeId, offerId
-		return new B3KeyOffer(
-				outcome.event.entity.getSportId(),
-				outcome.event.entity.getTypeId(),
-				false,
-				outcome.event.entity.getId(),
-				outcome.entity.getTypeId(),
-				outcome.entity.getId(),
-				this.entity.getBettingTypeId(),
-				this.entity.getId());
-	}*/
 }

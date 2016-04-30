@@ -4,24 +4,15 @@ import java.util.ArrayList;
 
 import com.betbrain.b3.data.B3Bundle;
 import com.betbrain.b3.data.B3KeyEntity;
-import com.betbrain.b3.data.B3KeyEvent;
 import com.betbrain.b3.data.B3KeyEventInfo;
-import com.betbrain.b3.data.B3KeyLink;
-import com.betbrain.b3.data.B3KeyLookup;
-import com.betbrain.b3.data.B3KeyOffer;
 import com.betbrain.b3.data.B3KeyOutcome;
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.data.ModelShortName;
 import com.betbrain.b3.model.B3Outcome;
 import com.betbrain.b3.pushclient.JsonMapper;
-import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
 import com.betbrain.sepc.connector.sportsmodel.Event;
 import com.betbrain.sepc.connector.sportsmodel.EventInfo;
-import com.betbrain.sepc.connector.sportsmodel.EventPart;
-import com.betbrain.sepc.connector.sportsmodel.EventType;
 import com.betbrain.sepc.connector.sportsmodel.Outcome;
-import com.betbrain.sepc.connector.sportsmodel.OutcomeType;
-import com.betbrain.sepc.connector.sportsmodel.Sport;
 
 public class DetailedOddsTable {
 	
@@ -47,10 +38,10 @@ public class DetailedOddsTable {
 
 		//TODO use lookup table
 		B3KeyEntity entityKey = new B3KeyEntity(Outcome.class, outcomeId);
-		Outcome outcome = (Outcome) entityKey.load(bundle);
+		Outcome outcome = (Outcome) entityKey.load(bundle, jsonMapper);
 		
 		entityKey = new B3KeyEntity(Event.class, outcome.getEventId());
-		Event event = entityKey.load(bundle);
+		Event event = entityKey.load(bundle, jsonMapper);
 		
 		//B3KeyLookup lookupKey = new B3KeyLookup(entity, targetTable, targetHash, targetRange)
 		

@@ -1,24 +1,12 @@
 package com.betbrain.b3.report;
 
-import java.util.ArrayList;
-
 import com.betbrain.b3.data.B3Bundle;
 import com.betbrain.b3.data.B3KeyEntity;
 import com.betbrain.b3.data.B3KeyEventInfo;
-import com.betbrain.b3.data.B3KeyLink;
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.data.ModelShortName;
 import com.betbrain.b3.pushclient.JsonMapper;
-import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
-import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Event;
-import com.betbrain.sepc.connector.sportsmodel.EventInfo;
-import com.betbrain.sepc.connector.sportsmodel.EventInfoType;
-import com.betbrain.sepc.connector.sportsmodel.EventStatus;
-import com.betbrain.sepc.connector.sportsmodel.EventType;
-import com.betbrain.sepc.connector.sportsmodel.Outcome;
-import com.betbrain.sepc.connector.sportsmodel.OutcomeType;
-import com.betbrain.sepc.connector.sportsmodel.Sport;
 
 public class EventInfoQuery {
 	
@@ -37,7 +25,7 @@ public class EventInfoQuery {
 		
 		//event
 		B3KeyEntity keyEntity = new B3KeyEntity(Event.class, eventId);
-		Event event = keyEntity.load(bundle);
+		Event event = keyEntity.load(bundle, jsonMapper);
 		
 		//eventinfo - current status
 		//B3KeyEventInfo key = new B3KeyEventInfo(event.getSportId(), event.getTypeId(),

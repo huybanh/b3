@@ -123,7 +123,7 @@ public class InitialDumpDeployer {
 	
 	public void initialPutAllEvents() {
 		
-		initialPutAll(eventTasks, B3Table.Event, 0, null, Event.class, new B3KeyBuilder<Event>() {
+		initialPutAllToMainTable(eventTasks, B3Table.Event, 0, null, Event.class, new B3KeyBuilder<Event>() {
 
 			public B3Entity<Event> newB3Entity() {
 				return new B3Event();
@@ -143,7 +143,7 @@ public class InitialDumpDeployer {
 	
 	public void initialPutAllEventInfos() {
 		
-		initialPutAll(eventInfoTasks, B3Table.EventInfo, 0, null, EventInfo.class, new B3KeyBuilder<EventInfo>() {
+		initialPutAllToMainTable(eventInfoTasks, B3Table.EventInfo, 0, null, EventInfo.class, new B3KeyBuilder<EventInfo>() {
 
 			public B3Entity<EventInfo> newB3Entity() {
 				return new B3EventInfo();
@@ -165,7 +165,7 @@ public class InitialDumpDeployer {
 	
 	public void initialPutAllOutcomes() {
 		
-		initialPutAll(outcomeTasks, B3Table.Outcome, 0, null, Outcome.class, new B3KeyBuilder<Outcome>() {
+		initialPutAllToMainTable(outcomeTasks, B3Table.Outcome, 0, null, Outcome.class, new B3KeyBuilder<Outcome>() {
 
 			public B3Outcome newB3Entity() {
 				return new B3Outcome();
@@ -187,7 +187,7 @@ public class InitialDumpDeployer {
 	
 	public void initialPutAllOffers() {
 		
-		initialPutAll(offerTasks, B3Table.BettingOffer, 0, null, BettingOffer.class, new B3KeyBuilder<BettingOffer>() {
+		initialPutAllToMainTable(offerTasks, B3Table.BettingOffer, 0, null, BettingOffer.class, new B3KeyBuilder<BettingOffer>() {
 
 			public B3BettingOffer newB3Entity() {
 				return new B3BettingOffer();
@@ -276,7 +276,8 @@ public class InitialDumpDeployer {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private <E extends Entity> void initialPutAll(LinkedList<Runnable> runnerList, final B3Table table, final int start, final Integer end,
+	private <E extends Entity> void initialPutAllToMainTable(LinkedList<Runnable> runnerList, 
+			final B3Table table, final int start, final Integer end,
 			final Class<E> entityClazz, final B3KeyBuilder<E> keyBuilder) {
 
 		HashMap<Long, Entity> allEntities = masterMap.get(entityClazz.getName());
@@ -300,13 +301,13 @@ public class InitialDumpDeployer {
 						}
 						B3Entity<E> b3entity = keyBuilder.newB3Entity();
 						b3entity.entity = (E) entity;
-						b3entity.buildDownlinks(masterMap);
+						b3entity.buildDownlinks(masterMap, null, null);
 						B3Key b3key = keyBuilder.buildKey(b3entity);
 						
 						LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
 						
 						//put linked entities to table main, lookup, link
-						initialPutOne(table, b3key, b3Cells, null, b3entity, jsonMapper);
+						putToMainAndLookupAndLinkRecursively(table, b3key, b3Cells, null, b3entity, masterMap, bundle, jsonMapper);
 						
 						//put main entity to main table
 						B3Update update = new B3Update(table, b3key, b3Cells.toArray(new B3CellString[b3Cells.size()]));
@@ -328,9 +329,10 @@ public class InitialDumpDeployer {
 		}
 	}
 	
-	private <E extends Entity>void initialPutOne(
+	public static <E extends Entity>void putToMainAndLookupAndLinkRecursively(
 			B3Table mainTable, B3Key mainKey, LinkedList<B3Cell<?>> mainCells, 
-			final String cellName, B3Entity<?> b3entity, JsonMapper jsonMapper) {
+			final String cellName, B3Entity<?> b3entity, 
+			HashMap<String, HashMap<Long, Entity>> masterMap, B3Bundle bundle, JsonMapper jsonMapper) {
 		
 		String thisCellName;
 		if (cellName == null) {
@@ -354,7 +356,7 @@ public class InitialDumpDeployer {
 				
 				//link: From main entity -> linked entities
 				if (link.linkedEntity != null) {
-					link.linkedEntity.buildDownlinks(masterMap);
+					link.linkedEntity.buildDownlinks(masterMap, bundle, jsonMapper);
 				}
 				
 				//put linked entity to table link
@@ -376,7 +378,8 @@ public class InitialDumpDeployer {
 					} else {
 						childCellName = cellName + B3Table.CELL_LOCATOR_SEP + link.name;
 					}
-					initialPutOne(mainTable, mainKey, mainCells, childCellName, link.linkedEntity, jsonMapper);
+					putToMainAndLookupAndLinkRecursively(mainTable, mainKey, mainCells, childCellName, link.linkedEntity, 
+							masterMap, bundle, jsonMapper);
 				}
 			}
 		}

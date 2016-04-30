@@ -19,7 +19,7 @@ public class B3KeyEntity extends B3Key {
 	
 	final Long id;
 	
-	private JsonMapper jsonMapper = new JsonMapper();
+	//private JsonMapper jsonMapper = new JsonMapper();
 
 	public B3KeyEntity(Entity entity) {
 		super();
@@ -80,13 +80,15 @@ public class B3KeyEntity extends B3Key {
 		return list;
 	}
 
-	public static <E extends Entity> ArrayList<E> load(B3Bundle bundle, Class<E> clazz, long id) {
+	public static <E extends Entity> ArrayList<E> load(B3Bundle bundle, JsonMapper mapper, Class<E> clazz, long id) {
 		ArrayList<Long> idList = new ArrayList<Long>();
 		idList.add(id);
-		return load(bundle, clazz, idList);
+		return load(bundle, mapper, clazz, idList);
 	}
 
-	public static <E extends Entity> ArrayList<E> load(B3Bundle bundle, Class<E> clazz, ArrayList<Long> idList) {
+	public static <E extends Entity> ArrayList<E> load(B3Bundle bundle, JsonMapper mapper,
+			Class<E> clazz, ArrayList<Long> idList) {
+		
 		ArrayList<E> list = new ArrayList<E>();
 		for (Long id : idList) {
 			B3KeyEntity key = new B3KeyEntity(clazz, id);
@@ -98,7 +100,7 @@ public class B3KeyEntity extends B3Key {
 			@SuppressWarnings("unchecked")
 			E entity = (E) JsonMapper.DeserializeF(json);
 			System.out.println(entity);*/
-			E entity = key.load(bundle);
+			E entity = key.load(bundle, mapper);
 			//let clients may need to know if an entity is missing
 			//if (entity != null) {
 				list.add(entity);
@@ -107,7 +109,7 @@ public class B3KeyEntity extends B3Key {
 		return list;
 	}
 
-	public <E extends Entity> E load(B3Bundle bundle) {
+	public <E extends Entity> E load(B3Bundle bundle, JsonMapper mapper) {
 		Item item = DynamoWorker.get(B3Table.Entity, bundle, getHashKey(), getRangeKey());
 		if (item == null) {
 			System.out.println("ID not found: " + getHashKey() + "@" + getRangeKey());
@@ -115,7 +117,7 @@ public class B3KeyEntity extends B3Key {
 		}
 		String json = item.getString(B3Table.CELL_LOCATOR_THIZ);
 		@SuppressWarnings("unchecked")
-		E entity = (E) jsonMapper.deserialize(json);
+		E entity = (E) mapper.deserialize(json);
 		System.out.println(entity);
 		return entity;
 	}

@@ -31,7 +31,7 @@ public class QueryTests {
 		B3Bundle bundle = DynamoWorker.getBundleCurrent(); 
 		JsonMapper jsonMapper = new JsonMapper();
 		ArrayList<Long> ids;
-		B3KeyLink keyLink = new B3KeyLink(Event.class, 219387861, Outcome.class, "eventId");
+		B3KeyLink keyLink = new B3KeyLink(Event.class, 206795928, Outcome.class, "eventId");
 		ArrayList<Long> outcomeIds = keyLink.listLinks(bundle);
 		keyLink = new B3KeyLink(Outcome.class, outcomeIds.get(0), BettingOffer.class, "outcomeId");
 		keyLink.listLinks(bundle);
