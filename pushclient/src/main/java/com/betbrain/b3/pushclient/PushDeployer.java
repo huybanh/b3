@@ -8,7 +8,7 @@ import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.internal.IteratorSupport;
-import com.betbrain.b3.data.B3Bundle;
+
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.ChangeBatchDeployer;
 import com.betbrain.b3.data.DynamoWorker;
@@ -26,16 +26,11 @@ public class PushDeployer {
 		final int threadCount = Integer.parseInt(args[0]);
 		DynamoWorker.initialize();
 		ModelShortName.initialize();
+		//DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYWAIT);
+		DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYING); //TESTING
 		final JsonMapper mapper = new JsonMapper();
 		
-		//final B3Bundle bundle = DynamoWorker.getBundleByStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYWAIT);
-		final B3Bundle bundle = DynamoWorker.getBundleByStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYING); //TESTING
-		if (bundle == null) {
-			System.out.println("Found no bundles for depoying");
-			return;
-		}
-		System.out.println("Working bundle: " + bundle);
-		DynamoWorker.setBundleStatus(bundle, DynamoWorker.BUNDLE_STATUS_DEPLOYING);
+		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYING);
 
 		final HashMap<String, HashMap<Long, Entity>> masterMap = new HashMap<String, HashMap<Long,Entity>>();		
 		//final Runnable[] masterRunner = new Runnable[1];
@@ -45,7 +40,7 @@ public class PushDeployer {
 				for (Entry<String, HashMap<Long, Entity>> entry : masterMap.entrySet()) {
 					System.out.println(entry.getKey() + ": " + entry.getValue().size());
 				}
-				new InitialDumpDeployer(bundle, masterMap).initialPutMaster(threadCount);
+				new InitialDumpDeployer(masterMap).initialPutMaster(threadCount);
 			}
 		};
 
@@ -55,7 +50,7 @@ public class PushDeployer {
 			initialDumpLoadTasks.add(new Runnable() {
 				public void run() {
 					ItemCollection<QueryOutcome> coll = DynamoWorker.query(
-							bundle, B3Table.SEPC, DynamoWorker.SEPC_INITIAL + distFinal);
+							B3Table.SEPC, DynamoWorker.SEPC_INITIAL + distFinal);
 
 					IteratorSupport<Item, QueryOutcome> iter = coll.iterator();
 					int itemCount = 0;
@@ -122,8 +117,8 @@ public class PushDeployer {
 		initialDumpDeployTask.run();*/
 		
 		//all initial-dump deploying threads have finished
-		//DynamoWorker.setBundleStatus(bundle, DynamoWorker.BUNDLE_STATUS_PUSHING);
-		new ChangeBatchDeployer(bundle).deployChangeBatches();
+		//DynamoWorker.setBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSHING);
+		new ChangeBatchDeployer().deployChangeBatches();
 	}
 
 }

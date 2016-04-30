@@ -2,7 +2,6 @@ package com.betbrain.b3.model;
 
 import java.util.HashMap;
 
-import com.betbrain.b3.data.B3Bundle;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Event;
@@ -37,15 +36,15 @@ public class B3Event extends B3Entity<Event> {
 
 	@Override
 	public void buildDownlinks(HashMap<String, HashMap<Long, Entity>> masterMap,
-			B3Bundle bundle, JsonMapper mapper) {
+			JsonMapper mapper) {
 		this.sport = build(entity.getSportId(), new B3Sport(), 
-				Sport.class, masterMap, bundle, mapper);
+				Sport.class, masterMap, mapper);
 		this.status = build(entity.getStatusId(), new B3EventStatus(), 
-				EventStatus.class, masterMap, bundle, mapper);
+				EventStatus.class, masterMap, mapper);
 		this.template = build(entity.getTemplateId(), new B3EventTemplate(), 
-				EventTemplate.class, masterMap, bundle, mapper);
+				EventTemplate.class, masterMap, mapper);
 		this.type = build(entity.getTypeId(), new B3EventType(),
-				EventType.class, masterMap, bundle, mapper);
+				EventType.class, masterMap, mapper);
 	}
 
 }

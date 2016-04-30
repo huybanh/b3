@@ -11,7 +11,6 @@ import com.betbrain.b3.pushclient.EntityDeleteWrapper;
 import com.betbrain.b3.pushclient.EntityUpdateWrapper;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.amazonaws.services.dynamodbv2.document.Item;
-import com.betbrain.b3.data.B3Bundle;
 import com.betbrain.b3.data.B3CellString;
 import com.betbrain.b3.data.B3KeyEntity;
 import com.betbrain.b3.data.B3Table;
@@ -59,20 +58,19 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		return links;
 	}
 	
-	abstract public void buildDownlinks(HashMap<String, HashMap<Long, Entity>> masterMap,
-			B3Bundle bundle, JsonMapper mapper);
+	abstract public void buildDownlinks(HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper);
 	
 	/*@SuppressWarnings("rawtypes")
 	static <E extends B3Entity, F> E build(Long id, E e, Class<? extends Entity> clazz,
-			HashMap<String, HashMap<Long, Entity>> masterMap, B3Bundle bundle, JsonMapper mapper) {
+			HashMap<String, HashMap<Long, Entity>> masterMap, B3Bundle JsonMapper mapper) {
 		
-		return build(id, e, clazz, masterMap, bundle, mapper, true);
+		return build(id, e, clazz, masterMap, mapper, true);
 	}*/
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	static <E extends B3Entity> E build(Long id, E e, Class<? extends Entity> clazz,
 			HashMap<String, HashMap<Long, Entity>> masterMap, 
-			B3Bundle bundle, JsonMapper mapper/*, boolean depthBuilding*/) {
+			JsonMapper mapper/*, boolean depthBuilding*/) {
 		
 		if (id == null) {
 			return null;
@@ -82,14 +80,14 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		if (masterMap != null) {
 			one = lookup(id, clazz, masterMap);
 		} else {
-			one = lookupB3(id, clazz, bundle, mapper);
+			one = lookupB3(id, clazz, mapper);
 		}
 		if (one == null) {
 			return null;
 		}
 		e.entity = one;
 		//if (depthBuilding) {
-			e.buildDownlinks(masterMap, bundle, mapper);
+			e.buildDownlinks(masterMap, mapper);
 		//}
 		return e;
 	}
@@ -108,10 +106,10 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		return one;
 	}
 	
-	private static Entity lookupB3(long id, Class<? extends Entity> clazz, B3Bundle bundle, JsonMapper mapper) {
+	private static Entity lookupB3(long id, Class<? extends Entity> clazz, JsonMapper mapper) {
 		
 		B3KeyEntity entityKey = new B3KeyEntity(clazz, id);
-		Entity foundEntity = entityKey.load(bundle, mapper);
+		Entity foundEntity = entityKey.load(mapper);
 		if (foundEntity == null) {
 			System.out.println("Ignoring entity due to missing linked entity: " + clazz.getName() + "@" + id);
 			return null;
@@ -128,7 +126,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		return b3entity;
 	}
 	
-	public static void applyChange(EntityChangeBase change, B3Bundle bundle, JsonMapper mapper) {
+	public static void applyChange(EntityChangeBase change, JsonMapper mapper) {
 		
 		Class<? extends B3Entity<?>> b3class = ModelShortName.getB3Class(change.getEntityClassName());
 		if (b3class == null) {
@@ -139,13 +137,13 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 			B3Entity<?> b3entity = b3class.newInstance();
 			//b3entity.entity = change.getEntity();
 			if (change instanceof EntityCreateWrapper) {
-				b3entity.applyChangeCreate((EntityCreateWrapper) change, bundle, mapper);
+				b3entity.applyChangeCreate((EntityCreateWrapper) change, mapper);
 				
 			} else if (change instanceof EntityUpdateWrapper) {
-				b3entity.applyChangeUpdate((EntityUpdateWrapper) change, bundle, mapper);
+				b3entity.applyChangeUpdate((EntityUpdateWrapper) change, mapper);
 				
 			} else if (change instanceof EntityDeleteWrapper) {
-				b3entity.applyChangeDelete((EntityDeleteWrapper) change, bundle, mapper);
+				b3entity.applyChangeDelete((EntityDeleteWrapper) change, mapper);
 			} else {
 				throw new RuntimeException("Unknown change-wrapper class: " + change.getClass().getName());
 			}
@@ -157,7 +155,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 	}
 
 	@SuppressWarnings("unchecked")
-	void applyChangeCreate(EntityCreateWrapper create, B3Bundle bundle, JsonMapper mapper) {
+	void applyChangeCreate(EntityCreateWrapper create, JsonMapper mapper) {
 		
 		//table entity
 		this.entity = (E) create.getEntity();
@@ -165,15 +163,15 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		String newEntityJson = mapper.serialize(this.entity);
 		B3CellString cells = new B3CellString(B3Table.CELL_LOCATOR_THIZ, newEntityJson);
 		B3Update b3update = new B3Update(B3Table.Entity, entityKey, cells);
-		DynamoWorker.put(bundle, b3update);
+		DynamoWorker.put(b3update);
 		
 	}
 
-	void applyChangeUpdate(EntityUpdateWrapper update, B3Bundle bundle, JsonMapper mapper) {
+	void applyChangeUpdate(EntityUpdateWrapper update, JsonMapper mapper) {
 		
 	}
 
-	void applyChangeDelete(EntityDeleteWrapper delte, B3Bundle bundle, JsonMapper mapper) {
+	void applyChangeDelete(EntityDeleteWrapper delete, JsonMapper mapper) {
 		
 	}
 

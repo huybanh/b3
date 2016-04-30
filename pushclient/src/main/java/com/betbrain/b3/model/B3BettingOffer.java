@@ -2,7 +2,6 @@ package com.betbrain.b3.model;
 
 import java.util.HashMap;
 
-import com.betbrain.b3.data.B3Bundle;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
 import com.betbrain.sepc.connector.sportsmodel.BettingOfferStatus;
@@ -37,19 +36,18 @@ public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 	}
 	
 	@Override
-	public void buildDownlinks(HashMap<String, HashMap<Long, Entity>> masterMap,
-			B3Bundle bundle, JsonMapper mapper) {
+	public void buildDownlinks(HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper) {
 		
 		this.provider = build(entity.getProviderId(), new B3Provider(), 
-				Provider.class, masterMap, bundle, mapper);
+				Provider.class, masterMap, mapper);
 		this.source = build(entity.getSourceId(), new B3Source(), 
-				Source.class, masterMap, bundle, mapper);
+				Source.class, masterMap, mapper);
 		this.outcome = build(entity.getOutcomeId(), new B3Outcome(), 
-				Outcome.class, masterMap, bundle, mapper);
+				Outcome.class, masterMap, mapper);
 		this.bettingType = build(entity.getBettingTypeId(), 
-				new B3BettingType(), BettingType.class, masterMap, bundle, mapper);
+				new B3BettingType(), BettingType.class, masterMap, mapper);
 		this.status = build(entity.getStatusId(), 
-				new B3BettingOfferStatus(), BettingOfferStatus.class, masterMap, bundle, mapper);
+				new B3BettingOfferStatus(), BettingOfferStatus.class, masterMap, mapper);
 		
 		/*Entity one = masterMap.get(Outcome.class.getName()).get(entity.getOutcomeId());
 		this.outcome = new B3Outcome((Outcome) one);

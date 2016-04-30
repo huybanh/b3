@@ -22,8 +22,6 @@ import com.betbrain.sepc.connector.sportsmodel.Outcome;
 public class InitialDumpDeployer {
 	
 	//private static final int CONCURRENT_FACTOR = 20;
-	
-	private final B3Bundle bundle;
 
 	private final HashMap<String, HashMap<Long, Entity>> masterMap;
 	//private final HashMap<Long, Long> eventPartToEventMap;
@@ -51,10 +49,9 @@ public class InitialDumpDeployer {
 	private LinkedList<Runnable> offerTasks = allTasks[4];
 	private int taskTypeIndex = 0;
 	
-	public InitialDumpDeployer(B3Bundle bundle, HashMap<String, HashMap<Long, Entity>> masterMap/*,
+	public InitialDumpDeployer(HashMap<String, HashMap<Long, Entity>> masterMap/*,
 			HashMap<Long, Long> eventPartToEventMap*/) {
 
-		this.bundle = bundle;
 		this.masterMap = masterMap;
 		//this.eventPartToEventMap = eventPartToEventMap;
 	}
@@ -261,7 +258,7 @@ public class InitialDumpDeployer {
 							B3KeyEntity entityKey = new B3KeyEntity(entity);
 							B3Update update = new B3Update(B3Table.Entity, entityKey, 
 									new B3CellString(B3Table.CELL_LOCATOR_THIZ, jsonMapper.serialize(entity)));
-							DynamoWorker.put(bundle, update);
+							DynamoWorker.put(update);
 						}
 					}
 				});
@@ -302,16 +299,16 @@ public class InitialDumpDeployer {
 						}*/
 						B3Entity<E> b3entity = keyBuilder.newB3Entity();
 						b3entity.entity = (E) entity;
-						b3entity.buildDownlinks(masterMap, null, null);
+						b3entity.buildDownlinks(masterMap, null);
 						B3Key b3key = keyBuilder.buildKey(b3entity);
 						
 						//put linked entities to table main, lookup, link
 						LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
-						putToMainAndLookupAndLinkRecursively(table, b3key, b3Cells, null, b3entity, masterMap, bundle, jsonMapper);
+						putToMainAndLookupAndLinkRecursively(table, b3key, b3Cells, null, b3entity, masterMap, jsonMapper);
 						
 						//put main entity to main table
 						B3Update update = new B3Update(table, b3key, b3Cells.toArray(new B3CellString[b3Cells.size()]));
-						DynamoWorker.put(bundle, update);
+						DynamoWorker.put(update);
 						
 						//entity table
 						/*B3KeyEntity entityKey = new B3KeyEntity(entity);
@@ -332,7 +329,7 @@ public class InitialDumpDeployer {
 	public static <E extends Entity>void putToMainAndLookupAndLinkRecursively(
 			B3Table mainTable, B3Key mainKey, LinkedList<B3Cell<?>> mainCells, 
 			final String cellName, B3Entity<?> b3entity, 
-			HashMap<String, HashMap<Long, Entity>> masterMap, B3Bundle bundle, JsonMapper jsonMapper) {
+			HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper jsonMapper) {
 		
 		String thisCellName;
 		if (cellName == null) {
@@ -349,7 +346,7 @@ public class InitialDumpDeployer {
 		B3KeyLookup lookupKey = new B3KeyLookup(
 				b3entity.entity, mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), thisCellName);
 		B3Update update = new B3Update(B3Table.Lookup, lookupKey);
-		DynamoWorker.put(bundle, update);
+		DynamoWorker.put(update);
 		
 		EntityLink[] linkedEntities = b3entity.getDownlinkedEntities();
 		if (linkedEntities != null) {
@@ -357,14 +354,14 @@ public class InitialDumpDeployer {
 				
 				//link: From main entity -> linked entities
 				if (link.linkedEntity != null) {
-					link.linkedEntity.buildDownlinks(masterMap, bundle, jsonMapper);
+					link.linkedEntity.buildDownlinks(masterMap, jsonMapper);
 				}
 				
 				//put linked entity to table link
 				//B3KeyLink linkKey = new B3KeyLink(link.linkedEntity.entity, b3entity.entity, link.name); //reverse link direction
 				B3KeyLink linkKey = new B3KeyLink(link.linkedEntityClazz, link.linkedEntityId, b3entity.entity, link.name); //reverse link direction
 				update = new B3Update(B3Table.Link, linkKey);
-				DynamoWorker.put(bundle, update);
+				DynamoWorker.put(update);
 				
 				//commented out, as we can always find a link without information from lookup table
 				//also, put link to lookup: Main entity -> link location
@@ -380,7 +377,7 @@ public class InitialDumpDeployer {
 						childCellName = cellName + B3Table.CELL_LOCATOR_SEP + link.name;
 					}
 					putToMainAndLookupAndLinkRecursively(mainTable, mainKey, mainCells, childCellName, link.linkedEntity, 
-							masterMap, bundle, jsonMapper);
+							masterMap, jsonMapper);
 				}
 			}
 		}

@@ -4,7 +4,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import com.betbrain.b3.data.B3Bundle;
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.data.ModelShortName;
@@ -22,7 +21,7 @@ public class GarbageCollector {
 			System.out.println("Found no bundles for depoying");
 			return;
 		}
-		DynamoWorker.setBundleStatus(bundle, DynamoWorker.BUNDLE_STATUS_DELETING);
+		DynamoWorker.setBundleStatus(DynamoWorker.BUNDLE_STATUS_DELETING);
 
 		final LinkedList<Runnable> runners = new LinkedList<Runnable>();
 		for (int dist = 0; dist < B3Table.DIST_FACTOR; dist++) {
@@ -30,7 +29,7 @@ public class GarbageCollector {
 			runners.add(new Runnable() {
 				public void run() {
 					ItemCollection<QueryOutcome> coll = DynamoWorker.query(
-							bundle, B3Table.SEPC, DynamoWorker.SEPC_INITIAL + distFinal);
+							B3Table.SEPC, DynamoWorker.SEPC_INITIAL + distFinal);
 
 					IteratorSupport<Item, QueryOutcome> iter = coll.iterator();
 					int itemCount = 0;
@@ -70,15 +69,11 @@ public class GarbageCollector {
 		ModelShortName.initialize();
 		DynamoWorker.initialize();
 		
-		B3Bundle bundle = DynamoWorker.getBundleByStatus(DynamoWorker.BUNDLE_STATUS_GARBAGE);
-		if (bundle == null) {
-			System.out.println("Found no bundles to delete");
-			return;
-		}
-		deleteParallel(B3Table.SEPC, bundle, 2);
+		DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_GARBAGE);
+		deleteParallel(B3Table.SEPC, 2);
 	}
 	
-	private static void deleteParallel(final B3Table table, final B3Bundle bundle, int numberOfThreads) {
+	private static void deleteParallel(final B3Table table, int numberOfThreads) {
 		
         ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads);
         
@@ -93,7 +88,7 @@ public class GarbageCollector {
 				
 				public void run() {
 					System.out.println("Deleting " + table.name + " segment " + segmentFinal);
-					DynamoWorker.deleteParallel(table, bundle, segmentFinal, totalSegments);
+					DynamoWorker.deleteParallel(table, segmentFinal, totalSegments);
 				}
 			});
         }

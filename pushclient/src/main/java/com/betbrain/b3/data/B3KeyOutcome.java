@@ -77,8 +77,8 @@ public class B3KeyOutcome extends B3KeyEntitySupport {
 		return eventPartId + B3Table.KEY_SEP + outcomeTypeId + B3Table.KEY_SEP + outcomeId; 
 	}
 	
-	public B3Outcome loadFull(B3Bundle bundle, JsonMapper mapper) {
-		Item item = DynamoWorker.get(B3Table.Outcome, bundle, getHashKey(), getRangeKey());
+	public B3Outcome loadFull(JsonMapper mapper) {
+		Item item = DynamoWorker.get(B3Table.Outcome, getHashKey(), getRangeKey());
 		if (item == null) {
 			System.out.println("ID not found: " + getHashKey() + "@" + getRangeKey());
 			return null;

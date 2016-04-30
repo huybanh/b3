@@ -54,8 +54,9 @@ public class InitialLocalPut {
 		
 		ModelShortName.initialize();
 		DynamoWorker.initialize();
+		DynamoWorker.initBundleUnused("test");
 		
-		new InitialDumpDeployer(DynamoWorker.getBundleUnused("test"), masterMap).initialPutMaster(2);
+		new InitialDumpDeployer(masterMap).initialPutMaster(2);
 	}
 
 }

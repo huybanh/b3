@@ -2,7 +2,6 @@ package com.betbrain.b3.report;
 
 import java.util.ArrayList;
 
-import com.betbrain.b3.data.B3Bundle;
 import com.betbrain.b3.data.B3KeyEntity;
 import com.betbrain.b3.data.B3KeyEventInfo;
 import com.betbrain.b3.data.B3KeyOutcome;
@@ -22,7 +21,7 @@ public class DetailedOddsTable {
 		
 		ModelShortName.initialize();
 		DynamoWorker.initialize();
-		B3Bundle bundle = DynamoWorker.getBundleCurrent();
+		DynamoWorker.initBundleCurrent();
 		
 		//long matchId = 217410074;
 		//long outcomeId = 2691102520l;
@@ -31,23 +30,23 @@ public class DetailedOddsTable {
 		//Y1/1/E219387861
 		//long outcomeId = 2890001650l;
 		
-		new DetailedOddsTable().run(bundle, outcomeId);
+		new DetailedOddsTable().run(outcomeId);
 	}
 	
-	public void run(B3Bundle bundle, long outcomeId) {
+	public void run(long outcomeId) {
 
 		//TODO use lookup table
 		B3KeyEntity entityKey = new B3KeyEntity(Outcome.class, outcomeId);
-		Outcome outcome = (Outcome) entityKey.load(bundle, jsonMapper);
+		Outcome outcome = (Outcome) entityKey.load(jsonMapper);
 		
 		entityKey = new B3KeyEntity(Event.class, outcome.getEventId());
-		Event event = entityKey.load(bundle, jsonMapper);
+		Event event = entityKey.load(jsonMapper);
 		
 		//B3KeyLookup lookupKey = new B3KeyLookup(entity, targetTable, targetHash, targetRange)
 		long eventPartOrdinaryTime = 3;
 		B3KeyOutcome outcomeKey = new B3KeyOutcome(event.getSportId(), event.getTypeId(), 
 				event.getId(), eventPartOrdinaryTime, outcome.getTypeId(), outcome.getId());
-		B3Outcome b3outcome = outcomeKey.loadFull(bundle, jsonMapper);
+		B3Outcome b3outcome = outcomeKey.loadFull(jsonMapper);
 		
 		/*long sportId = 1; //outcome.gets
 		long eventId = outcome.getEventId();
@@ -60,13 +59,13 @@ public class DetailedOddsTable {
 		B3KeyEventInfo eventInfoKey = new B3KeyEventInfo(
 				event.getSportId(), event.getTypeId(), event.getId(), 
 				IDs.EVENTINFOTYPE_CURRENTSTATUS, null/*eventInfoId*/);
-		ArrayList<EventInfo> matchStatuses = eventInfoKey.listEntities(bundle, jsonMapper);
+		ArrayList<EventInfo> matchStatuses = eventInfoKey.listEntities(jsonMapper);
 		
 		//scores
 		eventInfoKey = new B3KeyEventInfo(
 				event.getSportId(), event.getTypeId(), event.getId(), 
 				IDs.EVENTINFOTYPE_SCORE, null/*eventInfoId*/);
-		ArrayList<EventInfo> matchScores = eventInfoKey.listEntities(bundle, jsonMapper);
+		ArrayList<EventInfo> matchScores = eventInfoKey.listEntities(jsonMapper);
 		
 		//odds
 		//B3KeyEntity b3key  = new B3KeyEntity(Outcome.class, outcomeId);

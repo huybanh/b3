@@ -2,7 +2,6 @@ package com.betbrain.b3.report;
 
 import java.util.ArrayList;
 
-import com.betbrain.b3.data.B3Bundle;
 import com.betbrain.b3.data.B3KeyEntity;
 import com.betbrain.b3.data.B3KeyLink;
 import com.betbrain.b3.data.DynamoWorker;
@@ -26,26 +25,26 @@ public class EventQuery {
 	
 	private static void query(long eventId) {
 
-		B3Bundle bundle = DynamoWorker.getBundleCurrent(); 
+		DynamoWorker.initBundleCurrent(); 
 		JsonMapper jsonMapper = new JsonMapper();
 		
 		//event
 		B3KeyEntity keyEntity = new B3KeyEntity(Event.class, eventId);
-		Event event = keyEntity.load(bundle, jsonMapper);
+		Event event = keyEntity.load(jsonMapper);
 		
 		//outcomes
 		B3KeyLink keyLink = new B3KeyLink(Event.class, eventId, Outcome.class, "eventId");
-		ArrayList<Long> outcomeIds = keyLink.listLinks(bundle);
-		B3KeyEntity.load(bundle, jsonMapper, Outcome.class, outcomeIds);
+		ArrayList<Long> outcomeIds = keyLink.listLinks();
+		B3KeyEntity.load(jsonMapper, Outcome.class, outcomeIds);
 		
 		//bettingoffer
 		keyLink = new B3KeyLink(Outcome.class, outcomeIds.get(0), BettingOffer.class, "outcomeId");
-		ArrayList<Long> offerIds = keyLink.listLinks(bundle);
-		B3KeyEntity.load(bundle, jsonMapper, BettingOffer.class, offerIds);
+		ArrayList<Long> offerIds = keyLink.listLinks();
+		B3KeyEntity.load(jsonMapper, BettingOffer.class, offerIds);
 		
 		//eventinfo - current status
 		keyLink = new B3KeyLink(Event.class, eventId, EventInfo.class, "eventId");
-		ArrayList<Long> infoIds = keyLink.listLinks(bundle);
-		B3KeyEntity.load(bundle, jsonMapper, EventInfo.class, infoIds);
+		ArrayList<Long> infoIds = keyLink.listLinks();
+		B3KeyEntity.load(jsonMapper, EventInfo.class, infoIds);
 	}
 }

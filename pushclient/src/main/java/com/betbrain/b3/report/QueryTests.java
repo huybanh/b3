@@ -2,7 +2,6 @@ package com.betbrain.b3.report;
 
 import java.util.ArrayList;
 
-import com.betbrain.b3.data.B3Bundle;
 import com.betbrain.b3.data.B3KeyEntity;
 import com.betbrain.b3.data.B3KeyLink;
 import com.betbrain.b3.data.DynamoWorker;
@@ -28,13 +27,13 @@ public class QueryTests {
 		//all sports
 		//ArrayList<Entity> sports = new B3KeyEntity(Sport.class).listEntities();
 
-		B3Bundle bundle = DynamoWorker.getBundleCurrent(); 
+		DynamoWorker.initBundleCurrent(); 
 		JsonMapper jsonMapper = new JsonMapper();
 		ArrayList<Long> ids;
 		B3KeyLink keyLink = new B3KeyLink(Event.class, 206795928, Outcome.class, "eventId");
-		ArrayList<Long> outcomeIds = keyLink.listLinks(bundle);
+		ArrayList<Long> outcomeIds = keyLink.listLinks();
 		keyLink = new B3KeyLink(Outcome.class, outcomeIds.get(0), BettingOffer.class, "outcomeId");
-		keyLink.listLinks(bundle);
+		keyLink.listLinks();
 		//ids = new B3KeyLink(sports.get(0), Event.class).listLinks();
 		//B3KeyEntity.load(Event.class, ids);
 		

@@ -18,14 +18,11 @@ import com.betbrain.b3.pushclient.JsonMapper;
 
 public class ChangeBatchDeployer {
 	
-	private B3Bundle bundle;
-	
 	private JsonMapper mapper = new JsonMapper();
 	
 	ExecutorService executor;
 	
-	public ChangeBatchDeployer(B3Bundle bundle) {
-		this.bundle = bundle;
+	public ChangeBatchDeployer() {
 		executor = Executors.newFixedThreadPool(5);
 	}
 
@@ -35,7 +32,7 @@ public class ChangeBatchDeployer {
 			ArrayList<Object> allChanges = queryForChanges();
 			System.out.println("Total changes to deploy: " + allChanges.size());
 			for (Object one : allChanges) {
-				B3Entity.applyChange((EntityChangeBase) one, bundle, mapper);
+				B3Entity.applyChange((EntityChangeBase) one, mapper);
 			}
 			break; //TODO for testing only
 		}
@@ -52,7 +49,7 @@ public class ChangeBatchDeployer {
 				
 					public void run() {
 						ItemCollection<QueryOutcome> coll = DynamoWorker.query(
-								bundle, B3Table.SEPC, DynamoWorker.SEPC_CHANGEBATCH + distFinal);
+								B3Table.SEPC, DynamoWorker.SEPC_CHANGEBATCH + distFinal);
 	
 						IteratorSupport<Item, QueryOutcome> iter = coll.iterator();
 						int changeBatchCount = 0;
