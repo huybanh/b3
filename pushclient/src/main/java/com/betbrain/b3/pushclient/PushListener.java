@@ -7,6 +7,8 @@ import java.util.List;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityChange;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
+import com.betbrain.sepc.connector.sportsmodel.EntityCreate;
+import com.betbrain.sepc.connector.sportsmodel.EntityDelete;
 import com.betbrain.sepc.connector.sportsmodel.EntityUpdate;
 import com.betbrain.b3.data.B3Bundle;
 import com.betbrain.b3.data.B3Table;
@@ -71,7 +73,7 @@ public class PushListener implements SEPCConnectorListener, EntityChangeBatchPro
 			started = true;
 		}
 		for (int i = 0; i < initialThreads; i++) {
-			new Thread(new InitialWorker(bundle, initialListLock, entityList)).start();
+			new Thread(new InitialWorker(bundle, initialListLock, entityList))/*.start()*/;
 		}
 	}
 }
@@ -110,14 +112,18 @@ class BatchWorker implements Runnable {
 				}
 			}
 
-			//new change list to replace EntityUpdate by EntityUpdateWrapper (we failed serialize EntityUpdate)
+			//new change list to replace EntityChange by its wrapper (we failed serialize EntityUpdate/EntityCreate)
 			LinkedList<Object> changeList = new LinkedList<Object>();
 			for (EntityChange change : batch.getEntityChanges()) {
 				//nameValuePairs.add(new String[] {String.valueOf(i++), serializeChange(change)});
 				if (change instanceof EntityUpdate) {
 					changeList.add(new EntityUpdateWrapper((EntityUpdate) change));
+				} else if (change instanceof EntityCreate) {
+					changeList.add(new EntityCreateWrapper((EntityCreate) change));
+				} else if (change instanceof EntityDelete) {
+					changeList.add(new EntityDeleteWrapper((EntityDelete) change));
 				} else {
-					changeList.add(change);
+					throw new RuntimeException("Unknown change class: " + change.getClass().getName());
 				}
 			}
 			

@@ -37,7 +37,7 @@ public class ChangeBatchDeployer {
 				String changesJson = item.getString(DynamoWorker.SEPC_CELLNAME_CHANGES);
 				@SuppressWarnings("unchecked")
 				List<Object> changes = (List<Object>) mapper.deserialize(changesJson);
-				System.out.println(changes);
+				//System.out.println(changes);
 				changeBatchCount++;
 				if (changeBatchCount % 100 == 0) {
 					System.out.println("Change-batch count: " + changeBatchCount);
