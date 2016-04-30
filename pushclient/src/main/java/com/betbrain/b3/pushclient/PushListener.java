@@ -7,6 +7,7 @@ import java.util.List;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityChange;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
+import com.betbrain.sepc.connector.sportsmodel.EntityUpdate;
 import com.betbrain.b3.data.B3Bundle;
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.DynamoWorker;
@@ -108,15 +109,24 @@ class BatchWorker implements Runnable {
 				}
 			}
 
+			//new change list to replace EntityUpdate by EntityUpdateWrapper (we failed serialize EntityUpdate)
+			LinkedList<Object> changeList = new LinkedList<Object>();
+			for (EntityChange change : batch.getEntityChanges()) {
+				//nameValuePairs.add(new String[] {String.valueOf(i++), serializeChange(change)});
+				if (change instanceof EntityUpdate) {
+					changeList.add(new EntityUpdateWrapper((EntityUpdate) change));
+				} else {
+					changeList.add(change);
+				}
+			}
+			
+			//put
 			String rangeKey = String.valueOf(batch.getId());
 			String hashKey = DynamoWorker.SEPC_CHANGEBATCH + Math.abs(rangeKey.hashCode() % B3Table.DIST_FACTOR);
 			//DynamoWorker.putSepc(bundle, hashKey, "BATCH", mapper.serialize(batch));
-			LinkedList<String[]> nameValuePairs = new LinkedList<String[]>();
-			int i = 0;
-			for (EntityChange change : batch.getEntityChanges()) {
-				nameValuePairs.add(new String[] {String.valueOf(i++), mapper.serialize(change)});
-			}
-			DynamoWorker.putSepc(bundle, hashKey, rangeKey, nameValuePairs.toArray(new String[nameValuePairs.size()][]));
+			DynamoWorker.putSepc(bundle, hashKey, rangeKey,
+				new String[] {"CREATE_TIME", mapper.serialize(batch.getCreateTime())},
+				new String[] {"CHANGES", mapper.serialize(changeList)});
 		}
 	}
 }

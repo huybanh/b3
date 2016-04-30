@@ -21,7 +21,8 @@ public class JsonMapper {
 
 		flexDe = new JSONDeserializer();
 		ExcludeTransformer excludeTransformer = new ExcludeTransformer();
-		flexSer = new JSONSerializer().exclude("beanInfo").transform(excludeTransformer, void.class);
+		flexSer = new JSONSerializer().exclude("beanInfo").transform(excludeTransformer, void.class)
+				.include("propertyNames").include("propertyValues");
 	}
 
 	public String serialize(Object entity) {
@@ -30,6 +31,10 @@ public class JsonMapper {
 	
 	public Entity deserialize(String json) {
 		return (Entity) flexDe.deserialize(json);
+	}
+	
+	public Object deserializeObject(String json) {
+		return flexDe.deserialize(json);
 	}
 	
 	/*public String SerializeExcludeClassName(Object entity) {
