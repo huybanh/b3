@@ -304,9 +304,8 @@ public class InitialDumpDeployer {
 						b3entity.buildDownlinks(masterMap, null, null);
 						B3Key b3key = keyBuilder.buildKey(b3entity);
 						
-						LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
-						
 						//put linked entities to table main, lookup, link
+						LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
 						putToMainAndLookupAndLinkRecursively(table, b3key, b3Cells, null, b3entity, masterMap, bundle, jsonMapper);
 						
 						//put main entity to main table
@@ -346,7 +345,8 @@ public class InitialDumpDeployer {
 		mainCells.add(jsonCell);
 		
 		//put event to lookup
-		B3KeyLookup lookupKey = new B3KeyLookup(b3entity.entity, mainTable, mainKey.getHashKey(), mainKey.getRangeKey());
+		B3KeyLookup lookupKey = new B3KeyLookup(
+				b3entity.entity, mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), thisCellName);
 		B3Update update = new B3Update(B3Table.Lookup, lookupKey);
 		DynamoWorker.put(bundle, update);
 		

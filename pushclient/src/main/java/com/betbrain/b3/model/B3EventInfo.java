@@ -92,7 +92,6 @@ public class B3EventInfo extends B3Entity<EventInfo> {
 		//put main entity to main table
 		B3Update update = new B3Update(B3Table.EventInfo, infoKey, b3Cells.toArray(new B3CellString[b3Cells.size()]));
 		DynamoWorker.put(bundle, update);
-		
 	}
 
 	@Override
