@@ -22,7 +22,7 @@ import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 public class DynamoWorker {
 	
 	private static String HASH = "hash";
-	private static String RANGE = "range";
+	public static String RANGE = "range";
 	
 	private static String[] BUNDLEIDS = {"X", "Y", "Z", "T", "U"};
 	
@@ -43,9 +43,11 @@ public class DynamoWorker {
 	private static final String BUNDLE_CELL_ID = "ID";
 	private static final String BUNDLE_CELL_STATUS = "STATUS";
 	
-	public static final String SEPC_CELLNAME_JSON = "JSON";
 	public static final String SEPC_INITIAL = "I";
 	public static final String SEPC_CHANGEBATCH = "B";
+	public static final String SEPC_CELLNAME_JSON = "JSON";
+	public static final String SEPC_CELLNAME_CREATETIME = "CREATE_TIME";
+	public static final String SEPC_CELLNAME_CHANGES = "CHANGES";
 	
 	private  static AmazonDynamoDBClient dynaClient;
 	private static DynamoDB dynamoDB;

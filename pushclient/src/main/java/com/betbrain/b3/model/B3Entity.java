@@ -3,7 +3,7 @@ package com.betbrain.b3.model;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-import com.betbrain.b3.data.InitialPutHandler;
+import com.betbrain.b3.data.InitialDumpDeployer;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.betbrain.b3.data.EntityLink;
@@ -66,12 +66,12 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		}
 		HashMap<Long, Entity> subMap = masterMap.get(clazz.getName());
 		if (subMap == null) {
-			InitialPutHandler.linkingErrors.add("Found zero entities of " + clazz.getName());
+			InitialDumpDeployer.linkingErrors.add("Found zero entities of " + clazz.getName());
 			return null;
 		}
 		Entity one = subMap.get(id);
 		if (one == null) {
-			InitialPutHandler.linkingErrors.add("Missed ID " + id + " of " + clazz.getName());
+			InitialDumpDeployer.linkingErrors.add("Missed ID " + id + " of " + clazz.getName());
 			return null;
 		}
 		e.entity = one;

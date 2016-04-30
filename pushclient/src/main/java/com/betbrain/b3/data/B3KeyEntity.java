@@ -72,7 +72,7 @@ public class B3KeyEntity extends B3Key {
 				}
 				Item item = it.next();
 				String json = item.getString(B3Table.CELL_LOCATOR_THIZ);
-				Entity entity = jsonMapper.deserialize(json);
+				Entity entity = jsonMapper.deserializeEntity(json);
 				System.out.println(entity);
 				list.add((E) entity);
 			}

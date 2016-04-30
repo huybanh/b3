@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.betbrain.sepc.connector.sportsmodel.Entity;
+import com.betbrain.sepc.connector.sportsmodel.EntityCreate;
 import com.betbrain.sepc.connector.sportsmodel.EntityUpdate;
 import com.betbrain.sepc.connector.sportsmodel.Event;
 import com.betbrain.sepc.connector.util.StringUtil;
@@ -71,7 +72,11 @@ public class EntityUpdateWrapper {
 		if (update != null) {
 			LinkedList<String> stringValues = new LinkedList<String>();
 			for (Object obj : update.getPropertyValues()) {
-				stringValues.add(obj.toString());
+				if (obj != null) {
+					stringValues.add(obj.toString());
+				} else {
+					stringValues.add(null);
+				}
 			}
 			return stringValues;
 		}
@@ -132,7 +137,7 @@ public class EntityUpdateWrapper {
 		EntityUpdateWrapper wrapper = new EntityUpdateWrapper(update);
 		String s = mapper.serialize(wrapper);
 		System.out.println("serialized: " + s);
-		Object x = mapper.deserializeObject(s);
+		Object x = mapper.deserialize(s);
 		System.out.println("deserialized: " + BeanUtil.toString(x));
 		
 		System.out.println("SEPC utils");

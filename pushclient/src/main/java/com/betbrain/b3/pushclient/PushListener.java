@@ -41,6 +41,7 @@ public class PushListener implements SEPCConnectorListener, EntityChangeBatchPro
 		int batchThreads = Integer.parseInt(args[1]);
 		
 		listener.bundle = DynamoWorker.getBundleUnused(DynamoWorker.BUNDLE_STATUS_INITIALPUT);
+		System.out.println("Working bundle: " + listener.bundle);
 		SEPCConnector pushConnector = new SEPCPushConnector("sept.betbrain.com", 7000);
 		pushConnector.addConnectorListener(listener);
 		pushConnector.setEntityChangeBatchProcessingMonitor(listener);
@@ -125,8 +126,8 @@ class BatchWorker implements Runnable {
 			String hashKey = DynamoWorker.SEPC_CHANGEBATCH + Math.abs(rangeKey.hashCode() % B3Table.DIST_FACTOR);
 			//DynamoWorker.putSepc(bundle, hashKey, "BATCH", mapper.serialize(batch));
 			DynamoWorker.putSepc(bundle, hashKey, rangeKey,
-				new String[] {"CREATE_TIME", mapper.serialize(batch.getCreateTime())},
-				new String[] {"CHANGES", mapper.serialize(changeList)});
+				new String[] {DynamoWorker.SEPC_CELLNAME_CREATETIME, mapper.serialize(batch.getCreateTime())},
+				new String[] {DynamoWorker.SEPC_CELLNAME_CHANGES, mapper.serialize(changeList)});
 		}
 	}
 }

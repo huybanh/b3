@@ -19,7 +19,7 @@ import com.betbrain.sepc.connector.sportsmodel.Event;
 import com.betbrain.sepc.connector.sportsmodel.EventInfo;
 import com.betbrain.sepc.connector.sportsmodel.Outcome;
 
-public class InitialPutHandler {
+public class InitialDumpDeployer {
 	
 	//private static final int CONCURRENT_FACTOR = 20;
 	
@@ -31,7 +31,7 @@ public class InitialPutHandler {
 	public static LinkedList<String> linkingErrors = new LinkedList<String>();
 	
 	@SuppressWarnings("unchecked")
-	private final LinkedList<Runnable>[] runners = new LinkedList[] {
+	private final LinkedList<Runnable>[] allTasks = new LinkedList[] {
 			//entity
 			new LinkedList<Runnable>(),
 			//event
@@ -44,14 +44,14 @@ public class InitialPutHandler {
 			new LinkedList<Runnable>()
 	};
 	
-	private LinkedList<Runnable> entityRunners = runners[0];
-	private LinkedList<Runnable> eventRunners = runners[1];
-	private LinkedList<Runnable> eventInfoRunners = runners[2];
-	private LinkedList<Runnable> outcomeRunners = runners[3];
-	private LinkedList<Runnable> offerRunners = runners[4];
-	private int runnerTypeIndex = 0;
+	private LinkedList<Runnable> entityTasks = allTasks[0];
+	private LinkedList<Runnable> eventTasks = allTasks[1];
+	private LinkedList<Runnable> eventInfoTasks = allTasks[2];
+	private LinkedList<Runnable> outcomeTasks = allTasks[3];
+	private LinkedList<Runnable> offerTasks = allTasks[4];
+	private int taskTypeIndex = 0;
 	
-	public InitialPutHandler(B3Bundle bundle, HashMap<String, HashMap<Long, Entity>> masterMap/*,
+	public InitialDumpDeployer(B3Bundle bundle, HashMap<String, HashMap<Long, Entity>> masterMap/*,
 			HashMap<Long, Long> eventPartToEventMap*/) {
 
 		this.bundle = bundle;
@@ -67,50 +67,63 @@ public class InitialPutHandler {
 		initialPutAllOutcomes();
 		initialPutAllOffers();
 		
-		//System.out.println("Total runner count: " + runners.size());
+		final ArrayList<Object> threadIds = new ArrayList<Object>();
 		for (int i = 0; i < threads; i++) {
+			final Object oneThreadId = new Object();
+			threadIds.add(oneThreadId);
 			new Thread() {
 				public void run() {
 					do {
-						Runnable oneRunner;
-						synchronized (runners) {
-							int runnerTypeCount = 0;
+						Runnable oneTask;
+						synchronized (allTasks) {
+							int taskTypeCount = 0;
 							do {
-								runnerTypeIndex++;
-								if (runnerTypeIndex == runners.length) {
-									runnerTypeIndex = 0;
+								taskTypeIndex++;
+								if (taskTypeIndex == allTasks.length) {
+									taskTypeIndex = 0;
 								}
-								if (!runners[runnerTypeIndex].isEmpty()) {
+								if (!allTasks[taskTypeIndex].isEmpty()) {
 									break;
 								}
 
-								runnerTypeCount++;
-								if (runnerTypeCount > runners.length + 1) {
+								taskTypeCount++;
+								if (taskTypeCount > allTasks.length + 1) {
 									//no more runners
+									threadIds.remove(oneThreadId);
+									allTasks.notifyAll();
 									return;
 								}
 							} while (true);
-							oneRunner = runners[runnerTypeIndex].remove();
+							oneTask = allTasks[taskTypeIndex].remove();
 						}
-						oneRunner.run();
+						oneTask.run();
 					} while (true);
 				}
 			}.start();
 		}
-
-		/*if (linkingErrors.isEmpty()) {
-			System.out.println("Completed all initial puts without any linking errors found");
-		} else {
-			System.out.println("Completed all initial puts with linking errors found:");
-			for (String err : linkingErrors) {
-				System.out.println(err);
+		
+		//wait for all initial deploying threads to finish
+		while (true) {
+			synchronized (allTasks) {
+				if (!threadIds.isEmpty()) {
+					try {
+						allTasks.wait();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					continue;
+				}
 			}
-		}*/
+			break;
+		}
+		
+		//all initial-dump deploying threads have finished
+		return;
 	}
 	
 	public void initialPutAllEvents() {
 		
-		initialPutAll(eventRunners, B3Table.Event, 0, null, Event.class, new B3KeyBuilder<Event>() {
+		initialPutAll(eventTasks, B3Table.Event, 0, null, Event.class, new B3KeyBuilder<Event>() {
 
 			public B3Entity<Event> newB3Entity() {
 				return new B3Event();
@@ -130,7 +143,7 @@ public class InitialPutHandler {
 	
 	public void initialPutAllEventInfos() {
 		
-		initialPutAll(eventInfoRunners, B3Table.EventInfo, 0, null, EventInfo.class, new B3KeyBuilder<EventInfo>() {
+		initialPutAll(eventInfoTasks, B3Table.EventInfo, 0, null, EventInfo.class, new B3KeyBuilder<EventInfo>() {
 
 			public B3Entity<EventInfo> newB3Entity() {
 				return new B3EventInfo();
@@ -152,7 +165,7 @@ public class InitialPutHandler {
 	
 	public void initialPutAllOutcomes() {
 		
-		initialPutAll(outcomeRunners, B3Table.Outcome, 0, null, Outcome.class, new B3KeyBuilder<Outcome>() {
+		initialPutAll(outcomeTasks, B3Table.Outcome, 0, null, Outcome.class, new B3KeyBuilder<Outcome>() {
 
 			public B3Outcome newB3Entity() {
 				return new B3Outcome();
@@ -174,7 +187,7 @@ public class InitialPutHandler {
 	
 	public void initialPutAllOffers() {
 		
-		initialPutAll(offerRunners, B3Table.BettingOffer, 0, null, BettingOffer.class, new B3KeyBuilder<BettingOffer>() {
+		initialPutAll(offerTasks, B3Table.BettingOffer, 0, null, BettingOffer.class, new B3KeyBuilder<BettingOffer>() {
 
 			public B3BettingOffer newB3Entity() {
 				return new B3BettingOffer();
@@ -227,7 +240,7 @@ public class InitialPutHandler {
 			Collection<Entity>[] subLists = split(entities);
 			for (Collection<Entity> oneSubList : subLists) {
 				final Collection<Entity> oneSubListFinal = oneSubList;
-				entityRunners.add(new Runnable() {
+				entityTasks.add(new Runnable() {
 					
 					private JsonMapper jsonMapper = new JsonMapper();
 					

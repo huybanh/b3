@@ -29,11 +29,11 @@ public class JsonMapper {
 		return flexSer.serialize(entity);
 	}
 	
-	public Entity deserialize(String json) {
+	public Entity deserializeEntity(String json) {
 		return (Entity) flexDe.deserialize(json);
 	}
 	
-	public Object deserializeObject(String json) {
+	public Object deserialize(String json) {
 		return flexDe.deserialize(json);
 	}
 	

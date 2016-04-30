@@ -10,8 +10,9 @@ import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.internal.IteratorSupport;
 import com.betbrain.b3.data.B3Bundle;
 import com.betbrain.b3.data.B3Table;
+import com.betbrain.b3.data.ChangeBatchDeployer;
 import com.betbrain.b3.data.DynamoWorker;
-import com.betbrain.b3.data.InitialPutHandler;
+import com.betbrain.b3.data.InitialDumpDeployer;
 import com.betbrain.b3.data.ModelShortName;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
@@ -28,28 +29,30 @@ public class PushDeployer {
 		final JsonMapper mapper = new JsonMapper();
 		
 		final B3Bundle bundle = DynamoWorker.getBundleByStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYWAIT);
+		//final B3Bundle bundle = DynamoWorker.getBundleByStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYING); //TESTING
 		if (bundle == null) {
 			System.out.println("Found no bundles for depoying");
 			return;
 		}
+		System.out.println("Working bundle: " + bundle);
 		DynamoWorker.setBundleStatus(bundle, DynamoWorker.BUNDLE_STATUS_DEPLOYING);
 
 		final HashMap<String, HashMap<Long, Entity>> masterMap = new HashMap<String, HashMap<Long,Entity>>();		
 		//final Runnable[] masterRunner = new Runnable[1];
-		Runnable masterRunner = new Runnable() {
+		Runnable initialDumpDeployTask = new Runnable() {
 			
 			public void run() {
 				for (Entry<String, HashMap<Long, Entity>> entry : masterMap.entrySet()) {
 					System.out.println(entry.getKey() + ": " + entry.getValue().size());
 				}
-				new InitialPutHandler(bundle, masterMap).initialPutMaster(threadCount);
+				new InitialDumpDeployer(bundle, masterMap).initialPutMaster(threadCount);
 			}
 		};
 
-		final LinkedList<Runnable> runners = new LinkedList<Runnable>();
+		final LinkedList<Runnable> initialDumpLoadTasks = new LinkedList<Runnable>();
 		for (int dist = 0; dist < B3Table.DIST_FACTOR; dist++) {
 			final int distFinal = dist;
-			runners.add(new Runnable() {
+			initialDumpLoadTasks.add(new Runnable() {
 				public void run() {
 					ItemCollection<QueryOutcome> coll = DynamoWorker.query(
 							bundle, B3Table.SEPC, DynamoWorker.SEPC_INITIAL + distFinal);
@@ -59,7 +62,7 @@ public class PushDeployer {
 					while (iter.hasNext()) {
 						Item item = iter.next();
 						String json = item.getString(DynamoWorker.SEPC_CELLNAME_JSON);
-						Entity entity = mapper.deserialize(json);
+						Entity entity = mapper.deserializeEntity(json);
 						synchronized (masterMap) {
 							HashMap<Long, Entity> subMap = masterMap.get(entity.getClass().getName());
 							if (subMap == null) {
@@ -78,46 +81,49 @@ public class PushDeployer {
 			});
 		}
 		
+		//start initial-dump loading threads
 		final LinkedList<Object> threadIds = new LinkedList<Object>();
-		LinkedList<Thread> threads = new LinkedList<Thread>();
 		for (int i = 0; i < threadCount; i++) {
 			final Object threadId = new Object();
 			threadIds.add(threadId);
-			threads.add(
-				new Thread() {
-					public void run() {
-						while (true) {
-							Runnable oneRunner;
-							synchronized (runners) {
-								System.out.println("Remaining runners: " + runners.size());
-								if (runners.isEmpty()) {
-									threadIds.remove(threadId);
-									runners.notifyAll();
-									return;
-								}
-								oneRunner = runners.remove();
+			new Thread() {
+				public void run() {
+					while (true) {
+						Runnable oneRunner;
+						synchronized (initialDumpLoadTasks) {
+							System.out.println("Remaining runners: " + initialDumpLoadTasks.size());
+							if (initialDumpLoadTasks.isEmpty()) {
+								threadIds.remove(threadId);
+								initialDumpLoadTasks.notifyAll();
+								return;
 							}
-							oneRunner.run();
+							oneRunner = initialDumpLoadTasks.remove();
 						}
+						oneRunner.run();
 					}
-				});
-		}
-		for (Thread t : threads) {
-			t.start();
+				}
+			}.start();
 		}
 		
+		//wait for all initial-dump loading threads to finish
 		while (true) {
-			synchronized (runners) {
+			synchronized (initialDumpLoadTasks) {
 				if (threadIds.isEmpty()) {
 					break;
 				}
 				try {
-					runners.wait();
+					initialDumpLoadTasks.wait();
 				} catch (InterruptedException e) {
 				}
 			}
 		}
-		masterRunner.run();
+		
+		//start initial-dump deploying threads
+		initialDumpDeployTask.run();
+		
+		//all initial-dump deploying threads have finished
+		DynamoWorker.setBundleStatus(bundle, DynamoWorker.BUNDLE_STATUS_PUSHING);
+		new ChangeBatchDeployer(bundle).deployChangeBatches();
 	}
 
 }
