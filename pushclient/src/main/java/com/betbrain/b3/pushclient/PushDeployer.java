@@ -28,19 +28,8 @@ public class PushDeployer {
 		final JsonMapper mapper = new JsonMapper();
 		
 		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYING);
-
-		final HashMap<String, HashMap<Long, Entity>> masterMap = new HashMap<String, HashMap<Long,Entity>>();		
-		//final Runnable[] masterRunner = new Runnable[1];
-		Runnable initialDumpDeployTask = new Runnable() {
-			
-			public void run() {
-				for (Entry<String, HashMap<Long, Entity>> entry : masterMap.entrySet()) {
-					System.out.println(entry.getKey() + ": " + entry.getValue().size());
-				}
-				new InitialDumpDeployer(masterMap).initialPutMaster(threadCount);
-			}
-		};
-
+		final HashMap<String, HashMap<Long, Entity>> masterMap = new HashMap<String, HashMap<Long,Entity>>();
+		
 		final LinkedList<Runnable> initialDumpLoadTasks = new LinkedList<Runnable>();
 		for (int dist = 0; dist < B3Table.DIST_FACTOR; dist++) {
 			final int distFinal = dist;
@@ -111,7 +100,20 @@ public class PushDeployer {
 		}
 		
 		//start initial-dump deploying threads
-		initialDumpDeployTask.run();
+		/*Runnable initialDumpDeployTask = new Runnable() {
+			
+			public void run() {
+				for (Entry<String, HashMap<Long, Entity>> entry : masterMap.entrySet()) {
+					System.out.println(entry.getKey() + ": " + entry.getValue().size());
+				}
+				new InitialDumpDeployer(masterMap).initialPutMaster(threadCount);
+			}
+		};
+		initialDumpDeployTask.run();*/
+		for (Entry<String, HashMap<Long, Entity>> entry : masterMap.entrySet()) {
+			System.out.println(entry.getKey() + ": " + entry.getValue().size());
+		}
+		new InitialDumpDeployer(masterMap).initialPutMaster(threadCount);
 		
 		//all initial-dump deploying threads have finished
 		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSHING);

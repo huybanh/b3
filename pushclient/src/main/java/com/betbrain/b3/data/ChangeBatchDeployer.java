@@ -20,7 +20,14 @@ public class ChangeBatchDeployer {
 	
 	private JsonMapper mapper = new JsonMapper();
 	
-	ExecutorService executor;
+	private ExecutorService executor;
+	
+	public static void main(String[] args) {
+
+		DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYWAIT);
+		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSHING);
+		new ChangeBatchDeployer().deployChangeBatches();
+	}
 	
 	public ChangeBatchDeployer() {
 		executor = Executors.newFixedThreadPool(5);
