@@ -30,6 +30,7 @@ class B3Bundle {
 	}
 	
 	static void initWorkingBundle(DynamoDB dynamoDB, String id) {
+		System.out.println("Working bundle: " + id);
 		workingBundle = new B3Bundle(id);
 		workingBundle.init(dynamoDB);
 	}
@@ -84,7 +85,7 @@ class B3Bundle {
 		tables[i++] = createTable(dynamoDB, id, "lookup", 1, 1, true);
 		tables[i++] = createTable(dynamoDB, id, "link", 1, 1, true);
 		tables[i++] = createTable(dynamoDB, id, "entity", 1, 1, false);
-		tables[i++] = createTable(dynamoDB, id, "sepc", 500, 500, true);
+		tables[i++] = createTable(dynamoDB, id, "sepc", 1, 1, true);
 		for (Table t : tables) {
 			try {
 		        System.out.println("Waiting for " + t.getTableName() + " to be created...this may take a while...");

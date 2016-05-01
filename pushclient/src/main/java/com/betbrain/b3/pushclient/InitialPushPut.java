@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
-import com.betbrain.b3.data.ModelShortName;
 import com.betbrain.sepc.connector.sdql.SEPCConnector;
 import com.betbrain.sepc.connector.sdql.SEPCConnectorListener;
 import com.betbrain.sepc.connector.sdql.SEPCPushConnector;
@@ -49,7 +48,6 @@ public class InitialPushPut implements SEPCConnectorListener {
 			System.out.println(entry.getKey() + ": " + entry.getValue().size());
 		}
 		
-		ModelShortName.initialize();
 		//new InitialPutHandler(masterMap).initialPutMaster();
 	}
 

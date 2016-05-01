@@ -52,7 +52,7 @@ public enum ModelShortName {
 	
 	private static HashMap<String, ModelShortName> allShortNames;
 	
-	public static void initialize() {
+	static void initialize() {
 		allShortNames = new HashMap<String, ModelShortName>();
 		for (ModelShortName em : ModelShortName.values()) {
 			allShortNames.put(em.className, em);

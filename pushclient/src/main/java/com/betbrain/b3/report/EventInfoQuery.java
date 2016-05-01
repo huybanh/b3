@@ -3,14 +3,12 @@ package com.betbrain.b3.report;
 import com.betbrain.b3.data.B3KeyEntity;
 import com.betbrain.b3.data.B3KeyEventInfo;
 import com.betbrain.b3.data.DynamoWorker;
-import com.betbrain.b3.data.ModelShortName;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Event;
 
 public class EventInfoQuery {
 	
 	public static void main(String[] args) {
-		ModelShortName.initialize();
 		DynamoWorker.initBundleCurrent();
 
 		//query(217410745);

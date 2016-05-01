@@ -13,7 +13,6 @@ import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.ChangeBatchDeployer;
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.data.InitialDumpDeployer;
-import com.betbrain.b3.data.ModelShortName;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
 
@@ -24,7 +23,6 @@ public class PushDeployer {
 	public static void main(String[] args) {
 
 		final int threadCount = Integer.parseInt(args[0]);
-		ModelShortName.initialize();
 		//DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYWAIT);
 		DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYING); //TESTING
 		final JsonMapper mapper = new JsonMapper();

@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import com.betbrain.b3.data.B3KeyEntity;
 import com.betbrain.b3.data.B3KeyLink;
 import com.betbrain.b3.data.DynamoWorker;
-import com.betbrain.b3.data.ModelShortName;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
 import com.betbrain.sepc.connector.sportsmodel.Event;
@@ -15,7 +14,6 @@ import com.betbrain.sepc.connector.sportsmodel.Outcome;
 public class EventQuery {
 	
 	public static void main(String[] args) {
-		ModelShortName.initialize();
 		DynamoWorker.initBundleCurrent();
 
 		//query(219387861);

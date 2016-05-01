@@ -12,7 +12,6 @@ import com.betbrain.sepc.connector.sportsmodel.EntityDelete;
 import com.betbrain.sepc.connector.sportsmodel.EntityUpdate;
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.DynamoWorker;
-import com.betbrain.b3.data.ModelShortName;
 import com.betbrain.sepc.connector.sdql.EntityChangeBatchProcessingMonitor;
 import com.betbrain.sepc.connector.sdql.SEPCConnector;
 import com.betbrain.sepc.connector.sdql.SEPCConnectorListener;
@@ -32,7 +31,6 @@ public class PushListener implements SEPCConnectorListener, EntityChangeBatchPro
 	
 	public static void main(String[] args) {
 		
-		ModelShortName.initialize();
 		DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_EMPTY);
 		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_INITIALPUT);
 		
@@ -70,7 +68,7 @@ public class PushListener implements SEPCConnectorListener, EntityChangeBatchPro
 			started = true;
 		}
 		for (int i = 0; i < initialThreads; i++) {
-			new Thread(new InitialWorker(initialListLock, entityList))/*.start()*/;
+			new Thread(new InitialWorker(initialListLock, entityList)).start();
 		}
 	}
 }

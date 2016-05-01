@@ -13,6 +13,7 @@ import com.betbrain.sepc.connector.sdql.SEPCConnector;
 import com.betbrain.sepc.connector.sdql.SEPCConnectorListener;
 import com.betbrain.sepc.connector.sdql.SEPCPushConnector;
 
+@Deprecated
 public class InitialDumpLocalWriter implements SEPCConnectorListener {
 	
 	public static void main(String[] args) {

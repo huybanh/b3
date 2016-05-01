@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
-import com.betbrain.b3.data.ModelShortName;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
 import com.betbrain.sepc.connector.sportsmodel.Event;
@@ -50,7 +49,6 @@ public class InitialPushListener implements SEPCConnectorListener {
 			System.out.println(entry.getKey() + ": " + entry.getValue().size());
 		}
 		
-		ModelShortName.initialize();
 		new Thread() {
 			public void run() {
 				//new InitialPutHandler(masterMap/*, eventPartToEventMap*/).initialPutMaster();

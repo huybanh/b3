@@ -6,8 +6,8 @@ import java.util.concurrent.TimeUnit;
 
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.DynamoWorker;
-import com.betbrain.b3.data.ModelShortName;
 
+@Deprecated
 public class GarbageCollector {
 	
 	/*public static void main(String[] args) {
@@ -66,7 +66,6 @@ public class GarbageCollector {
 	
 	public static void main(String[] args) {
 		
-		ModelShortName.initialize();
 		DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_DELETEWAIT);
 		deleteParallel(B3Table.SEPC, 2);
 	}

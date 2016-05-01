@@ -6,7 +6,6 @@ import com.betbrain.b3.data.B3KeyEntity;
 import com.betbrain.b3.data.B3KeyEventInfo;
 import com.betbrain.b3.data.B3KeyOutcome;
 import com.betbrain.b3.data.DynamoWorker;
-import com.betbrain.b3.data.ModelShortName;
 import com.betbrain.b3.model.B3Outcome;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Event;
@@ -19,7 +18,6 @@ public class DetailedOddsTable {
 
 	public static void main(String[] args) {
 		
-		ModelShortName.initialize();
 		DynamoWorker.initBundleCurrent();
 		
 		//long matchId = 217410074;

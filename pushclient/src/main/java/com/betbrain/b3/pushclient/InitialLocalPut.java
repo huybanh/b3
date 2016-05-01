@@ -10,7 +10,6 @@ import java.util.Map.Entry;
 
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.data.InitialDumpDeployer;
-import com.betbrain.b3.data.ModelShortName;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 
 @Deprecated
@@ -52,7 +51,6 @@ public class InitialLocalPut {
 			System.out.println(entry.getKey() + ": " + entry.getValue().size());
 		}
 		
-		ModelShortName.initialize();
 		DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_NOTEXIST);
 		
 		new InitialDumpDeployer(masterMap).initialPutMaster(2);
