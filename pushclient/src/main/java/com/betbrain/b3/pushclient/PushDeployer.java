@@ -23,8 +23,8 @@ public class PushDeployer {
 	public static void main(String[] args) {
 
 		final int threadCount = Integer.parseInt(args[0]);
-		//DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYWAIT);
-		DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYING); //TESTING
+		DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYWAIT);
+		//DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYING); //TESTING
 		final JsonMapper mapper = new JsonMapper();
 		
 		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYING);
