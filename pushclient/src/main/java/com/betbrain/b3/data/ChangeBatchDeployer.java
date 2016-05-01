@@ -34,7 +34,7 @@ public class ChangeBatchDeployer {
 			for (Object one : allChanges) {
 				B3Entity.applyChange((EntityChangeBase) one, mapper);
 			}
-			break; //TODO for testing only
+			//break; //for testing only
 		}
 	}
 	
