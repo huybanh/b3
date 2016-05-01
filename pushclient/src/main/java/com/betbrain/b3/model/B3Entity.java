@@ -159,6 +159,10 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		
 		//table entity
 		this.entity = (E) create.getEntity();
+		String shortName = ModelShortName.get(this.entity.getClass().getName());
+		if (shortName == null) {
+			return;
+		}
 		B3KeyEntity entityKey = new B3KeyEntity(this.entity);
 		String newEntityJson = mapper.serialize(this.entity);
 		B3CellString cells = new B3CellString(B3Table.CELL_LOCATOR_THIZ, newEntityJson);
@@ -167,8 +171,35 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		
 	}
 
+	/**
+	 * Tables to consider: entity, lookup, link, mains
+	 * 
+	 *   For a value property change: update table entity, mains
+	 *   For a linked ID change: update table entity, mains, link, lookup
+	 * 
+	 * @param update
+	 * @param mapper
+	 */
+	@SuppressWarnings("unchecked")
 	void applyChangeUpdate(EntityUpdateWrapper update, JsonMapper mapper) {
+
+		//retrieve entity
+		B3KeyEntity entityKey = new B3KeyEntity(update.getEntityClassName(), update.getEntityId());
+		Entity targetEntity = entityKey.load(mapper);
+		if (targetEntity == null) {
+			System.out.println("Ignoring entity update: entity does not exist: " + 
+					update.getEntityClassName() + "@" + update.getEntityId());
+			return;
+		}
+
+		//apply changes
+		update.applyChanges(targetEntity);
+		this.entity = (E) targetEntity;
 		
+		//update table entity
+		B3Update put = new B3Update(B3Table.Entity, entityKey,
+				new B3CellString(B3Table.CELL_LOCATOR_THIZ, mapper.serialize(targetEntity)));
+		DynamoWorker.put(put);
 	}
 
 	void applyChangeDelete(EntityDeleteWrapper delete, JsonMapper mapper) {

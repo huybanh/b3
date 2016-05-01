@@ -33,6 +33,12 @@ public class B3KeyEntity extends B3Key {
 		this.id = id;
 	}
 
+	public B3KeyEntity(String className, long id) {
+		super();
+		classShortName = ModelShortName.get(className); 
+		this.id = id;
+	}
+
 	public B3KeyEntity(Class<?> clazz) {
 		super();
 		classShortName = ModelShortName.get(clazz.getName()); 
@@ -41,7 +47,7 @@ public class B3KeyEntity extends B3Key {
 	
 	@Override
 	boolean isDetermined() {
-		return id != null;
+		return classShortName != null && id != null;
 	}
 	
 	protected String getHashKey() {
