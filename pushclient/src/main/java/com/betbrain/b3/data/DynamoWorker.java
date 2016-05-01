@@ -21,19 +21,21 @@ import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 
 public class DynamoWorker {
 	
-	static String HASH = "hash";
-	public static String RANGE = "range";
+	static String HASH = "HASH";
+	public static String RANGE = "RANGE";
 	
-	private static String[] BUNDLEIDS = {"X", "Y", "Z", "T", "U"};
+	private static String[] BUNDLEIDS = {"x", "y", "z", "t", "u"};
 	
 	public static final String BUNDLE_STATUS_INITIALPUT = "INITIAL-PUT";
 	public static final String BUNDLE_STATUS_DEPLOYWAIT= "DEPLOY-WAIT";
 	public static final String BUNDLE_STATUS_DEPLOYING = "DEPLOYING";
 	public static final String BUNDLE_STATUS_PUSHING = "PUSHING";
 	public static final String BUNDLE_STATUS_CEASED = "CEASED";
-	public static final String BUNDLE_STATUS_GARBAGE = "GARBAGE";
-	public static final String BUNDLE_STATUS_DELETING = "DELETING";
-	public static final String BUNDLE_STATUS_UNUSED = "UNUSED";
+	//public static final String BUNDLE_STATUS_GARBAGE = "GARBAGE";
+	public static final String BUNDLE_STATUS_DELETEWAIT = "DELETE-WAIT";
+	public static final String BUNDLE_STATUS_NOTEXIST = "NOT-EXIST";
+	public static final String BUNDLE_STATUS_EMPTY = "EMPTY";
+	//public static final String BUNDLE_STATUS_UNUSED = "UNUSED";
 
 	public static final String BUNDLE_PUSHSTATUS_ONGOING = "ONGOING";
 	public static final String BUNDLE_PUSHSTATUS_INTERRUPTED = "INTERRUPTED";
@@ -64,12 +66,23 @@ public class DynamoWorker {
 	
 	static void createTables() {
 		initialize();
-		String availBundleId = findBundleUnusedId();
+		String availBundleId = findBundleIdByStatus(BUNDLE_STATUS_NOTEXIST, true);
 		B3Bundle.createTables(dynamoDB, availBundleId);
+		setBundleStatus(availBundleId, BUNDLE_STATUS_EMPTY);
+	}
+	
+	static void deleteTables() {
+		initBundleByStatus(BUNDLE_STATUS_DELETEWAIT);
+		B3Bundle.workingBundle.deleteTables(dynamoDB);
+		setWorkingBundleStatus(BUNDLE_STATUS_NOTEXIST);
 	}
 
 	public static void initBundleCurrent() {
 		initialize();
+		String currentBundleId = getCurrentBundleId();
+		if (currentBundleId == null) {
+			throw new RuntimeException("No current bundle found");
+		}
 		B3Bundle.initWorkingBundle(dynamoDB, getCurrentBundleId());
 	}
 	
@@ -79,35 +92,33 @@ public class DynamoWorker {
 				.withAttributesToGet(BUNDLE_CELL_ID);
 		Item item = settingTable.getItem(spec);
 		if (item == null) {
-			return BUNDLEIDS[0];
-		} else {
-			return item.getString(BUNDLE_CELL_ID);
+			//return BUNDLEIDS[0];
+			return null;
 		}
+
+		return item.getString(BUNDLE_CELL_ID);
 	}
 	
-	public static void setBundleCurrent(String id) {
+	public static void activateWorkingBundle() {
 		
 		UpdateItemSpec us = new UpdateItemSpec()
 				.withPrimaryKey(HASH, BUNDLE_HASH, RANGE, BUNDLE_RANGE_CURRENT)
-				.addAttributeUpdate(new AttributeUpdate(BUNDLE_CELL_ID).put(id));
+				.addAttributeUpdate(new AttributeUpdate(BUNDLE_CELL_ID).put(B3Bundle.getWorkingBundleId()));
 		settingTable.updateItem(us);
 	}
 	
-	public static void initBundleUnused(String newStatus) {
+	/*public static void initBundleEmpty() {
 
 		initialize();
-		String availBundleId = findBundleUnusedId();
-		if (newStatus != null) {
-			UpdateItemSpec us = new UpdateItemSpec()
-					.withPrimaryKey(HASH, BUNDLE_HASH, RANGE, availBundleId)
-					.addAttributeUpdate(new AttributeUpdate(BUNDLE_CELL_STATUS).put(newStatus));
-			settingTable.updateItem(us);
-		}
+		String availBundleId = findBundleIdByStatus(BUNDLE_STATUS_EMPTY, false);
 		B3Bundle.initWorkingBundle(dynamoDB, availBundleId);
-	}
+	}*/
 	
-	private static String findBundleUnusedId() {
+	private static String findBundleIdByStatus(String requiredStatus, boolean takeNull) {
 		String currentId = getCurrentBundleId();
+		if (currentId == null) {
+			currentId = BUNDLEIDS[0];
+		}
 		int currentIndex = Arrays.asList(BUNDLEIDS).indexOf(currentId);
 		if (currentIndex < 0) {
 			throw new RuntimeException("Unknown current bundle id: " + currentId);
@@ -119,7 +130,7 @@ public class DynamoWorker {
 			proposedIndex++;
 			proposedIndex = proposedIndex < BUNDLEIDS.length ? proposedIndex : 0; //round robin
 			String status = getBundleStatus(BUNDLEIDS[proposedIndex]);
-			if (status == null || status.equals(BUNDLE_STATUS_UNUSED)) {
+			if ((takeNull && status == null) || status.equals(requiredStatus)) {
 				availBundleId = BUNDLEIDS[proposedIndex];
 				break;
 			}
@@ -155,6 +166,8 @@ public class DynamoWorker {
 	}
 	
 	private static String getBundleStatus(String bundleId) {
+		
+		System.out.println("Reading bundle status: " + bundleId);
 		GetItemSpec spec = new GetItemSpec()
 				.withPrimaryKey(HASH, BUNDLE_HASH, RANGE, bundleId)
 				.withAttributesToGet(BUNDLE_CELL_STATUS);
@@ -166,8 +179,12 @@ public class DynamoWorker {
 	}
 	
 	public static void setWorkingBundleStatus(String status) {
+		setBundleStatus(B3Bundle.getWorkingBundleId(), status);
+	}
+	
+	private static void setBundleStatus(String bundleId, String status) {
 		UpdateItemSpec spec = new UpdateItemSpec()
-				.withPrimaryKey(HASH, BUNDLE_HASH, RANGE, B3Bundle.getWorkingBundleId())
+				.withPrimaryKey(HASH, BUNDLE_HASH, RANGE, bundleId)
 				.withAttributeUpdate(new AttributeUpdate(BUNDLE_CELL_STATUS).put(status));
 		settingTable.updateItem(spec);
 	}
@@ -326,21 +343,7 @@ public class DynamoWorker {
 	}
 
 	public static void main(String[] args) {
-		initialize();
-		/*TableCollection<ListTablesResult> x = dynamoDB.listTables();
-		System.out.println(x);
-		for (Table i : x) {
-			System.out.println(i);
-		}
-		Table table = dynamoDB.getTable("fbook");
-		System.out.println(table);
-		table.deleteItem(HASH, "o3641", RANGE, "p_1005123616170333/1005123616170333_1094715557211138");*/
-		
-		//setBundleCurrent("Y");
-		//System.out.println(getBundleUnused(null).id);
-		
-		//deleteBundle(B3Table.BettingOffer, "Y");
-		initBundleByStatus(BUNDLE_STATUS_DEPLOYWAIT);
+		initBundleCurrent();
 		System.out.println(B3Bundle.workingBundle);
 	}
 }

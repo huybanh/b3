@@ -33,7 +33,8 @@ public class PushListener implements SEPCConnectorListener, EntityChangeBatchPro
 	public static void main(String[] args) {
 		
 		ModelShortName.initialize();
-		DynamoWorker.initBundleUnused(DynamoWorker.BUNDLE_STATUS_INITIALPUT);
+		DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_EMPTY);
+		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_INITIALPUT);
 		
 		PushListener listener = new PushListener();
 		listener.initialThreads = Integer.parseInt(args[0]);

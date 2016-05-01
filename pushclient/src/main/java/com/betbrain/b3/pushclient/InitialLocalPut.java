@@ -53,7 +53,7 @@ public class InitialLocalPut {
 		}
 		
 		ModelShortName.initialize();
-		DynamoWorker.initBundleUnused("test");
+		DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_NOTEXIST);
 		
 		new InitialDumpDeployer(masterMap).initialPutMaster(2);
 	}

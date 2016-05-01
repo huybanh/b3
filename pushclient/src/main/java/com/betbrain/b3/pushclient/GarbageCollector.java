@@ -67,7 +67,7 @@ public class GarbageCollector {
 	public static void main(String[] args) {
 		
 		ModelShortName.initialize();
-		DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_GARBAGE);
+		DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_DELETEWAIT);
 		deleteParallel(B3Table.SEPC, 2);
 	}
 	

@@ -116,7 +116,7 @@ public class PushDeployer {
 		initialDumpDeployTask.run();
 		
 		//all initial-dump deploying threads have finished
-		//DynamoWorker.setBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSHING);
+		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSHING);
 		new ChangeBatchDeployer().deployChangeBatches();
 	}
 

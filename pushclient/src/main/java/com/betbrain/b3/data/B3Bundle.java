@@ -75,55 +75,74 @@ class B3Bundle {
 	
 	static void createTables(DynamoDB dynamoDB, String id) {
 
-		createTable(dynamoDB, id, "offer", 1, 1, true);
-		createTable(dynamoDB, id, "event", 1, 1, true);
-		createTable(dynamoDB, id, "event_info", 1, 1, true);
-		createTable(dynamoDB, id, "outcome", 1, 1, true);
-		createTable(dynamoDB, id, "lookup", 1, 1, true);
-		createTable(dynamoDB, id, "link", 1, 1, true);
-		createTable(dynamoDB, id, "entity", 1, 200, false);
-		createTable(dynamoDB, id, "sepc", 1, 1, true);
+		Table[] tables = new Table[8];
+		int i = 0;
+		tables[i++] = createTable(dynamoDB, id, "offer", 1, 1, true);
+		tables[i++] = createTable(dynamoDB, id, "event", 1, 1, true);
+		tables[i++] = createTable(dynamoDB, id, "event_info", 1, 1, true);
+		tables[i++] = createTable(dynamoDB, id, "outcome", 1, 1, true);
+		tables[i++] = createTable(dynamoDB, id, "lookup", 1, 1, true);
+		tables[i++] = createTable(dynamoDB, id, "link", 1, 1, true);
+		tables[i++] = createTable(dynamoDB, id, "entity", 1, 1, false);
+		tables[i++] = createTable(dynamoDB, id, "sepc", 500, 500, true);
+		for (Table t : tables) {
+			try {
+		        System.out.println("Waiting for " + t.getTableName() + " to be created...this may take a while...");
+				t.waitForActive();
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+		}
 	}
     
-    private static void createTable(DynamoDB dynamoDB, String prefix,
+    private static Table createTable(DynamoDB dynamoDB, String prefix,
         String tableName, long readCapacityUnits, long writeCapacityUnits, boolean withRangeKey) {
         
-        try {
-            System.out.println("Creating table " + prefix + tableName);
-            
-            List<KeySchemaElement> keySchema = new ArrayList<KeySchemaElement>();
+        System.out.println("Creating table " + prefix + tableName);
+        List<KeySchemaElement> keySchema = new ArrayList<KeySchemaElement>();
+        keySchema.add(new KeySchemaElement()
+            .withAttributeName(DynamoWorker.HASH)
+            .withKeyType(KeyType.HASH)); //Partition key
+        
+        List<AttributeDefinition> attributeDefinitions = new ArrayList<AttributeDefinition>();
+        attributeDefinitions.add(new AttributeDefinition()
+            .withAttributeName(DynamoWorker.HASH)
+            .withAttributeType("S"));
+
+        if (withRangeKey){
             keySchema.add(new KeySchemaElement()
-                .withAttributeName(DynamoWorker.HASH)
-                .withKeyType(KeyType.HASH)); //Partition key
-            
-            List<AttributeDefinition> attributeDefinitions = new ArrayList<AttributeDefinition>();
+                .withAttributeName(DynamoWorker.RANGE)
+                .withKeyType(KeyType.RANGE)); //Sort key
             attributeDefinitions.add(new AttributeDefinition()
-                .withAttributeName(DynamoWorker.HASH)
-                .withAttributeType("S"));
-
-            if (withRangeKey){
-                keySchema.add(new KeySchemaElement()
-                    .withAttributeName(DynamoWorker.RANGE)
-                    .withKeyType(KeyType.RANGE)); //Sort key
-                attributeDefinitions.add(new AttributeDefinition()
-                      .withAttributeName(DynamoWorker.RANGE)
-                      .withAttributeType("S"));
-            }
-
-            Table table = dynamoDB.createTable(prefix + tableName, 
-                keySchema,
-                attributeDefinitions, 
-                new ProvisionedThroughput()
-                    .withReadCapacityUnits(readCapacityUnits)
-                    .withWriteCapacityUnits(writeCapacityUnits));
-            System.out.println("Waiting for " + prefix + tableName
-                + " to be created...this may take a while...");
-            table.waitForActive();
-       
-            
-        } catch (Exception e) {
-            System.err.println("Failed to create table " + prefix + tableName);
-            e.printStackTrace(System.err);
+                  .withAttributeName(DynamoWorker.RANGE)
+                  .withAttributeType("S"));
         }
+
+        Table table = dynamoDB.createTable(prefix + tableName, 
+            keySchema,
+            attributeDefinitions, 
+            new ProvisionedThroughput()
+                .withReadCapacityUnits(readCapacityUnits)
+                .withWriteCapacityUnits(writeCapacityUnits));
+        //table.waitForActive();
+        return table;
     }
+	
+	void deleteTables(DynamoDB dynamoDB) {
+
+		Table[] tables = new Table[] {offerTable, eventTable, eventInfoTable, 
+				outcomeTable, lookupTable, linkTable, entityTable, sepcTable};
+		for (Table t : tables) {
+			System.out.println("Deleting table " + t.getTableName());
+			t.delete();
+		}
+		
+		for (Table t : tables) {
+			try {
+				t.waitForDelete();
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
 }
