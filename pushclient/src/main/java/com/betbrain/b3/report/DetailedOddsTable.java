@@ -22,7 +22,7 @@ public class DetailedOddsTable {
 		
 		//long matchId = 217410074;
 		//long outcomeId = 2691102520l;
-		long outcomeId = 2966653095l;
+		long outcomeId = 2950462361l;
 		//Y8/1/E219389552
 		//Y1/1/E219387861
 		//long outcomeId = 2890001650l;
