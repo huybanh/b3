@@ -58,9 +58,14 @@ public class PushListener2 implements SEPCConnectorListener, EntityChangeBatchPr
 	public long getLastAppliedEntityChangeBatchId() {
 		return lastBatchId;
 	}
+	
+	private boolean intialDumpStarted = false;
 
 	public void notifyInitialDump(List<? extends Entity> entityList) {
-		
+		if (intialDumpStarted) {
+			return;
+		}
+		intialDumpStarted = true;
 		final HashMap<String, HashMap<Long, Entity>> masterMap = new HashMap<String, HashMap<Long,Entity>>();
 		for (Entity e : entityList) {
 			HashMap<Long, Entity> subMap = masterMap.get(e.getClass().getName());
