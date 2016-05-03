@@ -10,8 +10,6 @@ import flexjson.JSONSerializer;
 
 public class JsonMapper {
 
-	//private ObjectMapper mapper = new ObjectMapper();
-	
 	@SuppressWarnings("rawtypes")
 	private JSONDeserializer flexDe;
 	private JSONSerializer flexSer;
@@ -31,42 +29,7 @@ public class JsonMapper {
 	public Entity deserialize(String json) {
 		return (Entity) flexDe.deserialize(json);
 	}
-	
-	/*public String SerializeExcludeClassName(Object entity) {
-		String jsonString = "[]";
-		jsonString = flexSer.exclude("*.class").serialize(entity);
-		return jsonString + ",";
-	}
-	
-	public Entity Deserialize(String json) {
-		Entity entity = null;
-		try {
-			entity = mapper.readValue(json, Entity.class);
-		} catch (JsonParseException e) {
-			e.printStackTrace();
-		} catch (JsonMappingException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return entity;
-	}
-	
-	public String Serialize(Entity entity) {
-		String jsonString = "[]";
-		try {
-			mapper.enableDefaultTyping(DefaultTyping.NON_FINAL);
-			jsonString = mapper.writeValueAsString(entity);
-		} catch (JsonGenerationException e) {
-			e.printStackTrace();
-		} catch (JsonMappingException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return jsonString;
-	}*/
-	
+		
 	public static void main(String[] args) {
 		try {
 			System.out.println("Hello Word");
