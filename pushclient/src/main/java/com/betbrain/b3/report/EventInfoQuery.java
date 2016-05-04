@@ -2,47 +2,110 @@ package com.betbrain.b3.report;
 
 import java.util.ArrayList;
 
-import com.betbrain.b3.data.B3Bundle;
+import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.ItemCollection;
+import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
+import com.amazonaws.services.dynamodbv2.document.internal.IteratorSupport;
 import com.betbrain.b3.data.B3KeyEntity;
 import com.betbrain.b3.data.B3KeyEventInfo;
 import com.betbrain.b3.data.B3KeyLink;
+import com.betbrain.b3.data.B3KeyOffer;
+import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.DynamoWorker;
-import com.betbrain.b3.data.ModelShortName;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
-import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Event;
-import com.betbrain.sepc.connector.sportsmodel.EventInfo;
-import com.betbrain.sepc.connector.sportsmodel.EventInfoType;
-import com.betbrain.sepc.connector.sportsmodel.EventStatus;
-import com.betbrain.sepc.connector.sportsmodel.EventType;
 import com.betbrain.sepc.connector.sportsmodel.Outcome;
-import com.betbrain.sepc.connector.sportsmodel.OutcomeType;
 import com.betbrain.sepc.connector.sportsmodel.Sport;
 
-public class EventInfoQuery {
+public class EventInfoQuery{
+	
+	private static JsonMapper mapper = new JsonMapper();
 	
 	public static void main(String[] args) {
-		ModelShortName.initialize();
-		DynamoWorker.initialize();
-
-		//query(217410745);
-		query(219501132);
+		
+		DynamoWorker.initBundleCurrent(); 
+		
+		B3KeyLink keyLink = new B3KeyLink(Sport.class, IDs.SPORT_FOOTBALL, Event.class, Event.PROPERTY_NAME_sportId);
+		IteratorSupport<Item, QueryOutcome> it = DynamoWorker.query(B3Table.Link, keyLink.getHashKey()).iterator();
+		int count = 0;
+		while (it.hasNext()) {
+			Item item = it.next();
+			long eventId = Long.parseLong(item.getString(DynamoWorker.RANGE));
+			queryEvent(eventId);
+			count++;
+			if (count % 100 == 0) {
+				System.out.println("Queried events " + count + ": " + havingOfferCount + "/" + havingInfoCount);
+			}
+		}
 	}
 	
-	private static void query(long eventId) {
-
-		B3Bundle bundle = DynamoWorker.getBundleCurrent(); 
-		JsonMapper jsonMapper = new JsonMapper();
+	private static int havingOfferCount, havingInfoCount;
+	
+	private static void queryEvent(long eventId) {
 		
-		//event
 		B3KeyEntity keyEntity = new B3KeyEntity(Event.class, eventId);
-		Event event = keyEntity.load(bundle);
+		Event e = keyEntity.load(mapper);
 		
-		//eventinfo - current status
-		//B3KeyEventInfo key = new B3KeyEventInfo(event.getSportId(), event.getTypeId(),
-		//		false, eventId, 4l, 17442912l);
-		B3KeyEventInfo key = new B3KeyEventInfo(1l, 1l, false, eventId, 4l, 17442912l);
-		key.listEntities(bundle, jsonMapper);
+		//offers
+		B3KeyOffer offerKey = new B3KeyOffer(e.getSportId(), e.getTypeId(), eventId);
+		IteratorSupport<Item, QueryOutcome> it = DynamoWorker.query(B3Table.BettingOffer, offerKey.getHashKey()).iterator();
+		/*int offerCount = 0;
+		/*while (it.hasNext()) {
+			it.next();
+			offerCount++;
+		}
+		if (offerCount > 0) havingOfferCount++;*/
+		if (it.hasNext()) {
+			havingOfferCount++;
+		}
+
+		//info
+		B3KeyEventInfo infoKey = new B3KeyEventInfo(e.getSportId(), e.getTypeId(), eventId);
+		it = DynamoWorker.query(B3Table.EventInfo, infoKey.getHashKey()).iterator();
+		/*int infoCount = 0;
+		while (it.hasNext()) {
+			it.next();
+			infoCount++;
+		}
+		if (infoCount > 0) havingInfoCount++;*/
+		if (it.hasNext()) {
+			havingInfoCount++;
+		}
+		
+		/*if (offerCount > 0 && infoCount > 0) {
+			System.out.println("Event " + eventId + ":  offer count: " + offerCount + ", info count: " + infoCount);
+		}*/
+		
+		/*B3KeyLink keyLink = new B3KeyLink(Event.class, eventId, Outcome.class, "eventId");
+		ArrayList<Long> outcomeIds = keyLink.listLinks();
+		ArrayList<Long> offerIds;
+		if (!outcomeIds.isEmpty()) {
+			keyLink = new B3KeyLink(Outcome.class, outcomeIds.get(0), BettingOffer.class, "outcomeId");
+			offerIds = keyLink.listLinks();
+		} else {
+			offerIds = new ArrayList<Long>();
+		}
+		System.out.println("Event " + eventId + ": outcome count: " + + outcomeIds.size() + ", offer count: " + offerIds.size());*/
+		//ids = new B3KeyLink(sports.get(0), Event.class).listLinks();
+		//B3KeyEntity.load(Event.class, ids);
+		
+		//all event types
+		//new B3KeyEntity(EventType.class).listEntities();
+		
+		//all event statuses
+		//new B3KeyEntity(EventStatus.class).listEntities();
+
+		//new B3KeyEntity(OutcomeType.class).listEntities(bundle, jsonMapper);
+		//new B3KeyEntity(EventInfoType.class).listEntities();
+		//new B3KeyEntity(EventInfo.class).listEntities();
+		//B3KeyEntity.load(EventInfoType.class, 92);
+		
+		//event to outcome
+		//ids = new B3KeyLink(Event.class, 217409474, Outcome.class).listLinks();
+		//B3KeyEntity.load(Outcome.class, ids);
+		
+		//outcome to offer
+		//new B3KeyLink(Outcome.class, 2890125761l, BettingOffer.class).listLinks();
 	}
 }

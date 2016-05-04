@@ -19,17 +19,57 @@ public class JsonMapper {
 
 		flexDe = new JSONDeserializer();
 		ExcludeTransformer excludeTransformer = new ExcludeTransformer();
-		flexSer = new JSONSerializer().exclude("beanInfo").transform(excludeTransformer, void.class);
+		flexSer = new JSONSerializer().exclude("beanInfo").transform(excludeTransformer, void.class)
+				.include("propertyNames").include("propertyValues");
 	}
 
 	public String serialize(Object entity) {
 		return flexSer.serialize(entity);
 	}
 	
-	public Entity deserialize(String json) {
+	public Entity deserializeEntity(String json) {
 		return (Entity) flexDe.deserialize(json);
 	}
-		
+	
+	public Object deserialize(String json) {
+		return flexDe.deserialize(json);
+	}
+	
+	/*public String SerializeExcludeClassName(Object entity) {
+		String jsonString = "[]";
+		jsonString = flexSer.exclude("*.class").serialize(entity);
+		return jsonString + ",";
+	}
+	
+	public Entity Deserialize(String json) {
+		Entity entity = null;
+		try {
+			entity = mapper.readValue(json, Entity.class);
+		} catch (JsonParseException e) {
+			e.printStackTrace();
+		} catch (JsonMappingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return entity;
+	}
+	
+	public String Serialize(Entity entity) {
+		String jsonString = "[]";
+		try {
+			mapper.enableDefaultTyping(DefaultTyping.NON_FINAL);
+			jsonString = mapper.writeValueAsString(entity);
+		} catch (JsonGenerationException e) {
+			e.printStackTrace();
+		} catch (JsonMappingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return jsonString;
+	}*/
+
 	public static void main(String[] args) {
 		try {
 			System.out.println("Hello Word");

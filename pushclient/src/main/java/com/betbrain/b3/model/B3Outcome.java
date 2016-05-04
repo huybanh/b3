@@ -24,14 +24,15 @@ public class B3Outcome extends B3Entity<Outcome> {
 		
 		//unfollowed links
 		addDownlink(Outcome.PROPERTY_NAME_eventId, Event.class, entity.getEventId());
-		addDownlink(Outcome.PROPERTY_NAME_eventPartId, EventPart.class, entity.getEventPartId());
 		
+		//followed
+		addDownlink(Outcome.PROPERTY_NAME_eventPartId, eventPart);
 		addDownlink(Outcome.PROPERTY_NAME_statusId, status);
 		addDownlink(Outcome.PROPERTY_NAME_typeId, type);
 	}
 
 	@Override
-	public void buildDownlinks(HashMap<String, HashMap<Long, Entity>> masterMap) {
+	public void buildDownlinks(HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper) {
 		/*HashMap<Long, Entity> allEvents = masterMap.get(Event.class.getName());
 		Event one = (Event) allEvents.get(entity.getEventId());
 		this.event = new B3Event(one);*/
@@ -39,21 +40,17 @@ public class B3Outcome extends B3Entity<Outcome> {
 		//we don't want event graph going into BettingOffer table
 		//this.event.buildDownlinks(masterMap);
 		
-		//we don't want event graph going into BettingOffer table: depthBuilding = false
-		//boolean depthBuilding = false; 
 		this.event = build(entity.getEventId(), 
-				new B3Event(), Event.class, masterMap, true);
+				new B3Event(), Event.class, masterMap, mapper);
 		this.eventPart = build(entity.getEventPartId(), 
-				new B3EventPart(), EventPart.class, masterMap, true);
-		
+				new B3EventPart(), EventPart.class, masterMap, mapper);
 		this.status = build(entity.getStatusId(),
-				new B3OutcomeStatus(), OutcomeStatus.class, masterMap, true);
+				new B3OutcomeStatus(), OutcomeStatus.class, masterMap, mapper);
 		this.type = build(entity.getTypeId(),
-				new B3OutcomeType(), OutcomeType.class, masterMap, true);
+				new B3OutcomeType(), OutcomeType.class, masterMap, mapper);
 	}
 	
-	public void loadFull(Item item) {
-		JsonMapper mapper = new JsonMapper();
+	public void loadFull(Item item, JsonMapper mapper) {
 		deserialize(mapper, item, this, B3Table.CELL_LOCATOR_THIZ);
 		this.status = (B3OutcomeStatus) deserialize(mapper, item, new B3OutcomeStatus(), Outcome.PROPERTY_NAME_statusId);
 		this.type = (B3OutcomeType) deserialize(mapper, item, new B3OutcomeType(), Outcome.PROPERTY_NAME_typeId);

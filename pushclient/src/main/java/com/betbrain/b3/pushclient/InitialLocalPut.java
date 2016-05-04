@@ -9,10 +9,9 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 
 import com.betbrain.b3.data.DynamoWorker;
-import com.betbrain.b3.data.InitialPutHandler;
-import com.betbrain.b3.data.ModelShortName;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 
+@Deprecated
 public class InitialLocalPut {
 	
 	private static HashMap<String, HashMap<Long, Entity>> masterMap = new HashMap<String, HashMap<Long,Entity>>();
@@ -30,7 +29,7 @@ public class InitialLocalPut {
 			if (line == null) {
 				break;
 			}
-			Entity entity = jsonMapper.deserialize(line);
+			Entity entity = jsonMapper.deserializeEntity(line);
 			HashMap<Long, Entity> subMap = masterMap.get(entity.getClass().getName());
 			if (subMap == null) {
 				subMap = new HashMap<Long, Entity>();
@@ -51,9 +50,9 @@ public class InitialLocalPut {
 			System.out.println(entry.getKey() + ": " + entry.getValue().size());
 		}
 		
-		ModelShortName.initialize();
-		DynamoWorker.initialize();
-		new InitialPutHandler(masterMap).initialPutMaster();
+		DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_NOTEXIST);
+		
+		//new InitialDumpDeployer(masterMap).initialPutMaster(2);
 	}
 
 }

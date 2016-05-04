@@ -1,6 +1,6 @@
 package com.betbrain.b3.data;
 
-abstract class B3Cell<T> {
+public abstract class B3Cell<T> {
 	
 	final String columnName;
 	

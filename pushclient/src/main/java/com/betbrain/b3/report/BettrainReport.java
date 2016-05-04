@@ -2,30 +2,24 @@ package com.betbrain.b3.report;
 
 import java.util.ArrayList;
 
-import com.betbrain.b3.data.B3Bundle;
 import com.betbrain.b3.data.B3KeyEntity;
 import com.betbrain.b3.data.B3KeyLink;
 import com.betbrain.b3.data.DynamoWorker;
-import com.betbrain.b3.data.ModelShortName;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Event;
 import com.betbrain.sepc.connector.sportsmodel.EventInfo;
-import com.betbrain.sepc.connector.sportsmodel.EventType;
 import com.betbrain.sepc.connector.sportsmodel.Outcome;
 import com.betbrain.sepc.connector.sportsmodel.Sport;
 
 public class BettrainReport {
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		ModelShortName.initialize();
-		DynamoWorker.initialize();
 		String SportFilter = "Football";
 		//all sports
-		B3Bundle bundle = DynamoWorker.getBundleCurrent(); 
+		DynamoWorker.initBundleCurrent(); 
 		JsonMapper jsonMapper = new JsonMapper();
-		ArrayList<Entity> sports = new B3KeyEntity(Sport.class).listEntities(bundle, jsonMapper);
+		ArrayList<Entity> sports = new B3KeyEntity(Sport.class).listEntities(jsonMapper);
 		Entity SportEntity = null;
 		//Sport Filter
 		for(Entity e : sports) {
@@ -40,13 +34,13 @@ public class BettrainReport {
 		ArrayList<Long> ids;
 		
 		//ids = new B3KeyLink(Sport.class, SportEntity.getId(), Event.class).listLinks();
-		ids = new B3KeyLink(Sport.class, SportEntity.getId(), Event.class, "sportId").listLinks(bundle);
-		ArrayList<Event> lstEvent = B3KeyEntity.load(bundle, Event.class, ids);
+		ids = new B3KeyLink(Sport.class, SportEntity.getId(), Event.class, "sportId").listLinks();
+		ArrayList<Event> lstEvent = B3KeyEntity.load(jsonMapper, Event.class, ids);
 		
 		System.out.println(lstEvent.size());
 		
 		//all event types
-		ArrayList<Entity> events = new B3KeyEntity(Event.class).listEntities(bundle, jsonMapper);
+		ArrayList<Entity> events = new B3KeyEntity(Event.class).listEntities(jsonMapper);
 		System.out.println(events.size());
 
 		//Why all number of event is 49 but number of event where sportid is 1 = 49 
@@ -56,8 +50,8 @@ public class BettrainReport {
 		
 		//event to outcome
 		//ids = new B3KeyLink(Event.class, 217409474, EventInfo.class).listLinks();
-		ids = new B3KeyLink(Event.class, 217409474, Outcome.class, "eventId").listLinks(bundle);
-		ArrayList<EventInfo> lstEventInfo = B3KeyEntity.load(bundle, EventInfo.class, ids);
+		ids = new B3KeyLink(Event.class, 217409474, Outcome.class, "eventId").listLinks();
+		ArrayList<EventInfo> lstEventInfo = B3KeyEntity.load(jsonMapper, EventInfo.class, ids);
 		for(EventInfo item : lstEventInfo){
 			System.out.println(item.toString());
 		}

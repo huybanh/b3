@@ -10,14 +10,15 @@ public enum B3Table {
 	Event("event", "E"),
 	EventInfo("event_info", "I"),
 	Outcome("outcome", "C"),
-	BettingOffer("betting_offer", "B");
+	BettingOffer("betting_offer", "B"),
+	SEPC("sepc", null);
 	
 	public final String name;
 	
 	//exact one character
 	public final String shortName;
 	
-	static final int DIST_FACTOR = 200;
+	public static final int DIST_FACTOR = 200;
 	
 	public static final String CELL_LOCATOR_THIZ = "THIZ";
 	static final String CELL_LOCATOR_SEP = "_";
@@ -30,8 +31,8 @@ public enum B3Table {
 	//name of lookup column, which contains range key of target table
 	static final String LOOKUP_CELL_TARGET_RANGE = "R";
 	
-	static final String EVENTKEY_MARKER_EVENT = "E";
-	static final String EVENTKEY_MARKER_EVENTPART = "P";
+	//static final String EVENTKEY_MARKER_EVENT = "E";
+	//static final String EVENTKEY_MARKER_EVENTPART = "P";
 	
 	private B3Table(String tableName, String shortName) {
 		this.name = tableName;

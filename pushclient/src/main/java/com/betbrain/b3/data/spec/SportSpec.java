@@ -18,6 +18,7 @@ import com.betbrain.sepc.connector.sportsmodel.Sport;
  *    Insert: (EVENT/SPORT/sportId/eventId), [no columns] 
  *    Query: (EVENT/SPORT/sportId/eventId*), [no columns]
  */
+@Deprecated
 public class SportSpec extends EntitySpec<Sport, B3KeyEvent> {
 
 	public SportSpec() {
@@ -26,7 +27,7 @@ public class SportSpec extends EntitySpec<Sport, B3KeyEvent> {
 
 	@Override
 	protected B3KeyEvent getB3KeyMain(Sport e) {
-		return new B3KeyEvent(e.getId(), null, null, null);
+		return new B3KeyEvent(e.getId(), null, null);
 	}
 
 	@Override

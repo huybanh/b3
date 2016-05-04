@@ -1,7 +1,9 @@
 package com.betbrain.b3.data;
 
 import java.util.Arrays;
-import java.util.function.Consumer;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.logging.Logger;
 
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.regions.Region;
@@ -20,103 +22,106 @@ import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 
 public class DynamoWorker {
 	
-	private static String HASH = "hash";
-	private static String RANGE = "range";
+	static String HASH = "HASH";
+	public static String RANGE = "RANGE";
 	
-	private static String[] BUNDLEIDS = {"X", "Y", "Z", "T", "U"};
+	private static String[] BUNDLEIDS = {"x", "y", "z", "t", "u"};
 	
-	public static final String BUNDLE_STATUS_INITIALPUT = "INITIAL_PUT";
-	public static final String BUNDLE_STATUS_DEPLOYWAIT= "DEPLOY_WAIT";
+	public static final String BUNDLE_STATUS_INITIALPUT = "INITIAL-PUT";
+	public static final String BUNDLE_STATUS_DEPLOYWAIT= "DEPLOY-WAIT";
 	public static final String BUNDLE_STATUS_DEPLOYING = "DEPLOYING";
+	public static final String BUNDLE_STATUS_PUSH_WAIT = "PUSH-WAIT";
 	public static final String BUNDLE_STATUS_PUSHING = "PUSHING";
-	public static final String BUNDLE_STATUS_PUSHING_INTERRUPTED = "PUSHING_INTERRUPTED";
 	public static final String BUNDLE_STATUS_CEASED = "CEASED";
-	public static final String BUNDLE_STATUS_DELETING = "DELETING";
-	public static final String BUNDLE_STATUS_UNUSED = "UNUSED";
+	//public static final String BUNDLE_STATUS_GARBAGE = "GARBAGE";
+	public static final String BUNDLE_STATUS_DELETEWAIT = "DELETE-WAIT";
+	public static final String BUNDLE_STATUS_NOTEXIST = "NOT-EXIST";
+	public static final String BUNDLE_STATUS_EMPTY = "EMPTY";
+	//public static final String BUNDLE_STATUS_UNUSED = "UNUSED";
+
+	public static final String BUNDLE_PUSHSTATUS_ONGOING = "ONGOING";
+	public static final String BUNDLE_PUSHSTATUS_INTERRUPTED = "INTERRUPTED";
 	
 	private static final String BUNDLE_HASH = "BUNDLE";
 	private static final String BUNDLE_RANGE_CURRENT = "CURRENT";
 	private static final String BUNDLE_CELL_ID = "ID";
 	private static final String BUNDLE_CELL_STATUS = "STATUS";
 	
-	public static final String SEPC_CELLNAME = "JSON";
 	public static final String SEPC_INITIAL = "I";
 	public static final String SEPC_CHANGEBATCH = "B";
+	public static final String SEPC_CELLNAME_JSON = "JSON";
+	public static final String SEPC_CELLNAME_CREATETIME = "CREATE_TIME";
+	public static final String SEPC_CELLNAME_CHANGES = "CHANGES";
 	
 	private  static AmazonDynamoDBClient dynaClient;
 	private static DynamoDB dynamoDB;
 	
-	private static Table offerTable;
-	private static Table eventTable;
-	private static Table eventInfoTable;
-	private static Table outcomeTable;
-	private static Table lookupTable;
-	private static Table linkTable;
-	private static Table entityTable;
-	private static Table sepcTable;
 	private static Table settingTable;
 	
-	public static void initialize() {
+	private static void initialize() {
 
+		ModelShortName.initialize();
 		dynaClient = new AmazonDynamoDBClient(new ProfileCredentialsProvider());
 		dynaClient.setRegion(Region.getRegion(Regions.AP_SOUTHEAST_1));
 		dynamoDB = new DynamoDB(dynaClient);
-		offerTable = dynamoDB.getTable("offer");
-		eventTable = dynamoDB.getTable("event");
-		eventInfoTable = dynamoDB.getTable("event_info");
-		outcomeTable = dynamoDB.getTable("outcome");
-		lookupTable = dynamoDB.getTable("lookup");
-		linkTable = dynamoDB.getTable("link");
-		entityTable = dynamoDB.getTable("entity2");
-		sepcTable = dynamoDB.getTable("sepc");
 		settingTable = dynamoDB.getTable("setting");
 	}
 	
-	private static Table getTable(B3Table b3table) {
-
-		if (b3table == B3Table.BettingOffer) {
-			return offerTable;
-		} else if (b3table == B3Table.Event) {
-			return eventTable;
-		} else if (b3table == B3Table.EventInfo) {
-			return eventInfoTable;
-		} else if (b3table == B3Table.Outcome) {
-			return outcomeTable;
-		} else if (b3table == B3Table.Lookup) {
-			return lookupTable;
-		} else if (b3table == B3Table.Link) {
-			return linkTable;
-		} else if (b3table == B3Table.Entity) {
-			return entityTable;
-		} else {
-			throw new RuntimeException("Unmapped table: " + b3table);
-		}
+	static void createTables() {
+		initialize();
+		String availBundleId = findBundleIdByStatus(BUNDLE_STATUS_NOTEXIST, true);
+		B3Bundle.createTables(dynamoDB, availBundleId);
+		setBundleStatus(availBundleId, BUNDLE_STATUS_EMPTY);
+	}
+	
+	static void deleteTables() {
+		initBundleByStatus(BUNDLE_STATUS_DELETEWAIT);
+		B3Bundle.workingBundle.deleteTables(dynamoDB);
+		setWorkingBundleStatus(BUNDLE_STATUS_NOTEXIST);
 	}
 
-	public static B3Bundle getBundleCurrent() {
+	public static void initBundleCurrent() {
+		initialize();
+		String currentBundleId = getCurrentBundleId();
+		if (currentBundleId == null) {
+			throw new RuntimeException("No current bundle found");
+		}
+		B3Bundle.initWorkingBundle(dynamoDB, getCurrentBundleId());
+	}
+	
+	private static String getCurrentBundleId() {
 		GetItemSpec spec = new GetItemSpec()
 				.withPrimaryKey(HASH, BUNDLE_HASH, RANGE, BUNDLE_RANGE_CURRENT)
 				.withAttributesToGet(BUNDLE_CELL_ID);
 		Item item = settingTable.getItem(spec);
-		String id;
 		if (item == null) {
-			id = BUNDLEIDS[0];
-		} else {
-			id = item.getString(BUNDLE_CELL_ID);
+			//return BUNDLEIDS[0];
+			return null;
 		}
-		return new B3Bundle(id);
+
+		return item.getString(BUNDLE_CELL_ID);
 	}
 	
-	public static void setBundleCurrent(String id) {
+	public static void activateWorkingBundle() {
 		
 		UpdateItemSpec us = new UpdateItemSpec()
 				.withPrimaryKey(HASH, BUNDLE_HASH, RANGE, BUNDLE_RANGE_CURRENT)
-				.addAttributeUpdate(new AttributeUpdate(BUNDLE_CELL_ID).put(id));
+				.addAttributeUpdate(new AttributeUpdate(BUNDLE_CELL_ID).put(B3Bundle.getWorkingBundleId()));
 		settingTable.updateItem(us);
 	}
 	
-	public static B3Bundle getBundleUnused(String newStatus) {
-		String currentId = getBundleCurrent().id;
+	/*public static void initBundleEmpty() {
+
+		initialize();
+		String availBundleId = findBundleIdByStatus(BUNDLE_STATUS_EMPTY, false);
+		B3Bundle.initWorkingBundle(dynamoDB, availBundleId);
+	}*/
+	
+	private static String findBundleIdByStatus(String requiredStatus, boolean takeNull) {
+		String currentId = getCurrentBundleId();
+		if (currentId == null) {
+			currentId = BUNDLEIDS[0];
+		}
 		int currentIndex = Arrays.asList(BUNDLEIDS).indexOf(currentId);
 		if (currentIndex < 0) {
 			throw new RuntimeException("Unknown current bundle id: " + currentId);
@@ -128,7 +133,7 @@ public class DynamoWorker {
 			proposedIndex++;
 			proposedIndex = proposedIndex < BUNDLEIDS.length ? proposedIndex : 0; //round robin
 			String status = getBundleStatus(BUNDLEIDS[proposedIndex]);
-			if (status == null || status.equals(BUNDLE_STATUS_UNUSED)) {
+			if ((takeNull && status == null) || status.equals(requiredStatus)) {
 				availBundleId = BUNDLEIDS[proposedIndex];
 				break;
 			}
@@ -137,17 +142,38 @@ public class DynamoWorker {
 				throw new RuntimeException("No available bundle");
 			}
 		}
-		
-		if (newStatus != null) {
-			UpdateItemSpec us = new UpdateItemSpec()
-					.withPrimaryKey(HASH, BUNDLE_HASH, RANGE, availBundleId)
-					.addAttributeUpdate(new AttributeUpdate(BUNDLE_CELL_STATUS).put(newStatus));
-			settingTable.updateItem(us);
+		return availBundleId;
+	}
+	
+	public static boolean initBundleByStatus(String requiredStatus) {
+		initialize();
+		int proposedIndex = 0;
+		int count = 0;
+		String foundBundleId;
+		while (true) {
+			proposedIndex++;
+			proposedIndex = proposedIndex < BUNDLEIDS.length ? proposedIndex : 0; //round robin
+			String oneStatus = getBundleStatus(BUNDLEIDS[proposedIndex]);
+			if (oneStatus != null && oneStatus.equals(requiredStatus)) {
+				foundBundleId = BUNDLEIDS[proposedIndex];
+				break;
+			}
+			count++;
+			if (count >= BUNDLEIDS.length) {
+				//throw new RuntimeException("Found no bundles with status of " + requiredStatus);
+				//return null;
+				Logger.getLogger(DynamoWorker.class.getName()).info("Found no bundles with status " + requiredStatus);
+				return false;
+			}
 		}
-		return new B3Bundle(availBundleId);
+		
+		B3Bundle.initWorkingBundle(dynamoDB, foundBundleId);
+		return true;
 	}
 	
 	private static String getBundleStatus(String bundleId) {
+		
+		System.out.println("Reading bundle status: " + bundleId);
 		GetItemSpec spec = new GetItemSpec()
 				.withPrimaryKey(HASH, BUNDLE_HASH, RANGE, bundleId)
 				.withAttributesToGet(BUNDLE_CELL_STATUS);
@@ -158,14 +184,18 @@ public class DynamoWorker {
 		return item.getString(BUNDLE_CELL_STATUS);
 	}
 	
-	public static void setBundleStatus(B3Bundle bundle, String status) {
+	public static void setWorkingBundleStatus(String status) {
+		setBundleStatus(B3Bundle.getWorkingBundleId(), status);
+	}
+	
+	private static void setBundleStatus(String bundleId, String status) {
 		UpdateItemSpec spec = new UpdateItemSpec()
-				.withPrimaryKey(HASH, BUNDLE_HASH, RANGE, bundle.id)
+				.withPrimaryKey(HASH, BUNDLE_HASH, RANGE, bundleId)
 				.withAttributeUpdate(new AttributeUpdate(BUNDLE_CELL_STATUS).put(status));
 		settingTable.updateItem(spec);
 	}
 	
-	public static void put(B3Bundle bundle, B3Update update) {
+	public static void put(B3Update update) {
 		/*Table dynaTable = getTable(update.table);
 		UpdateItemSpec us = new UpdateItemSpec().withPrimaryKey(
 				HASH, bundleId + update.key.getHashKey(), RANGE, update.key.getRangeKey());
@@ -175,13 +205,13 @@ public class DynamoWorker {
 			}
 		}*/
 		
-		Table dynaTable = getTable(update.table);
+		Table dynaTable = B3Bundle.workingBundle.getTable(update.table);
 		String rangeKey = update.key.getRangeKey();
 		Item item ;
 		if (rangeKey != null) {
-			item = new Item().withPrimaryKey(HASH, bundle.id + update.key.getHashKey(), RANGE, update.key.getRangeKey());
+			item = new Item().withPrimaryKey(HASH, update.key.getHashKey(), RANGE, update.key.getRangeKey());
 		} else {
-			item = new Item().withPrimaryKey(HASH, bundle.id + update.key.getHashKey());
+			item = new Item().withPrimaryKey(HASH, update.key.getHashKey());
 		}
 		if (update.cells != null) {
 			for (B3Cell<?> c : update.cells) {
@@ -201,22 +231,23 @@ public class DynamoWorker {
 		//System.out.println(update + ": " + update.toString().length());
 	}
 	
-	public static void putSepc(B3Bundle bundle, String hash, String name, String value) {
+	public static void putSepc(String hashKey, String rangeKey, String[]... nameValuePairs ) {
 		
-		Item item = new Item().withPrimaryKey(HASH, bundle.id + hash).withString(name, value);
-		sepcTable.putItem(item);
-		//System.out.println("SEPC: " + bundle.id + hash + "@" + value);
+		Item item = new Item().withPrimaryKey(HASH, hashKey, RANGE, rangeKey);
+		if (nameValuePairs != null) {
+			for (String[] onePair : nameValuePairs) {
+				item = item.withString(onePair[0], onePair[1]);
+			}
+		}
+		B3Bundle.workingBundle.sepcTable.putItem(item);
+		//System.out.println("SEPC: " + hash + "@" + value);
 	}
 
-	public static void updatex(String bundleId, B3Update update) {
-		/*Item item = new Item().withPrimaryKey(HASH, hash, RANGE, range);
-		if (cell != null) {
-			item = item.withString(cell, value);
-		}*/
+	public static void updatex(B3Bundle bundle, B3Update update) {
 
-		Table dynaTable = getTable(update.table);
+		Table dynaTable = bundle.getTable(update.table);
 		UpdateItemSpec us = new UpdateItemSpec().withPrimaryKey(
-				HASH, bundleId + update.key.getHashKey(), RANGE, update.key.getRangeKey());
+				HASH, update.key.getHashKey(), RANGE, update.key.getRangeKey());
 		if (update.cells != null) {
 			for (B3Cell<?> c : update.cells) {
 				us = us.addAttributeUpdate(new AttributeUpdate(c.columnName).put(c.value));
@@ -224,25 +255,50 @@ public class DynamoWorker {
 		}
 
 		dynaTable.updateItem(us);
-		
-		/*int colCount = update.cells == null ? 0 : update.cells.length;
-		System.out.println(update.table.name + ": " + bundleId + update.key.getRangeKey() + "@" + 
-				update.key.getRangeKey() + ", cols: " + colCount);*/
 	}
 
-	public static Item get(B3Table b3table, B3Bundle bundle, String hashKey, String rangeKey) {
+	public static Item get(B3Table b3table, String hashKey, String rangeKey) {
 		
-		Table table = getTable(b3table);
+		Table table = B3Bundle.workingBundle.getTable(b3table);
 		if (rangeKey == null) {
-			System.out.println("GET " + table.getTableName() + ": " + bundle.id + hashKey);
-			return table.getItem(HASH, bundle.id + hashKey);
+			//System.out.println("GET " + table.getTableName() + ": " + hashKey);
+			return table.getItem(HASH, hashKey);
 		} else {
-			System.out.println("GET " + table.getTableName() + ": " + bundle.id + hashKey + "@" + rangeKey);
-			return table.getItem(HASH, bundle.id + hashKey, RANGE, rangeKey);
+			//System.out.println("GET " + table.getTableName() + ": " + hashKey + "@" + rangeKey);
+			return table.getItem(HASH, hashKey, RANGE, rangeKey);
 		}
 	}
 	
-	private static void deleteBundle(B3Table b3table, final String bundleId) {
+	public static void deleteParallel(B3Table b3table, int segment, int totalSegments) {
+		
+		HashMap<String, String> nameMap = new HashMap<String, String>();
+		nameMap.put("h", "hash");
+		
+		ScanSpec spec = new ScanSpec()
+            //.withMaxResultSize(10)
+            .withTotalSegments(totalSegments)
+            .withSegment(segment)
+            //.withAttributesToGet(RANGE, HASH)
+            .withNameMap(nameMap)
+            .withFilterExpression(":h = y");
+        
+		Table table = B3Bundle.workingBundle.getTable(b3table);
+        ItemCollection<ScanOutcome> items = table.scan(spec);
+        Iterator<Item> iterator = items.iterator();
+        Item currentItem = null;
+        while (iterator.hasNext()) {
+            currentItem = iterator.next();
+            String hashKey = currentItem.getString(HASH);
+            System.out.print("Scanning " + hashKey);
+			/*if (!hashKey.startsWith(bundle.id)) {
+				return;
+			}*/
+			System.out.println(hashKey);
+			//table.deleteItem(HASH, hashKey, RANGE, currentItem.getString(RANGE));
+        }
+	}
+	
+	/*private static void deleteBundle(B3Table b3table, final String bundleId) {
 		final Table table = getTable(b3table);
 		ScanSpec spec = new ScanSpec().withAttributesToGet(HASH, RANGE);
 		ItemCollection<ScanOutcome> coll = table.scan(spec);
@@ -258,13 +314,13 @@ public class DynamoWorker {
 			}
 		});
 		//table.deleteItem(HASH, hashKey);
-	}
+	}*/
 	
-	public static ItemCollection<QueryOutcome> query(B3Bundle bundle, B3Table b3table, String hashKey) {
+	public static ItemCollection<QueryOutcome> query(B3Table b3table, String hashKey) {
 		
-		Table table = getTable(b3table);
-		System.out.println("QUERY " + table.getTableName() + ": hash=" + bundle.id + hashKey);
-		return table.query(HASH, bundle.id + hashKey);
+		Table table = B3Bundle.workingBundle.getTable(b3table);
+		//System.out.println("QUERY " + table.getTableName() + ": hash=" + hashKey);
+		return table.query(HASH, hashKey);
 		/*ScanRequest scanRequest = new ScanRequest()
 		        .withTableName(table.getTableName())
 		        .withLimit(10)
@@ -293,19 +349,7 @@ public class DynamoWorker {
 	}
 
 	public static void main(String[] args) {
-		initialize();
-		/*TableCollection<ListTablesResult> x = dynamoDB.listTables();
-		System.out.println(x);
-		for (Table i : x) {
-			System.out.println(i);
-		}
-		Table table = dynamoDB.getTable("fbook");
-		System.out.println(table);
-		table.deleteItem(HASH, "o3641", RANGE, "p_1005123616170333/1005123616170333_1094715557211138");*/
-		
-		//setBundleCurrent("Y");
-		//System.out.println(getBundleUnused(null).id);
-		
-		deleteBundle(B3Table.BettingOffer, "Y");
+		initBundleCurrent();
+		System.out.println(B3Bundle.workingBundle);
 	}
 }

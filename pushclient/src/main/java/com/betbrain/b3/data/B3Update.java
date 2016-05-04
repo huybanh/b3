@@ -1,6 +1,6 @@
 package com.betbrain.b3.data;
 
-class B3Update {
+public class B3Update {
 
 	final B3Table table;
 	
@@ -22,7 +22,7 @@ class B3Update {
 		this(table, key, cellList == null ? null : cellList.toArray(new B3Cell<?>[cellList.size()]));
 	}*/
 
-	B3Update(B3Table table, B3Key key, B3Cell<?>... cells) {
+	public B3Update(B3Table table, B3Key key, B3Cell<?>... cells) {
 		super();
 		this.table = table;
 		this.key = key;
@@ -32,7 +32,7 @@ class B3Update {
 	@Override
 	public String toString() {
 		
-		String head = "UPDATE " + table.name + ": (" + key.getHashKey() + ", " + key.getRangeKey() + ")";
+		String head = "PUT " + table.name + ": (" + key.getHashKey() + ", " + key.getRangeKey() + ")";
 		String tail = null;
 		if (cells != null) {
 			for (int i = 0; i < cells.length; i++) {

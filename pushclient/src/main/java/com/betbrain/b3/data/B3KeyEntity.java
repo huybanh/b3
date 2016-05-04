@@ -19,7 +19,7 @@ public class B3KeyEntity extends B3Key {
 	
 	final Long id;
 	
-	private JsonMapper jsonMapper = new JsonMapper();
+	//private JsonMapper jsonMapper = new JsonMapper();
 
 	public B3KeyEntity(Entity entity) {
 		super();
@@ -33,6 +33,12 @@ public class B3KeyEntity extends B3Key {
 		this.id = id;
 	}
 
+	public B3KeyEntity(String className, long id) {
+		super();
+		classShortName = ModelShortName.get(className); 
+		this.id = id;
+	}
+
 	public B3KeyEntity(Class<?> clazz) {
 		super();
 		classShortName = ModelShortName.get(clazz.getName()); 
@@ -41,10 +47,10 @@ public class B3KeyEntity extends B3Key {
 	
 	@Override
 	boolean isDetermined() {
-		return id != null;
+		return classShortName != null && id != null;
 	}
 	
-	protected String getHashKey() {
+	public String getHashKey() {
 		if (id == null) {
 			return classShortName;
 		}
@@ -60,11 +66,11 @@ public class B3KeyEntity extends B3Key {
 	static final int hardLimit = 50;
 	
 	@SuppressWarnings("unchecked")
-	public <E extends Entity> ArrayList<E> listEntities(B3Bundle bundle, JsonMapper jsonMapper) {
+	public <E extends Entity> ArrayList<E> listEntities(JsonMapper jsonMapper) {
 		ArrayList<E> list = new ArrayList<E>();
 		int i = hardLimit;
 		for (int distFactor = 0; distFactor < B3Table.DIST_FACTOR; distFactor++) {
-			ItemCollection<QueryOutcome> coll = DynamoWorker.query(bundle, B3Table.Entity, classShortName + distFactor);
+			ItemCollection<QueryOutcome> coll = DynamoWorker.query(B3Table.Entity, classShortName + distFactor);
 			IteratorSupport<Item, QueryOutcome> it = coll.iterator();
 			while (it.hasNext()) {
 				if (--i <= 0) {
@@ -72,7 +78,7 @@ public class B3KeyEntity extends B3Key {
 				}
 				Item item = it.next();
 				String json = item.getString(B3Table.CELL_LOCATOR_THIZ);
-				Entity entity = jsonMapper.deserialize(json);
+				Entity entity = jsonMapper.deserializeEntity(json);
 				System.out.println(entity);
 				list.add((E) entity);
 			}
@@ -80,13 +86,15 @@ public class B3KeyEntity extends B3Key {
 		return list;
 	}
 
-	public static <E extends Entity> ArrayList<E> load(B3Bundle bundle, Class<E> clazz, long id) {
+	public static <E extends Entity> ArrayList<E> load(JsonMapper mapper, Class<E> clazz, long id) {
 		ArrayList<Long> idList = new ArrayList<Long>();
 		idList.add(id);
-		return load(bundle, clazz, idList);
+		return load(mapper, clazz, idList);
 	}
 
-	public static <E extends Entity> ArrayList<E> load(B3Bundle bundle, Class<E> clazz, ArrayList<Long> idList) {
+	public static <E extends Entity> ArrayList<E> load(JsonMapper mapper,
+			Class<E> clazz, ArrayList<Long> idList) {
+		
 		ArrayList<E> list = new ArrayList<E>();
 		for (Long id : idList) {
 			B3KeyEntity key = new B3KeyEntity(clazz, id);
@@ -98,7 +106,7 @@ public class B3KeyEntity extends B3Key {
 			@SuppressWarnings("unchecked")
 			E entity = (E) JsonMapper.DeserializeF(json);
 			System.out.println(entity);*/
-			E entity = key.load(bundle);
+			E entity = key.load(mapper);
 			//let clients may need to know if an entity is missing
 			//if (entity != null) {
 				list.add(entity);
@@ -107,16 +115,16 @@ public class B3KeyEntity extends B3Key {
 		return list;
 	}
 
-	public <E extends Entity> E load(B3Bundle bundle) {
-		Item item = DynamoWorker.get(B3Table.Entity, bundle, getHashKey(), getRangeKey());
+	public <E extends Entity> E load(JsonMapper mapper) {
+		Item item = DynamoWorker.get(B3Table.Entity, getHashKey(), getRangeKey());
 		if (item == null) {
 			System.out.println("ID not found: " + getHashKey() + "@" + getRangeKey());
 			return null;
 		}
 		String json = item.getString(B3Table.CELL_LOCATOR_THIZ);
 		@SuppressWarnings("unchecked")
-		E entity = (E) jsonMapper.deserialize(json);
-		System.out.println(entity);
+		E entity = (E) mapper.deserialize(json);
+		//System.out.println(entity);
 		return entity;
 	}
 }
