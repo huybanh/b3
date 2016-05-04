@@ -36,6 +36,19 @@ public class B3KeyOffer extends B3KeyEntitySupport {
 		this.bettingTypeId = bettingTypeId;
 		this.offerId = offerId;
 	}
+
+	public B3KeyOffer(Long sportId, Long eventTypeId, Long eventId) {
+
+		this.sportId = sportId;
+		this.eventTypeId = eventTypeId;
+		//this.eventPartFlag = eventPart;
+		this.eventId = eventId;
+		
+		this.outcomeTypeId = null;
+		this.outcomeId = null;
+		this.bettingTypeId = null;
+		this.offerId = null;
+	}
 	
 	@Override
 	boolean isDetermined() {
@@ -44,7 +57,7 @@ public class B3KeyOffer extends B3KeyEntitySupport {
 	}
 	
 	@Override
-	String getHashKey() {
+	public String getHashKey() {
 		if (sportId == null) {
 			return null;
 		}

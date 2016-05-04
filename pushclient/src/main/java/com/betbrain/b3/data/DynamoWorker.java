@@ -256,10 +256,10 @@ public class DynamoWorker {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
 		if (rangeKey == null) {
-			System.out.println("GET " + table.getTableName() + ": " + hashKey);
+			//System.out.println("GET " + table.getTableName() + ": " + hashKey);
 			return table.getItem(HASH, hashKey);
 		} else {
-			System.out.println("GET " + table.getTableName() + ": " + hashKey + "@" + rangeKey);
+			//System.out.println("GET " + table.getTableName() + ": " + hashKey + "@" + rangeKey);
 			return table.getItem(HASH, hashKey, RANGE, rangeKey);
 		}
 	}
@@ -314,7 +314,7 @@ public class DynamoWorker {
 	public static ItemCollection<QueryOutcome> query(B3Table b3table, String hashKey) {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
-		System.out.println("QUERY " + table.getTableName() + ": hash=" + hashKey);
+		//System.out.println("QUERY " + table.getTableName() + ": hash=" + hashKey);
 		return table.query(HASH, hashKey);
 		/*ScanRequest scanRequest = new ScanRequest()
 		        .withTableName(table.getTableName())

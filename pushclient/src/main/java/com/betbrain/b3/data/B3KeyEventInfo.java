@@ -36,6 +36,16 @@ public class B3KeyEventInfo extends B3KeyEntitySupport {
 		this.eventInfoTypeId = eventInfoTypeId;
 		this.eventInfoId = eventInfoId;
 	}
+
+	public B3KeyEventInfo(Long sportId, Long eventTypeId, Long eventId) {
+		super();
+		this.sportId = sportId;
+		this.eventTypeId = eventTypeId;
+		//this.eventPartFlag = eventPart;
+		this.eventId = eventId;
+		this.eventInfoTypeId = null;
+		this.eventInfoId = null;
+	}
 	
 	@Override
 	boolean isDetermined() {
@@ -43,7 +53,7 @@ public class B3KeyEventInfo extends B3KeyEntitySupport {
 				eventInfoTypeId != null && eventInfoId != null;
 	} 
 	
-	protected String getHashKey() {
+	public String getHashKey() {
 		if (sportId == null) {
 			return null;
 		}

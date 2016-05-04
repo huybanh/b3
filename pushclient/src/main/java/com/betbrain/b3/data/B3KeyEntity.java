@@ -50,7 +50,7 @@ public class B3KeyEntity extends B3Key {
 		return classShortName != null && id != null;
 	}
 	
-	protected String getHashKey() {
+	public String getHashKey() {
 		if (id == null) {
 			return classShortName;
 		}
@@ -124,7 +124,7 @@ public class B3KeyEntity extends B3Key {
 		String json = item.getString(B3Table.CELL_LOCATOR_THIZ);
 		@SuppressWarnings("unchecked")
 		E entity = (E) mapper.deserialize(json);
-		System.out.println(entity);
+		//System.out.println(entity);
 		return entity;
 	}
 }

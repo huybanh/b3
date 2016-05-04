@@ -66,7 +66,7 @@ public class B3KeyLink extends B3Key {
 		return true;
 	} 
 	
-	protected String getHashKey() {
+	public String getHashKey() {
 		//return classShortName + linkedClassShortName + id;
 		return classShortName + linkedClassShortName + linkName + B3Table.KEY_SEP + id;
 	}
@@ -85,8 +85,8 @@ public class B3KeyLink extends B3Key {
 			Item item = it.next();
 			//String json = item.getString(B3Table.CELL_LOCATOR_THIZ);
 			//Entity entity = JsonMapper.DeserializeF(json);
-			Long linkedId = item.getLong("range");
-			System.out.println(this.linkedClassShortName + ": " + linkedId);
+			Long linkedId = item.getLong(DynamoWorker.RANGE);
+			//System.out.println(this.linkedClassShortName + ": " + linkedId);
 			list.add(linkedId);
 			if (--i <= 0) {
 				break;
