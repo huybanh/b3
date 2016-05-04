@@ -52,7 +52,13 @@ public class PushListener2 implements SEPCConnectorListener, EntityChangeBatchPr
 		pushConnector.start("OddsHistory");
 	}
 
+	//private int printCount;
 	public void notifyEntityUpdates(EntityChangeBatch changeBatch) {
+		//if (printCount++ == 100) {
+			//System.out.println("Got batch: " + changeBatch);
+			//printCount = 0;
+			//logger.info("Got batch: " + changeBatch);
+		//}
 		synchronized (batches) {
 			batches.add(changeBatch);
 			batches.notifyAll();
@@ -74,9 +80,9 @@ public class PushListener2 implements SEPCConnectorListener, EntityChangeBatchPr
 		logger.info("Starting to deploy initial dump...");
 		intialDumpStarted = true;
 		final HashMap<String, HashMap<Long, Entity>> masterMap = new HashMap<String, HashMap<Long,Entity>>();
-		int totalCount = 0;
+		//int totalCount = 0;
 		for (Entity e : entityList) {
-			totalCount++;
+			//totalCount++;
 			HashMap<Long, Entity> subMap = masterMap.get(e.getClass().getName());
 			if (subMap == null) {
 				subMap = new HashMap<Long, Entity>();
@@ -88,8 +94,13 @@ public class PushListener2 implements SEPCConnectorListener, EntityChangeBatchPr
 		for (Entry<String, HashMap<Long, Entity>> entry : masterMap.entrySet()) {
 			logger.info(entry.getKey() + ": " + entry.getValue().size());
 		}
-		new InitialDumpDeployer(masterMap, totalCount).initialPutMaster(initialThreads);
-		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSH_WAIT);
+		new Thread() {
+			public void run() {
+
+				new InitialDumpDeployer(masterMap, 0).initialPutMaster(initialThreads);
+				DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSH_WAIT);
+			}
+		}.start();
 	}
 }
 
@@ -101,6 +112,8 @@ class BatchWorker implements Runnable {
 	
 	private final JsonMapper mapper = new JsonMapper();
 	
+	private static long printTimestamp;
+	
 	BatchWorker(ArrayList<EntityChangeBatch> batches) {
 		this.batches = batches;
 	}
@@ -109,7 +122,7 @@ class BatchWorker implements Runnable {
 	public void run() {
 
 		logger.info("Started a batch-deploying thread...");
-		int printCount = 0;
+		//int printCount = 0;
 		while (true) {
 			EntityChangeBatch batch;
 			synchronized (batches) {
@@ -122,9 +135,9 @@ class BatchWorker implements Runnable {
 					continue;
 				}
 				batch = batches.remove(0);
-				if (printCount++ == 100) {
-					printCount = 0;
-					logger.info("Batches to queue: " + batches.size());
+				if (System.currentTimeMillis() - printTimestamp > 5000) {
+					printTimestamp = System.currentTimeMillis();
+					logger.info("Batches in queue: " + batches.size());
 				}
 			}
 
