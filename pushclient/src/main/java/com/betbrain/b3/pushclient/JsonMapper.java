@@ -10,8 +10,6 @@ import flexjson.JSONSerializer;
 
 public class JsonMapper {
 
-	//private ObjectMapper mapper = new ObjectMapper();
-	
 	@SuppressWarnings("rawtypes")
 	private JSONDeserializer flexDe;
 	private JSONSerializer flexSer;
@@ -71,7 +69,7 @@ public class JsonMapper {
 		}
 		return jsonString;
 	}*/
-	
+
 	public static void main(String[] args) {
 		try {
 			System.out.println("Hello Word");
