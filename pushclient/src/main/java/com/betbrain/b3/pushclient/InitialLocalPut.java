@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 
 import com.betbrain.b3.data.DynamoWorker;
-import com.betbrain.b3.data.InitialDumpDeployer;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 
 @Deprecated
@@ -53,7 +52,7 @@ public class InitialLocalPut {
 		
 		DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_NOTEXIST);
 		
-		new InitialDumpDeployer(masterMap).initialPutMaster(2);
+		//new InitialDumpDeployer(masterMap).initialPutMaster(2);
 	}
 
 }

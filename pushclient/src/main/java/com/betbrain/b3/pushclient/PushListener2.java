@@ -6,6 +6,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 
+import org.apache.log4j.Logger;
+
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityChange;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
@@ -22,6 +24,8 @@ import com.betbrain.sepc.connector.sdql.SEPCPushConnector;
 
 public class PushListener2 implements SEPCConnectorListener, EntityChangeBatchProcessingMonitor {
 	
+    private final Logger logger = Logger.getLogger(this.getClass());
+	
 	final ArrayList<EntityChangeBatch> batches = new ArrayList<EntityChangeBatch>();
 	
 	private long lastBatchId;
@@ -31,20 +35,19 @@ public class PushListener2 implements SEPCConnectorListener, EntityChangeBatchPr
 	public static void main(String[] args) {
 		
 		DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_EMPTY);
-		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_INITIALPUT);
 		
 		PushListener2 listener = new PushListener2();
 		initialThreads = Integer.parseInt(args[0]);
 		int batchThreads = Integer.parseInt(args[1]);
+		for (int i = 0; i < batchThreads; i++) {
+			new Thread(new BatchWorker(listener.batches)).start();
+		}
 		
-		//System.out.println("Working bundle: " + listener.bundle);
+		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYING);
 		SEPCConnector pushConnector = new SEPCPushConnector("sept.betbrain.com", 7000);
 		pushConnector.addConnectorListener(listener);
 		pushConnector.setEntityChangeBatchProcessingMonitor(listener);
 		pushConnector.start("OddsHistory");
-		for (int i = 0; i < batchThreads; i++) {
-			new Thread(new BatchWorker(listener.batches)).start();
-		}
 	}
 
 	public void notifyEntityUpdates(EntityChangeBatch changeBatch) {
@@ -63,11 +66,15 @@ public class PushListener2 implements SEPCConnectorListener, EntityChangeBatchPr
 
 	public void notifyInitialDump(List<? extends Entity> entityList) {
 		if (intialDumpStarted) {
+			logger.info("Initial dump had been already deployed. Ignored a new coming dump.");
 			return;
 		}
+		logger.info("Starting to deploy initial dump...");
 		intialDumpStarted = true;
 		final HashMap<String, HashMap<Long, Entity>> masterMap = new HashMap<String, HashMap<Long,Entity>>();
+		int totalCount = 0;
 		for (Entity e : entityList) {
+			totalCount++;
 			HashMap<Long, Entity> subMap = masterMap.get(e.getClass().getName());
 			if (subMap == null) {
 				subMap = new HashMap<Long, Entity>();
@@ -79,12 +86,14 @@ public class PushListener2 implements SEPCConnectorListener, EntityChangeBatchPr
 		for (Entry<String, HashMap<Long, Entity>> entry : masterMap.entrySet()) {
 			System.out.println(entry.getKey() + ": " + entry.getValue().size());
 		}
-		new InitialDumpDeployer(masterMap).initialPutMaster(initialThreads);
-		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYWAIT);
+		new InitialDumpDeployer(masterMap, totalCount).initialPutMaster(initialThreads);
+		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSH_WAIT);
 	}
 }
 
 class BatchWorker implements Runnable {
+	
+    private final Logger logger = Logger.getLogger(this.getClass());
 	
 	final ArrayList<EntityChangeBatch> batches;
 	
@@ -94,8 +103,10 @@ class BatchWorker implements Runnable {
 		this.batches = batches;
 	}
 
+	@Override
 	public void run() {
-		
+
+		logger.info("Started a batch-deploying thread...");
 		int printCount = 0;
 		while (true) {
 			EntityChangeBatch batch;
@@ -109,9 +120,9 @@ class BatchWorker implements Runnable {
 					continue;
 				}
 				batch = batches.remove(0);
-				if (printCount++ == 1000) {
+				if (printCount++ == 100) {
 					printCount = 0;
-					System.out.println("Batches: " + batches.size());
+					logger.info("Batches: " + batches.size());
 				}
 			}
 

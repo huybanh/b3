@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map.Entry;
 
+import org.apache.log4j.Logger;
+
 import com.betbrain.b3.model.B3BettingOffer;
 import com.betbrain.b3.model.B3Entity;
 import com.betbrain.b3.model.B3Event;
@@ -21,39 +23,50 @@ import com.betbrain.sepc.connector.sportsmodel.Outcome;
 
 public class InitialDumpDeployer {
 	
-	//private static final int CONCURRENT_FACTOR = 20;
+    private final Logger logger = Logger.getLogger(this.getClass());
+	
+	private final int totalCount;
+	
+	private int totalProcessedCount;
 
 	private final HashMap<String, HashMap<Long, Entity>> masterMap;
 	//private final HashMap<Long, Long> eventPartToEventMap;
 	
 	public static LinkedList<String> linkingErrors = new LinkedList<String>();
 	
+	private abstract class InitialTask implements Runnable {
+		
+		int processedCount;
+		
+		int subTotalCount;
+	}
+	
 	@SuppressWarnings("unchecked")
-	private final LinkedList<Runnable>[] allTasks = new LinkedList[] {
+	private final LinkedList<InitialTask>[] allTasks = new LinkedList[] {
 			//entity
-			new LinkedList<Runnable>(),
+			new LinkedList<InitialTask>(),
 			//event
-			new LinkedList<Runnable>(),
+			new LinkedList<InitialTask>(),
 			//eventIno
-			new LinkedList<Runnable>(),
+			new LinkedList<InitialTask>(),
 			//outcome
-			new LinkedList<Runnable>(),
+			new LinkedList<InitialTask>(),
 			//offer
-			new LinkedList<Runnable>()
+			new LinkedList<InitialTask>()
 	};
 	
-	private LinkedList<Runnable> entityTasks = allTasks[0];
-	private LinkedList<Runnable> eventTasks = allTasks[1];
-	private LinkedList<Runnable> eventInfoTasks = allTasks[2];
-	private LinkedList<Runnable> outcomeTasks = allTasks[3];
-	private LinkedList<Runnable> offerTasks = allTasks[4];
+	private LinkedList<InitialTask> entityTasks = allTasks[0];
+	private LinkedList<InitialTask> eventTasks = allTasks[1];
+	private LinkedList<InitialTask> eventInfoTasks = allTasks[2];
+	private LinkedList<InitialTask> outcomeTasks = allTasks[3];
+	private LinkedList<InitialTask> offerTasks = allTasks[4];
 	private int taskTypeIndex = 0;
 	
-	public InitialDumpDeployer(HashMap<String, HashMap<Long, Entity>> masterMap/*,
-			HashMap<Long, Long> eventPartToEventMap*/) {
+	public InitialDumpDeployer(HashMap<String, HashMap<Long, Entity>> masterMap, int totalCount) {
 
 		this.masterMap = masterMap;
 		//this.eventPartToEventMap = eventPartToEventMap;
+		this.totalCount = totalCount;
 	}
 	
 	public void initialPutMaster(int threads) {
@@ -71,7 +84,7 @@ public class InitialDumpDeployer {
 			new Thread() {
 				public void run() {
 					do {
-						Runnable oneTask;
+						InitialTask oneTask;
 						synchronized (allTasks) {
 							int taskTypeCount = 0;
 							do {
@@ -93,7 +106,11 @@ public class InitialDumpDeployer {
 							} while (true);
 							oneTask = allTasks[taskTypeIndex].remove();
 						}
+						
 						oneTask.run();
+						totalProcessedCount += oneTask.subTotalCount;
+						logger.info("Totally deployed " + totalProcessedCount + " of " + totalCount);
+						
 					} while (true);
 				}
 			}.start();
@@ -238,22 +255,24 @@ public class InitialDumpDeployer {
 			Collection<Entity>[] subLists = split(entities);
 			for (Collection<Entity> oneSubList : subLists) {
 				final Collection<Entity> oneSubListFinal = oneSubList;
-				entityTasks.add(new Runnable() {
+				InitialTask oneTask = new InitialTask() {
 					
 					private JsonMapper jsonMapper = new JsonMapper();
 					
+				    private final Logger logger = Logger.getLogger(this.getClass());
+					
 					public void run() {
-						final int total = oneSubListFinal.size();
-						int count = 0;
+						//final int total = oneSubListFinal.size();
+						//int count = 0;
 						for (Entity entity : oneSubListFinal) {
+							processedCount++;
 							String shortName = ModelShortName.get(entity.getClass().getName());
 							if (shortName == null) {
 								continue;
 							}
-							count++;
-							if (count % 1000 == 0) {
-								System.out.println("Entity " + 
-										ModelShortName.get(entity.getClass().getName()) + " " + count + " of " + total);
+							//count++;
+							if (processedCount % 1000 == 0) {
+								logger.info("Entity " + shortName+ ": deployed " + processedCount + " of " + subTotalCount);
 							}
 							B3KeyEntity entityKey = new B3KeyEntity(entity);
 							B3Update update = new B3Update(B3Table.Entity, entityKey, 
@@ -261,7 +280,9 @@ public class InitialDumpDeployer {
 							DynamoWorker.put(update);
 						}
 					}
-				});
+				};
+				oneTask.subTotalCount = entities.size();
+				entityTasks.add(oneTask);
 			}
 		}
 	}
@@ -274,7 +295,7 @@ public class InitialDumpDeployer {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private <E extends Entity> void initialPutAllToMainTable(LinkedList<Runnable> runnerList, 
+	private <E extends Entity> void initialPutAllToMainTable(LinkedList<InitialTask> runnerList, 
 			final B3Table table, /*final int start, final Integer end,*/
 			final Class<E> entityClazz, final B3KeyBuilder<E> keyBuilder) {
 
@@ -282,15 +303,17 @@ public class InitialDumpDeployer {
 		Collection<Entity>[] subLists = split(allEntities.values());
 		for (Collection<Entity> oneSubList : subLists) {
 			final Collection<Entity> oneSubListFinal = oneSubList;
-			runnerList.add(new Runnable() {
+			InitialTask oneTask = new InitialTask() {
 				
 				private JsonMapper jsonMapper = new JsonMapper();
 				
+			    private final Logger logger = Logger.getLogger(this.getClass());
+				
 				public void run() {
-					int entityCount = oneSubListFinal.size();
-					int count = 0;
+					//int entityCount = oneSubListFinal.size();
+					//int count = 0;
 					for (Entity entity : oneSubListFinal) {
-						count++;
+						processedCount++;
 						/*if (count < start) {
 							continue;
 						}
@@ -316,13 +339,15 @@ public class InitialDumpDeployer {
 								new B3CellString(B3Table.CELL_LOCATOR_THIZ, JsonMapper.SerializeF(entity)));
 						update.execute();*/
 						
-						if (count % 100 == 0) {
-							System.out.println(entityClazz.getName() + " " + count + " of " + entityCount);
+						if (processedCount % 100 == 0) {
+							logger.info(table.name + ": deployed " + processedCount + " of " + subTotalCount);
 						}
 					}
 					
 				}
-			});
+			};
+			oneTask.subTotalCount = allEntities.size();
+			runnerList.add(oneTask);
 		}
 	}
 	

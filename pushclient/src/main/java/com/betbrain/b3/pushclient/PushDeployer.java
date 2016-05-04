@@ -12,7 +12,6 @@ import com.amazonaws.services.dynamodbv2.document.internal.IteratorSupport;
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.ChangeBatchDeployer;
 import com.betbrain.b3.data.DynamoWorker;
-import com.betbrain.b3.data.InitialDumpDeployer;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
 
@@ -113,7 +112,7 @@ public class PushDeployer {
 		for (Entry<String, HashMap<Long, Entity>> entry : masterMap.entrySet()) {
 			System.out.println(entry.getKey() + ": " + entry.getValue().size());
 		}
-		new InitialDumpDeployer(masterMap).initialPutMaster(threadCount);
+		//new InitialDumpDeployer(masterMap).initialPutMaster(threadCount);
 		
 		//all initial-dump deploying threads have finished
 		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSHING);

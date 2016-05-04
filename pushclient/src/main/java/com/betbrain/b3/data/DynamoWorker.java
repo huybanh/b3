@@ -29,6 +29,7 @@ public class DynamoWorker {
 	public static final String BUNDLE_STATUS_INITIALPUT = "INITIAL-PUT";
 	public static final String BUNDLE_STATUS_DEPLOYWAIT= "DEPLOY-WAIT";
 	public static final String BUNDLE_STATUS_DEPLOYING = "DEPLOYING";
+	public static final String BUNDLE_STATUS_PUSH_WAIT = "PUSH-WAIT";
 	public static final String BUNDLE_STATUS_PUSHING = "PUSHING";
 	public static final String BUNDLE_STATUS_CEASED = "CEASED";
 	//public static final String BUNDLE_STATUS_GARBAGE = "GARBAGE";
