@@ -23,30 +23,48 @@ import com.betbrain.b3.model.B3Sport;
 public enum ModelShortName {
 
 	//Short names are exact-two-character 
-	BettingOffer("BO", B3BettingOffer.class, com.betbrain.sepc.connector.sportsmodel.BettingOffer.class.getName()),
-	BettingOfferStatus("BS", B3BettingOfferStatus.class, com.betbrain.sepc.connector.sportsmodel.BettingOfferStatus.class.getName()),
-	BettingOfferType("BT", B3BettingType.class, com.betbrain.sepc.connector.sportsmodel.BettingType.class.getName()),
-	Event("EV", B3Event.class, com.betbrain.sepc.connector.sportsmodel.Event.class.getName()),
-	EventInfo("EI", B3EventInfo.class, com.betbrain.sepc.connector.sportsmodel.EventInfo.class.getName()),
-	EventInfoType("EF", B3EventInfoType.class, com.betbrain.sepc.connector.sportsmodel.EventInfoType.class.getName()),
-	EventPart("EP", B3EventPart.class, com.betbrain.sepc.connector.sportsmodel.EventPart.class.getName()),
-	EventStatus("ES", B3EventStatus.class, com.betbrain.sepc.connector.sportsmodel.EventStatus.class.getName()),
-	EventTemplate("EM", B3EventTemplate.class, com.betbrain.sepc.connector.sportsmodel.EventTemplate.class.getName()),
-	EventType("ET", B3EventType.class, com.betbrain.sepc.connector.sportsmodel.EventType.class.getName()),
-	Outcome("OC", B3Outcome.class, com.betbrain.sepc.connector.sportsmodel.Outcome.class.getName()),
-	OutcomeStatus("OS", B3OutcomeStatus.class, com.betbrain.sepc.connector.sportsmodel.OutcomeStatus.class.getName()),
-	OutcomeType("OT", B3OutcomeType.class, com.betbrain.sepc.connector.sportsmodel.OutcomeType.class.getName()),
-	Provider("PR", B3Provider.class, com.betbrain.sepc.connector.sportsmodel.Provider.class.getName()),
-	Source("SO", B3Source.class, com.betbrain.sepc.connector.sportsmodel.Source.class.getName()),
-	Sport("SP", B3Sport.class, com.betbrain.sepc.connector.sportsmodel.Sport.class.getName());
+	BettingOffer("BO", B3Table.BettingOffer, 
+			B3BettingOffer.class, com.betbrain.sepc.connector.sportsmodel.BettingOffer.class.getName()),
+	BettingOfferStatus("BS", null, 
+			B3BettingOfferStatus.class, com.betbrain.sepc.connector.sportsmodel.BettingOfferStatus.class.getName()),
+	BettingOfferType("BT", null,
+			B3BettingType.class, com.betbrain.sepc.connector.sportsmodel.BettingType.class.getName()),
+	Event("EV", B3Table.Event,
+			B3Event.class, com.betbrain.sepc.connector.sportsmodel.Event.class.getName()),
+	EventInfo("EI", B3Table.EventInfo,
+			B3EventInfo.class, com.betbrain.sepc.connector.sportsmodel.EventInfo.class.getName()),
+	EventInfoType("EF", null,
+			B3EventInfoType.class, com.betbrain.sepc.connector.sportsmodel.EventInfoType.class.getName()),
+	EventPart("EP", null,
+			B3EventPart.class, com.betbrain.sepc.connector.sportsmodel.EventPart.class.getName()),
+	EventStatus("ES", null,
+			B3EventStatus.class, com.betbrain.sepc.connector.sportsmodel.EventStatus.class.getName()),
+	EventTemplate("EM", null,
+			B3EventTemplate.class, com.betbrain.sepc.connector.sportsmodel.EventTemplate.class.getName()),
+	EventType("ET", null,
+			B3EventType.class, com.betbrain.sepc.connector.sportsmodel.EventType.class.getName()),
+	Outcome("OC", B3Table.Outcome,
+			B3Outcome.class, com.betbrain.sepc.connector.sportsmodel.Outcome.class.getName()),
+	OutcomeStatus("OS", null,
+			B3OutcomeStatus.class, com.betbrain.sepc.connector.sportsmodel.OutcomeStatus.class.getName()),
+	OutcomeType("OT", null,
+			B3OutcomeType.class, com.betbrain.sepc.connector.sportsmodel.OutcomeType.class.getName()),
+	Provider("PR", null,
+			B3Provider.class, com.betbrain.sepc.connector.sportsmodel.Provider.class.getName()),
+	Source("SO", null,
+			B3Source.class, com.betbrain.sepc.connector.sportsmodel.Source.class.getName()),
+	Sport("SP", null,
+			B3Sport.class, com.betbrain.sepc.connector.sportsmodel.Sport.class.getName());
 	
 	public final String shortName;
-	public final String className;
+	public final B3Table mainTable;
 	public final Class<? extends B3Entity<?>> b3class;
+	public final String entityClassName;
 	
-	private ModelShortName(String shortName, Class<? extends B3Entity<?>> b3class, String className) {
+	private ModelShortName(String shortName, B3Table mainTable, Class<? extends B3Entity<?>> b3class, String entityClassName) {
 		this.shortName = shortName;
-		this.className = className;
+		this.mainTable = mainTable;
+		this.entityClassName = entityClassName;
 		this.b3class = b3class;
 	}
 	
@@ -55,26 +73,20 @@ public enum ModelShortName {
 	static void initialize() {
 		allShortNames = new HashMap<String, ModelShortName>();
 		for (ModelShortName em : ModelShortName.values()) {
-			allShortNames.put(em.className, em);
+			allShortNames.put(em.entityClassName, em);
 		}
 	}
 	
-	public static String get(String entityClassName) {
+	public static ModelShortName get(String entityClassName) {
+		return allShortNames.get(entityClassName);
+	}
+	
+	public static String getShortName(String entityClassName) {
 		ModelShortName n = allShortNames.get(entityClassName);
 		if (n == null) {
 			return null;
 		}
 		return n.shortName;
-		//return allShortNames.get(entityClassName).shortName;
-	}
-	
-	public static Class<? extends B3Entity<?>> getB3Class(String entityClassName) {
-		ModelShortName n = allShortNames.get(entityClassName);
-		if (n == null) {
-			return null;
-		}
-		return n.b3class;
-		//return allShortNames.get(entityClassName).shortName;
 	}
 
 }

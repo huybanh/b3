@@ -88,7 +88,13 @@ public class EntityUpdateWrapper extends EntityChangeBase {
 			//setProperty(entity, names.get(i), stringValues.get(i));
 			String propertyName = names.get(i);
 			PropertyDescriptor desc = BeanUtil.getPropertyDescriptor(entity.getClass(), propertyName);
-			Object objectValue = StringUtil.parseValue(stringValues.get(i), desc.getPropertyType());
+			Object objectValue;
+			String stringValue = stringValues.get(i);
+			if (stringValue == null) {
+				objectValue = null;
+			} else {
+				objectValue = StringUtil.parseValue(stringValue, desc.getPropertyType());
+			}
 			BeanUtil.setPropertyValue(entity, propertyName, objectValue);
 		}
 	}

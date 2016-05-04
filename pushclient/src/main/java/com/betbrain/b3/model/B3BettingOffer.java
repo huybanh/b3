@@ -2,6 +2,7 @@ package com.betbrain.b3.model;
 
 import java.util.HashMap;
 
+import com.betbrain.b3.data.B3KeyOffer;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
 import com.betbrain.sepc.connector.sportsmodel.BettingOfferStatus;
@@ -56,5 +57,17 @@ public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 		one = masterMap.get(Provider.class.getName()).get(entity.getProviderId());
 		this.provider = new B3Provider((Provider) one);
 		this.provider.buildDownlinks(masterMap);*/
+	}
+
+	@Override
+	B3KeyOffer createMainKey() {
+		return new B3KeyOffer(outcome.event.entity.getSportId(),
+				outcome.event.entity.getTypeId(),
+				outcome.event.entity.getId(),
+				outcome.entity.getTypeId(),
+				outcome.entity.getId(),
+				this.entity.getBettingTypeId(),
+				this.entity.getId());
+		
 	}
 }

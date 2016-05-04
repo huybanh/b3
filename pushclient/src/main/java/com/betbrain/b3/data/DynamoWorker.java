@@ -17,6 +17,7 @@ import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
+import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 
@@ -227,8 +228,8 @@ public class DynamoWorker {
 			}
 		}
 
-		dynaTable.putItem(item);
-		//System.out.println(update + ": " + update.toString().length());
+		//dynaTable.putItem(item);
+		System.out.println(update + ": " + update.toString().length());
 	}
 	
 	public static void putSepc(String hashKey, String rangeKey, String[]... nameValuePairs ) {
@@ -261,10 +262,10 @@ public class DynamoWorker {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
 		if (rangeKey == null) {
-			//System.out.println("GET " + table.getTableName() + ": " + hashKey);
+			System.out.println("GET " + table.getTableName() + ": " + hashKey);
 			return table.getItem(HASH, hashKey);
 		} else {
-			//System.out.println("GET " + table.getTableName() + ": " + hashKey + "@" + rangeKey);
+			System.out.println("GET " + table.getTableName() + ": " + hashKey + "@" + rangeKey);
 			return table.getItem(HASH, hashKey, RANGE, rangeKey);
 		}
 	}
@@ -317,10 +318,18 @@ public class DynamoWorker {
 	}*/
 	
 	public static ItemCollection<QueryOutcome> query(B3Table b3table, String hashKey) {
+		return query(b3table, hashKey, null);
+	}
+	
+	public static ItemCollection<QueryOutcome> query(B3Table b3table, String hashKey, Integer maxResulteSize) {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
 		//System.out.println("QUERY " + table.getTableName() + ": hash=" + hashKey);
-		return table.query(HASH, hashKey);
+		QuerySpec spec = new QuerySpec().withHashKey(HASH, hashKey);
+		if (maxResulteSize != null) {
+			spec = spec.withMaxResultSize(maxResulteSize);
+		}
+		return table.query(spec);
 		/*ScanRequest scanRequest = new ScanRequest()
 		        .withTableName(table.getTableName())
 		        .withLimit(10)

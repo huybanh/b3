@@ -38,4 +38,8 @@ public class EntityLink {
 		this.linkedEntityClazz = linkedEntity.entity.getClass();
 		this.linkedEntity = linkedEntity;
 	}
+	
+	public String getLinkName() {
+		return this.name;
+	}
 }

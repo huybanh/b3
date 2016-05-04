@@ -26,36 +26,36 @@ public class B3KeyLink extends B3Key {
 
 	public B3KeyLink(Entity entity, Class<? extends Entity> clazz, String linkName) {
 		super();
-		classShortName = ModelShortName.get(entity.getClass().getName()); 
+		classShortName = ModelShortName.getShortName(entity.getClass().getName()); 
 		id = entity.getId();
-		linkedClassShortName = ModelShortName.get(clazz.getName());
+		linkedClassShortName = ModelShortName.getShortName(clazz.getName());
 		this.linkName = linkName;
 		linkedEntityId = null;
 	}
 
 	public B3KeyLink(Class<?> entityClazz, long entityId, Class<?> linkedClazz, String linkName) {
 		super();
-		classShortName = ModelShortName.get(entityClazz.getName()); 
+		classShortName = ModelShortName.getShortName(entityClazz.getName()); 
 		id = entityId;
-		linkedClassShortName = ModelShortName.get(linkedClazz.getName());
+		linkedClassShortName = ModelShortName.getShortName(linkedClazz.getName());
 		this.linkName = linkName;
 		linkedEntityId = null;
 	}
 
 	public B3KeyLink(Class<?> entityClazz, long entityId, Entity linkedEntity, String linkName) {
 		super();
-		classShortName = ModelShortName.get(entityClazz.getName()); 
+		classShortName = ModelShortName.getShortName(entityClazz.getName()); 
 		id = entityId;
-		linkedClassShortName = ModelShortName.get(linkedEntity.getClass().getName());
+		linkedClassShortName = ModelShortName.getShortName(linkedEntity.getClass().getName());
 		linkedEntityId = linkedEntity.getId();
 		this.linkName = linkName;
 	}
 
 	public B3KeyLink(Entity entity, Entity linkedEntity, String linkName) {
 		super();
-		classShortName = ModelShortName.get(entity.getClass().getName()); 
+		classShortName = ModelShortName.getShortName(entity.getClass().getName()); 
 		id = entity.getId();
-		linkedClassShortName = ModelShortName.get(linkedEntity.getClass().getName());
+		linkedClassShortName = ModelShortName.getShortName(linkedEntity.getClass().getName());
 		this.linkName = linkName;
 		this.linkedEntityId = linkedEntity.getId();
 		//this.linkedEntityId = linkedEntityId;
