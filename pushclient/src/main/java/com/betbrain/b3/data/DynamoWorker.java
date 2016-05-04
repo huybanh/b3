@@ -3,6 +3,7 @@ package com.betbrain.b3.data;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.regions.Region;
@@ -144,7 +145,7 @@ public class DynamoWorker {
 		return availBundleId;
 	}
 	
-	public static void initBundleByStatus(String requiredStatus) {
+	public static boolean initBundleByStatus(String requiredStatus) {
 		initialize();
 		int proposedIndex = 0;
 		int count = 0;
@@ -159,12 +160,15 @@ public class DynamoWorker {
 			}
 			count++;
 			if (count >= BUNDLEIDS.length) {
-				throw new RuntimeException("Found no bundles with status of " + requiredStatus);
+				//throw new RuntimeException("Found no bundles with status of " + requiredStatus);
 				//return null;
+				Logger.getLogger(DynamoWorker.class.getName()).info("Found no bundles with status " + requiredStatus);
+				return false;
 			}
 		}
 		
 		B3Bundle.initWorkingBundle(dynamoDB, foundBundleId);
+		return true;
 	}
 	
 	private static String getBundleStatus(String bundleId) {

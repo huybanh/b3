@@ -12,6 +12,7 @@ import com.betbrain.sepc.connector.sdql.SEPCConnector;
 import com.betbrain.sepc.connector.sdql.SEPCConnectorListener;
 import com.betbrain.sepc.connector.sdql.SEPCPushConnector;
 
+@Deprecated
 public class PushListener implements SEPCConnectorListener, EntityChangeBatchProcessingMonitor {
 	
 	final ArrayList<EntityChangeBatch> batches = new ArrayList<EntityChangeBatch>();

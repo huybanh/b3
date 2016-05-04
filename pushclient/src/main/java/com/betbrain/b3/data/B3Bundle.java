@@ -3,6 +3,8 @@ package com.betbrain.b3.data;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
@@ -11,6 +13,8 @@ import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 
 class B3Bundle {
+	
+    private final Logger logger = Logger.getLogger(this.getClass());
 
 	private final String id;
 	
@@ -30,7 +34,7 @@ class B3Bundle {
 	}
 	
 	static void initWorkingBundle(DynamoDB dynamoDB, String id) {
-		System.out.println("Working bundle: " + id);
+		
 		workingBundle = new B3Bundle(id);
 		workingBundle.init(dynamoDB);
 	}
@@ -40,7 +44,7 @@ class B3Bundle {
 	}
 	
 	private void init(DynamoDB dynamoDB) {
-
+		logger.info("Working bundle: " + id);
 		offerTable = dynamoDB.getTable(id + "offer");
 		eventTable = dynamoDB.getTable(id + "event");
 		eventInfoTable = dynamoDB.getTable(id + "event_info");
@@ -77,13 +81,13 @@ class B3Bundle {
 	static void createTables(DynamoDB dynamoDB, String id) {
 
 		Table[] tables = new Table[8];
-		int capaHigh = 1;//1000;
-		int capaLow = 1;//500;
+		int capaHigh = 200;
+		int capaLow = 200;
 		int i = 0;
 		tables[i++] = createTable(dynamoDB, id, "offer", 1, capaLow, true);
 		tables[i++] = createTable(dynamoDB, id, "event", 1, capaLow, true);
 		tables[i++] = createTable(dynamoDB, id, "event_info", 1, 10, true);
-		tables[i++] = createTable(dynamoDB, id, "outcome", 1, capaHigh, true);
+		tables[i++] = createTable(dynamoDB, id, "outcome", 1, capaLow, true);
 		tables[i++] = createTable(dynamoDB, id, "lookup", 1, capaHigh, true);
 		tables[i++] = createTable(dynamoDB, id, "link", 1, capaHigh, true);
 		tables[i++] = createTable(dynamoDB, id, "entity", 1, /*capaHigh*/capaLow, false);

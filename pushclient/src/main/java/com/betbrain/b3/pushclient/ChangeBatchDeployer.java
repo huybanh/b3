@@ -1,4 +1,4 @@
-package com.betbrain.b3.data;
+package com.betbrain.b3.pushclient;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -8,15 +8,19 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.apache.log4j.Logger;
+
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.internal.IteratorSupport;
+import com.betbrain.b3.data.B3Table;
+import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.model.B3Entity;
-import com.betbrain.b3.pushclient.EntityChangeBase;
-import com.betbrain.b3.pushclient.JsonMapper;
 
 public class ChangeBatchDeployer {
+	
+    private final Logger logger = Logger.getLogger(this.getClass());
 	
 	private JsonMapper mapper = new JsonMapper();
 	
@@ -24,20 +28,27 @@ public class ChangeBatchDeployer {
 	
 	public static void main(String[] args) {
 
-		DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYWAIT);
+		final int threadCount = Integer.parseInt(args[0]);
+		if (!DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_PUSH_WAIT)) {
+			if (!DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_PUSHING)) {
+				Logger.getLogger(ChangeBatchDeployer.class).error("No bundle available for pushing");
+				return;
+			}
+		}
+		
 		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSHING);
-		new ChangeBatchDeployer().deployChangeBatches();
+		new ChangeBatchDeployer(threadCount).deployChangeBatches();
 	}
 	
-	public ChangeBatchDeployer() {
-		executor = Executors.newFixedThreadPool(5);
+	public ChangeBatchDeployer(int threadCount) {
+		executor = Executors.newFixedThreadPool(threadCount);
 	}
 
 	public void deployChangeBatches() {
 
 		while (true) {
 			ArrayList<Object> allChanges = queryForChanges();
-			System.out.println("Total changes to deploy: " + allChanges.size());
+			logger.debug("Total changes to deploy: " + allChanges.size());
 			for (Object one : allChanges) {
 				B3Entity.applyChange((EntityChangeBase) one, mapper);
 			}

@@ -34,7 +34,9 @@ public class PushListener2 implements SEPCConnectorListener, EntityChangeBatchPr
 	
 	public static void main(String[] args) {
 		
-		DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_EMPTY);
+		if (!DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_EMPTY)) {
+			return;
+		}
 		
 		PushListener2 listener = new PushListener2();
 		initialThreads = Integer.parseInt(args[0]);
@@ -84,7 +86,7 @@ public class PushListener2 implements SEPCConnectorListener, EntityChangeBatchPr
 		}
 		
 		for (Entry<String, HashMap<Long, Entity>> entry : masterMap.entrySet()) {
-			System.out.println(entry.getKey() + ": " + entry.getValue().size());
+			logger.info(entry.getKey() + ": " + entry.getValue().size());
 		}
 		new InitialDumpDeployer(masterMap, totalCount).initialPutMaster(initialThreads);
 		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSH_WAIT);
@@ -122,7 +124,7 @@ class BatchWorker implements Runnable {
 				batch = batches.remove(0);
 				if (printCount++ == 100) {
 					printCount = 0;
-					logger.info("Batches: " + batches.size());
+					logger.info("Batches to queue: " + batches.size());
 				}
 			}
 

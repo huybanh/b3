@@ -10,11 +10,11 @@ import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.internal.IteratorSupport;
 
 import com.betbrain.b3.data.B3Table;
-import com.betbrain.b3.data.ChangeBatchDeployer;
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
 
+@Deprecated
 public class PushDeployer {
 	
 	final LinkedList<EntityChangeBatch> batches = new LinkedList<EntityChangeBatch>();
@@ -116,7 +116,7 @@ public class PushDeployer {
 		
 		//all initial-dump deploying threads have finished
 		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSHING);
-		new ChangeBatchDeployer().deployChangeBatches();
+		//new ChangeBatchDeployer().deployChangeBatches();
 	}
 
 }
