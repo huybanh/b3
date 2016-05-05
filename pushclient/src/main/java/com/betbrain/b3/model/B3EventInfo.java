@@ -56,6 +56,9 @@ public class B3EventInfo extends B3Entity<EventInfo> {
 
 	@Override
 	B3KeyEventInfo createMainKey() {
+		if (entity == null || event == null) {
+			return null;
+		}
 		EventInfo info = (EventInfo) entity;
 		return new B3KeyEventInfo(event.entity.getId(), event.entity.getTypeId(), 
 				info.getEventId(), info.getTypeId(), info.getId());

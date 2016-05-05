@@ -4,11 +4,11 @@ import com.betbrain.b3.model.B3Entity;
 
 public class EntityLink {
 
-	final String name;
+	public final String name;
 	
-	final Long linkedEntityId;
+	public final Long linkedEntityId;
 	
-	final Class<?> linkedEntityClazz;
+	public final Class<?> linkedEntityClazz;
 	
 	final B3Entity<?> linkedEntity;
 

@@ -230,9 +230,8 @@ public class DynamoWorker {
 		}
 
 		Table dynaTable = B3Bundle.workingBundle.getTable(update.table);
-		if (readOnly) {
-			System.out.println("DB-PUT " + update);
-		} else {
+		System.out.println("DB-PUT " + update);
+		if (!readOnly) {
 			dynaTable.putItem(item);
 		}
 	}
@@ -245,10 +244,9 @@ public class DynamoWorker {
 				item = item.withString(onePair[0], onePair[1]);
 			}
 		}
-		
-		if (readOnly) {
-			System.out.println("SEPC: " + hashKey + "/" + rangeKey);
-		} else {
+
+		System.out.println("SEPC: " + hashKey + "/" + rangeKey);
+		if (!readOnly) {
 			B3Bundle.workingBundle.sepcTable.putItem(item);
 		}
 	}
@@ -264,9 +262,8 @@ public class DynamoWorker {
 		}
 
 		Table dynaTable = B3Bundle.workingBundle.getTable(update.table);
-		if (readOnly) {
-			System.out.println("DB-UPDATE " + update);
-		} else {
+		System.out.println("DB-UPDATE " + update);
+		if (!readOnly) {
 			dynaTable.updateItem(us);
 		}
 	}
@@ -280,6 +277,19 @@ public class DynamoWorker {
 		} else {
 			System.out.println("DB-GET " + table.getTableName() + ": " + hashKey + "@" + rangeKey);
 			return table.getItem(HASH, hashKey, RANGE, rangeKey);
+		}
+	}
+	
+	public static void delete(B3Table b3table, String hashKey, String rangeKey) {
+		
+		Table table = B3Bundle.workingBundle.getTable(b3table);
+		System.out.println("DB-DELETE " + b3table.name + " " + hashKey + "@" + rangeKey);
+		if (!readOnly) {
+			if (rangeKey != null) {
+				table.deleteItem(HASH, hashKey, RANGE, rangeKey);
+			} else {
+				table.deleteItem(HASH, hashKey);
+			}
 		}
 	}
 	

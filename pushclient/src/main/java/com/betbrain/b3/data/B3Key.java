@@ -10,7 +10,7 @@ public abstract class B3Key {
 	
 	abstract String getHashKeyInternal();
 	
-	final String getRangeKey() {
+	public final String getRangeKey() {
 		if (revisionId != null) {
 			return getRangeKeyInternal() + B3Table.KEY_SEP + revisionId;
 		} else {

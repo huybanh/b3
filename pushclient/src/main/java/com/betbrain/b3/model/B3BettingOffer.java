@@ -56,6 +56,9 @@ public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 
 	@Override
 	B3KeyOffer createMainKey() {
+		if (entity == null || outcome == null) {
+			return null;
+		}
 		return new B3KeyOffer(outcome.event.entity.getSportId(),
 				outcome.event.entity.getTypeId(),
 				outcome.event.entity.getId(),

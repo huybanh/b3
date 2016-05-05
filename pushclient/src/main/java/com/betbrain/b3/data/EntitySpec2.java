@@ -21,57 +21,58 @@ import com.betbrain.b3.model.B3Provider;
 import com.betbrain.b3.model.B3Source;
 import com.betbrain.b3.model.B3Sport;
 import com.betbrain.b3.pushclient.EntityUpdateWrapper;
+import com.betbrain.sepc.connector.sportsmodel.Entity;
 
 public enum EntitySpec2 {
 
 	//Short names are exact-two-character 
 	BettingOffer("BO", B3Table.BettingOffer, true, B3BettingOffer.class,
-			com.betbrain.sepc.connector.sportsmodel.BettingOffer.class.getName()),
+			com.betbrain.sepc.connector.sportsmodel.BettingOffer.class),
 	BettingOfferStatus("BS", null, false, B3BettingOfferStatus.class,
-			com.betbrain.sepc.connector.sportsmodel.BettingOfferStatus.class.getName()),
+			com.betbrain.sepc.connector.sportsmodel.BettingOfferStatus.class),
 	BettingOfferType("BT", null, false, B3BettingType.class,
-			com.betbrain.sepc.connector.sportsmodel.BettingType.class.getName()),
+			com.betbrain.sepc.connector.sportsmodel.BettingType.class),
 	Event("EV", B3Table.Event, false, B3Event.class,
-			com.betbrain.sepc.connector.sportsmodel.Event.class.getName()),
+			com.betbrain.sepc.connector.sportsmodel.Event.class),
 	EventInfo("EI", B3Table.EventInfo, true, B3EventInfo.class,
-			com.betbrain.sepc.connector.sportsmodel.EventInfo.class.getName()),
+			com.betbrain.sepc.connector.sportsmodel.EventInfo.class),
 	EventInfoType("EF", null, false, B3EventInfoType.class,
-			com.betbrain.sepc.connector.sportsmodel.EventInfoType.class.getName()),
+			com.betbrain.sepc.connector.sportsmodel.EventInfoType.class),
 	EventPart("EP", null, false, B3EventPart.class,
-			com.betbrain.sepc.connector.sportsmodel.EventPart.class.getName()),
+			com.betbrain.sepc.connector.sportsmodel.EventPart.class),
 	EventStatus("ES", null, false, B3EventStatus.class,
-			com.betbrain.sepc.connector.sportsmodel.EventStatus.class.getName()),
+			com.betbrain.sepc.connector.sportsmodel.EventStatus.class),
 	EventTemplate("EM", null, false, B3EventTemplate.class, 
-			com.betbrain.sepc.connector.sportsmodel.EventTemplate.class.getName()),
+			com.betbrain.sepc.connector.sportsmodel.EventTemplate.class),
 	EventType("ET", null, false, B3EventType.class,
-			com.betbrain.sepc.connector.sportsmodel.EventType.class.getName()),
+			com.betbrain.sepc.connector.sportsmodel.EventType.class),
 	Outcome("OC", B3Table.Outcome, false, B3Outcome.class,
-			com.betbrain.sepc.connector.sportsmodel.Outcome.class.getName()),
+			com.betbrain.sepc.connector.sportsmodel.Outcome.class),
 	OutcomeStatus("OS", null, false, B3OutcomeStatus.class,
-			com.betbrain.sepc.connector.sportsmodel.OutcomeStatus.class.getName()),
+			com.betbrain.sepc.connector.sportsmodel.OutcomeStatus.class),
 	OutcomeType("OT", null, false, B3OutcomeType.class,
-			com.betbrain.sepc.connector.sportsmodel.OutcomeType.class.getName()),
+			com.betbrain.sepc.connector.sportsmodel.OutcomeType.class),
 	Provider("PR", null, false, B3Provider.class,
-			com.betbrain.sepc.connector.sportsmodel.Provider.class.getName()),
+			com.betbrain.sepc.connector.sportsmodel.Provider.class),
 	Source("SO", null, false, B3Source.class,
-			com.betbrain.sepc.connector.sportsmodel.Source.class.getName()),
+			com.betbrain.sepc.connector.sportsmodel.Source.class),
 	Sport("SP", null, false, B3Sport.class,
-			com.betbrain.sepc.connector.sportsmodel.Sport.class.getName());
+			com.betbrain.sepc.connector.sportsmodel.Sport.class);
 	
 	public final String shortName;
 	public final B3Table mainTable;
 	public final boolean revisioned;
 	public final Class<? extends B3Entity<?>> b3class;
-	public final String entityClassName;
+	public final Class<? extends Entity> entityClass;
 	
 	private EntitySpec2(String shortName, B3Table mainTable, boolean revisioned,
-			Class<? extends B3Entity<?>> b3class, String entityClassName) {
+			Class<? extends B3Entity<?>> b3class, Class<? extends Entity> entityClass) {
 		
 		this.shortName = shortName;
 		this.mainTable = mainTable;
 		this.revisioned = revisioned;
 		this.b3class = b3class;
-		this.entityClassName = entityClassName;
+		this.entityClass = entityClass;
 	}
 	
 	private static HashMap<String, EntitySpec2> allShortNames;
@@ -79,7 +80,7 @@ public enum EntitySpec2 {
 	static void initialize() {
 		allShortNames = new HashMap<String, EntitySpec2>();
 		for (EntitySpec2 em : EntitySpec2.values()) {
-			allShortNames.put(em.entityClassName, em);
+			allShortNames.put(em.entityClass.getName(), em);
 		}
 	}
 	

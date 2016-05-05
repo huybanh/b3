@@ -43,46 +43,55 @@ public class ChangeBatchDeployer {
 
 	public void deployChangeBatches() {
 
-		final ArrayList<Long> allBatcheIds = new ArrayList<Long>();
-		for (int dist = 0; dist < B3Table.DIST_FACTOR; dist++) {
-			ItemCollection<QueryOutcome> coll = DynamoWorker.query(
-					B3Table.SEPC, DynamoWorker.SEPC_CHANGEBATCH + dist, 1);
-			IteratorSupport<Item, QueryOutcome> iter = coll.iterator();
-			while (iter.hasNext()) {
-				Item item = iter.next();
-				allBatcheIds.add(item.getLong(DynamoWorker.RANGE));
-			}
-		}
-		Collections.sort(allBatcheIds);
-		
-		long batchId = allBatcheIds.get(0);
 		while (true) {
-			System.out.println("Processing batch " + batchId);
-			Item item = DynamoWorker.get(B3Table.SEPC, BatchWorker.generateHashKey(batchId), String.valueOf(batchId));
-			if (item == null) {
-				try {
-					Thread.sleep(5);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+			final ArrayList<Long> allBatcheIds = new ArrayList<Long>();
+			for (int dist = 0; dist < B3Table.DIST_FACTOR; dist++) {
+				ItemCollection<QueryOutcome> coll = DynamoWorker.query(
+						B3Table.SEPC, DynamoWorker.SEPC_CHANGEBATCH + dist, 1);
+				IteratorSupport<Item, QueryOutcome> iter = coll.iterator();
+				while (iter.hasNext()) {
+					Item item = iter.next();
+					allBatcheIds.add(item.getLong(DynamoWorker.RANGE));
 				}
-				continue;
 			}
-
-			String createTime = item.getString(DynamoWorker.SEPC_CELLNAME_CREATETIME);
-			String changesJson = item.getString(DynamoWorker.SEPC_CELLNAME_CHANGES);
-			@SuppressWarnings("unchecked")
-			List<Object> changes = (List<Object>) mapper.deserialize(changesJson);
-			for (Object oneChange : changes) {
-				B3Entity.applyChange(createTime, (EntityChangeBase) oneChange, mapper);
-			}
-			batchId++;
-			/*logger.debug("Total batches to deploy: " + allBatches.size());
-			for (B3ChangeBatch oneBatch : allBatches) {
-				System.out.println("Processing batch " + oneBatch.batchId);
-				for (EntityChangeBase oneChange : oneBatch.changes) {
-					B3Entity.applyChange(oneChange, mapper);
+			Collections.sort(allBatcheIds);
+			
+			long batchId = allBatcheIds.get(0);
+			int retryCount = 0;
+			while (true) {
+				Item item = DynamoWorker.get(B3Table.SEPC, BatchWorker.generateHashKey(batchId), String.valueOf(batchId));
+				if (item == null) {
+					if (retryCount > 3) {
+						break;
+					}
+					try {
+						Thread.sleep(5);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					retryCount++;
+					continue;
 				}
-			}*/
+	
+				String createTime = item.getString(DynamoWorker.SEPC_CELLNAME_CREATETIME);
+				String changesJson = item.getString(DynamoWorker.SEPC_CELLNAME_CHANGES);
+				@SuppressWarnings("unchecked")
+				List<Object> changes = (List<Object>) mapper.deserialize(changesJson);
+				System.out.println("Processing batch " + batchId + ", changes: " + changes.size());
+				for (Object oneChange : changes) {
+					B3Entity.applyChange(createTime, (EntityChangeBase) oneChange, mapper);
+				}
+				
+				DynamoWorker.delete(B3Table.SEPC, BatchWorker.generateHashKey(batchId), String.valueOf(batchId));
+				batchId++;
+				/*logger.debug("Total batches to deploy: " + allBatches.size());
+				for (B3ChangeBatch oneBatch : allBatches) {
+					System.out.println("Processing batch " + oneBatch.batchId);
+					for (EntityChangeBase oneChange : oneBatch.changes) {
+						B3Entity.applyChange(oneChange, mapper);
+					}
+				}*/
+			}
 		}
 	}
 	
