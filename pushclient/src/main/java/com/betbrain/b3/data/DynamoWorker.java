@@ -48,6 +48,14 @@ public class DynamoWorker {
 	private static final String BUNDLE_CELL_ID = "ID";
 	private static final String BUNDLE_CELL_STATUS = "STATUS";
 	
+	public static final String BUNDLE_CELL_PUSHSTATUS = "PUSH_STATUS";
+	public static final String BUNDLE_CELL_LASTBATCH_RECEIVED_ID = "LAST_RECEIVED_ID";
+	public static final String BUNDLE_CELL_LASTBATCH_RECEIVED_TIMESTAMP = "LAST_RECEIVED_TIMESTAMP";
+
+	public static final String BUNDLE_CELL_DEPLOYSTATUS = "DEPLOY_STATUS";
+	public static final String BUNDLE_CELL_LASTBATCH_DEPLOYED_ID = "LAST_DEPLOYED_ID";
+	public static final String BUNDLE_CELL_LASTBATCH_DEPLOYED_TIMESTAMP = "LAST_DEPLOYED_TIMESTAMP";
+	
 	public static final String SEPC_INITIAL = "I";
 	public static final String SEPC_CHANGEBATCH = "B";
 	public static final String SEPC_CELLNAME_JSON = "JSON";
@@ -196,7 +204,7 @@ public class DynamoWorker {
 		settingTable.updateItem(spec);
 	}
 	
-	public static boolean readOnly = true;
+	public static boolean readOnly = false;
 	
 	public static void put(B3Update update) {
 		/*Table dynaTable = getTable(update.table);
@@ -265,6 +273,22 @@ public class DynamoWorker {
 		System.out.println("DB-UPDATE " + update);
 		if (!readOnly) {
 			dynaTable.updateItem(us);
+		}
+	}
+
+	public static void updateSetting(B3CellString... cells) {
+
+		UpdateItemSpec us = new UpdateItemSpec().withPrimaryKey(
+				HASH, BUNDLE_HASH, RANGE, B3Bundle.getWorkingBundleId());
+		if (cells != null) {
+			for (B3Cell<?> c : cells) {
+				us = us.addAttributeUpdate(new AttributeUpdate(c.columnName).put(c.value));
+			}
+		}
+
+		System.out.println("DB-UPDATE " + settingTable.getTableName());
+		if (!readOnly) {
+			settingTable.updateItem(us);
 		}
 	}
 

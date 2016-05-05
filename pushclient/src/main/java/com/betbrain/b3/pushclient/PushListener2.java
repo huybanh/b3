@@ -14,6 +14,7 @@ import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
 import com.betbrain.sepc.connector.sportsmodel.EntityCreate;
 import com.betbrain.sepc.connector.sportsmodel.EntityDelete;
 import com.betbrain.sepc.connector.sportsmodel.EntityUpdate;
+import com.betbrain.b3.data.B3CellString;
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.data.InitialDumpDeployer;
@@ -51,6 +52,8 @@ public class PushListener2 implements SEPCConnectorListener, EntityChangeBatchPr
 		pushConnector.setEntityChangeBatchProcessingMonitor(listener);
 		pushConnector.start("OddsHistory");
 	}
+	
+	private int pushStatusCount = 0;
 
 	//private int printCount;
 	public void notifyEntityUpdates(EntityChangeBatch changeBatch) {
@@ -63,6 +66,17 @@ public class PushListener2 implements SEPCConnectorListener, EntityChangeBatchPr
 			batches.add(changeBatch);
 			batches.notifyAll();
 			lastBatchId = changeBatch.getId();
+			
+			if (pushStatusCount == 0) {
+				DynamoWorker.updateSetting(
+						new B3CellString(DynamoWorker.BUNDLE_CELL_PUSHSTATUS, DynamoWorker.BUNDLE_PUSHSTATUS_ONGOING),
+						new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_RECEIVED_ID, String.valueOf(changeBatch.getId())),
+						new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_RECEIVED_TIMESTAMP, changeBatch.getCreateTime().toString()));
+			}
+			pushStatusCount++;
+			if (pushStatusCount == 1000) {
+				pushStatusCount = 0;
+			}
 		}
 	}
 
@@ -114,6 +128,8 @@ class BatchWorker implements Runnable {
 	
 	private static long printTimestamp;
 	
+	//private static boolean firstBatch = true;
+	
 	BatchWorker(ArrayList<EntityChangeBatch> batches) {
 		this.batches = batches;
 	}
@@ -163,6 +179,7 @@ class BatchWorker implements Runnable {
 			DynamoWorker.putSepc(hashKey, rangeKey,
 				new String[] {DynamoWorker.SEPC_CELLNAME_CREATETIME, mapper.serialize(batch.getCreateTime())},
 				new String[] {DynamoWorker.SEPC_CELLNAME_CHANGES, mapper.serialize(changeList)});
+			
 		}
 	}
 	

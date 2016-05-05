@@ -2,6 +2,7 @@ package com.betbrain.b3.pushclient;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -10,6 +11,7 @@ import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.internal.IteratorSupport;
+import com.betbrain.b3.data.B3CellString;
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.model.B3Entity;
@@ -43,6 +45,7 @@ public class ChangeBatchDeployer {
 
 	public void deployChangeBatches() {
 
+		int deployCount = 0;
 		while (true) {
 			final ArrayList<Long> allBatcheIds = new ArrayList<Long>();
 			for (int dist = 0; dist < B3Table.DIST_FACTOR; dist++) {
@@ -83,6 +86,18 @@ public class ChangeBatchDeployer {
 				}
 				
 				DynamoWorker.delete(B3Table.SEPC, BatchWorker.generateHashKey(batchId), String.valueOf(batchId));
+
+				if (deployCount == 0) {
+					Date d = new Date(Long.parseLong(createTime));
+					DynamoWorker.updateSetting(
+							new B3CellString(DynamoWorker.BUNDLE_CELL_DEPLOYSTATUS, DynamoWorker.BUNDLE_PUSHSTATUS_ONGOING),
+							new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_ID, String.valueOf(batchId)),
+							new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_TIMESTAMP, d.toString()));
+				}
+				deployCount++;
+				if (deployCount == 1000) {
+					deployCount = 0;
+				}
 				batchId++;
 				/*logger.debug("Total batches to deploy: " + allBatches.size());
 				for (B3ChangeBatch oneBatch : allBatches) {
