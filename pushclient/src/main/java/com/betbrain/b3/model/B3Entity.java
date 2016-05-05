@@ -369,10 +369,9 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		}
 		
 		//delete in lookup
-		deleteCurrentLookup(B3Table.BettingOffer);
-		deleteCurrentLookup(B3Table.Event);
-		deleteCurrentLookup(B3Table.EventInfo);
-		deleteCurrentLookup(B3Table.Outcome);
+		for (B3Table oneMain : B3Table.mainTables) {
+			deleteCurrentLookup(oneMain);
+		}
 		
 		//delete in link
 		EntityLink[] linkedEntities = getDownlinkedEntities();
