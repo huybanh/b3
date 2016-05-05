@@ -269,8 +269,9 @@ public class InitialDumpDeployer {
 						//int count = 0;
 						for (Entity entity : oneSubListFinal) {
 							//processedCount++;
-							String shortName = EntitySpec2.get(entity.getClass().getName()).entityClassName;
-							if (shortName == null) {
+							EntitySpec2 spec = EntitySpec2.get(entity.getClass().getName());
+							//String shortName = spec.entityClassName;
+							if (spec == null) {
 								continue;
 							}
 							//count++;

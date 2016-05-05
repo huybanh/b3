@@ -237,7 +237,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 	}
 	
 	@SuppressWarnings("unchecked")
-	final void updateCurrent(Entity entity, JsonMapper mapper) {
+	private void updateCurrent(Entity entity, JsonMapper mapper) {
 		//table entity
 		this.entity = (E) entity;
 		String entityJson = mapper.serialize(this.entity);
@@ -259,12 +259,12 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 	}
 	
 	@SuppressWarnings("unchecked")
-	final void put(Entity entity, JsonMapper mapper) {
+	private void put(Entity entity, JsonMapper mapper) {
 		
 	}
 	
 	@SuppressWarnings("unchecked")
-	final void putCurrent(Entity entity, JsonMapper mapper) {
+	private void putCurrent(Entity entity, JsonMapper mapper) {
 		
 		//table entity
 		this.entity = (E) entity;
@@ -290,11 +290,11 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 	}
 	
 	@SuppressWarnings("unchecked")
-	final void putRevision(Entity entity, JsonMapper mapper) {
+	private void putRevision(Entity entity, JsonMapper mapper) {
 		
 	}
 	
-	final void delete(Entity targetEntity, JsonMapper mapper) {
+	private void delete(Entity targetEntity, JsonMapper mapper) {
 		if (targetEntity == null) {
 			System.out.println("Ignoring entity update: entity does not exist");
 			return;
