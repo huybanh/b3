@@ -25,47 +25,51 @@ import com.betbrain.b3.pushclient.EntityUpdateWrapper;
 public enum EntitySpec2 {
 
 	//Short names are exact-two-character 
-	BettingOffer("BO", B3Table.BettingOffer, 
-			B3BettingOffer.class, com.betbrain.sepc.connector.sportsmodel.BettingOffer.class.getName()),
-	BettingOfferStatus("BS", null, 
-			B3BettingOfferStatus.class, com.betbrain.sepc.connector.sportsmodel.BettingOfferStatus.class.getName()),
-	BettingOfferType("BT", null,
-			B3BettingType.class, com.betbrain.sepc.connector.sportsmodel.BettingType.class.getName()),
-	Event("EV", B3Table.Event,
-			B3Event.class, com.betbrain.sepc.connector.sportsmodel.Event.class.getName()),
-	EventInfo("EI", B3Table.EventInfo,
-			B3EventInfo.class, com.betbrain.sepc.connector.sportsmodel.EventInfo.class.getName()),
-	EventInfoType("EF", null,
-			B3EventInfoType.class, com.betbrain.sepc.connector.sportsmodel.EventInfoType.class.getName()),
-	EventPart("EP", null,
-			B3EventPart.class, com.betbrain.sepc.connector.sportsmodel.EventPart.class.getName()),
-	EventStatus("ES", null,
-			B3EventStatus.class, com.betbrain.sepc.connector.sportsmodel.EventStatus.class.getName()),
-	EventTemplate("EM", null,
-			B3EventTemplate.class, com.betbrain.sepc.connector.sportsmodel.EventTemplate.class.getName()),
-	EventType("ET", null,
-			B3EventType.class, com.betbrain.sepc.connector.sportsmodel.EventType.class.getName()),
-	Outcome("OC", B3Table.Outcome,
-			B3Outcome.class, com.betbrain.sepc.connector.sportsmodel.Outcome.class.getName()),
-	OutcomeStatus("OS", null,
-			B3OutcomeStatus.class, com.betbrain.sepc.connector.sportsmodel.OutcomeStatus.class.getName()),
-	OutcomeType("OT", null,
-			B3OutcomeType.class, com.betbrain.sepc.connector.sportsmodel.OutcomeType.class.getName()),
-	Provider("PR", null,
-			B3Provider.class, com.betbrain.sepc.connector.sportsmodel.Provider.class.getName()),
-	Source("SO", null,
-			B3Source.class, com.betbrain.sepc.connector.sportsmodel.Source.class.getName()),
-	Sport("SP", null,
-			B3Sport.class, com.betbrain.sepc.connector.sportsmodel.Sport.class.getName());
+	BettingOffer("BO", B3Table.BettingOffer, true, B3BettingOffer.class,
+			com.betbrain.sepc.connector.sportsmodel.BettingOffer.class.getName()),
+	BettingOfferStatus("BS", null, false, B3BettingOfferStatus.class,
+			com.betbrain.sepc.connector.sportsmodel.BettingOfferStatus.class.getName()),
+	BettingOfferType("BT", null, false, B3BettingType.class,
+			com.betbrain.sepc.connector.sportsmodel.BettingType.class.getName()),
+	Event("EV", B3Table.Event, false, B3Event.class,
+			com.betbrain.sepc.connector.sportsmodel.Event.class.getName()),
+	EventInfo("EI", B3Table.EventInfo, true, B3EventInfo.class,
+			com.betbrain.sepc.connector.sportsmodel.EventInfo.class.getName()),
+	EventInfoType("EF", null, false, B3EventInfoType.class,
+			com.betbrain.sepc.connector.sportsmodel.EventInfoType.class.getName()),
+	EventPart("EP", null, false, B3EventPart.class,
+			com.betbrain.sepc.connector.sportsmodel.EventPart.class.getName()),
+	EventStatus("ES", null, false, B3EventStatus.class,
+			com.betbrain.sepc.connector.sportsmodel.EventStatus.class.getName()),
+	EventTemplate("EM", null, false, B3EventTemplate.class, 
+			com.betbrain.sepc.connector.sportsmodel.EventTemplate.class.getName()),
+	EventType("ET", null, false, B3EventType.class,
+			com.betbrain.sepc.connector.sportsmodel.EventType.class.getName()),
+	Outcome("OC", B3Table.Outcome, false, B3Outcome.class,
+			com.betbrain.sepc.connector.sportsmodel.Outcome.class.getName()),
+	OutcomeStatus("OS", null, false, B3OutcomeStatus.class,
+			com.betbrain.sepc.connector.sportsmodel.OutcomeStatus.class.getName()),
+	OutcomeType("OT", null, false, B3OutcomeType.class,
+			com.betbrain.sepc.connector.sportsmodel.OutcomeType.class.getName()),
+	Provider("PR", null, false, B3Provider.class,
+			com.betbrain.sepc.connector.sportsmodel.Provider.class.getName()),
+	Source("SO", null, false, B3Source.class,
+			com.betbrain.sepc.connector.sportsmodel.Source.class.getName()),
+	Sport("SP", null, false, B3Sport.class,
+			com.betbrain.sepc.connector.sportsmodel.Sport.class.getName());
 	
 	public final String shortName;
 	public final B3Table mainTable;
+	public final boolean revisioned;
 	public final Class<? extends B3Entity<?>> b3class;
 	public final String entityClassName;
 	
-	private EntitySpec2(String shortName, B3Table mainTable, Class<? extends B3Entity<?>> b3class, String entityClassName) {
+	private EntitySpec2(String shortName, B3Table mainTable, boolean revisioned,
+			Class<? extends B3Entity<?>> b3class, String entityClassName) {
+		
 		this.shortName = shortName;
 		this.mainTable = mainTable;
+		this.revisioned = revisioned;
 		this.b3class = b3class;
 		this.entityClassName = entityClassName;
 	}

@@ -61,5 +61,10 @@ public class B3EventInfo extends B3Entity<EventInfo> {
 				info.getEventId(), info.getTypeId(), info.getId());
 		
 	}
+	
+	@Override
+	String getRevisionId() {
+		return null;
+	}
 
 }

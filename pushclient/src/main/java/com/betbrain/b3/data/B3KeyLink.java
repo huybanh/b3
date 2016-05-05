@@ -66,13 +66,13 @@ public class B3KeyLink extends B3Key {
 		return true;
 	} 
 	
-	public String getHashKey() {
+	public String getHashKeyInternal() {
 		//return classShortName + linkedClassShortName + id;
 		return classShortName + linkedClassShortName + linkName + B3Table.KEY_SEP + id;
 	}
 	
 	@Override
-	String getRangeKey() {
+	String getRangeKeyInternal() {
 		return String.valueOf(linkedEntityId); 
 	}
 	

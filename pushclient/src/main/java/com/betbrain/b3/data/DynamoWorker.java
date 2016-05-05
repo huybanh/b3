@@ -196,6 +196,8 @@ public class DynamoWorker {
 		settingTable.updateItem(spec);
 	}
 	
+	public static boolean readOnly = true;
+	
 	public static void put(B3Update update) {
 		/*Table dynaTable = getTable(update.table);
 		UpdateItemSpec us = new UpdateItemSpec().withPrimaryKey(
@@ -228,8 +230,11 @@ public class DynamoWorker {
 		}
 
 		Table dynaTable = B3Bundle.workingBundle.getTable(update.table);
-		//dynaTable.putItem(item);
-		System.out.println("DB-PUT " + update);
+		if (readOnly) {
+			System.out.println("DB-PUT " + update);
+		} else {
+			dynaTable.putItem(item);
+		}
 	}
 	
 	public static void putSepc(String hashKey, String rangeKey, String[]... nameValuePairs ) {
@@ -240,8 +245,12 @@ public class DynamoWorker {
 				item = item.withString(onePair[0], onePair[1]);
 			}
 		}
-		B3Bundle.workingBundle.sepcTable.putItem(item);
-		//System.out.println("SEPC: " + hash + "@" + value);
+		
+		if (readOnly) {
+			System.out.println("SEPC: " + hashKey + "/" + rangeKey);
+		} else {
+			B3Bundle.workingBundle.sepcTable.putItem(item);
+		}
 	}
 
 	public static void update(B3Update update) {
@@ -255,8 +264,11 @@ public class DynamoWorker {
 		}
 
 		Table dynaTable = B3Bundle.workingBundle.getTable(update.table);
-		//dynaTable.updateItem(us);
-		System.out.println("DB-UPDATE " + update);
+		if (readOnly) {
+			System.out.println("DB-UPDATE " + update);
+		} else {
+			dynaTable.updateItem(us);
+		}
 	}
 
 	public static Item get(B3Table b3table, String hashKey, String rangeKey) {

@@ -67,11 +67,13 @@ public class ChangeBatchDeployer {
 				}
 				continue;
 			}
+
+			String createTime = item.getString(DynamoWorker.SEPC_CELLNAME_CREATETIME);
 			String changesJson = item.getString(DynamoWorker.SEPC_CELLNAME_CHANGES);
 			@SuppressWarnings("unchecked")
 			List<Object> changes = (List<Object>) mapper.deserialize(changesJson);
 			for (Object oneChange : changes) {
-				B3Entity.applyChange((EntityChangeBase) oneChange, mapper);
+				B3Entity.applyChange(createTime, (EntityChangeBase) oneChange, mapper);
 			}
 			batchId++;
 			/*logger.debug("Total batches to deploy: " + allBatches.size());

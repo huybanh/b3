@@ -50,7 +50,7 @@ public class B3KeyEntity extends B3Key {
 		return classShortName != null && id != null;
 	}
 	
-	public String getHashKey() {
+	public String getHashKeyInternal() {
 		if (id == null) {
 			return classShortName;
 		}
@@ -59,7 +59,7 @@ public class B3KeyEntity extends B3Key {
 	}
 	
 	@Override
-	String getRangeKey() {
+	String getRangeKeyInternal() {
 		return null;//String.valueOf(id); 
 	}
 	

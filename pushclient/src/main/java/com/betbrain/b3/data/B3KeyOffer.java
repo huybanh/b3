@@ -57,7 +57,7 @@ public class B3KeyOffer extends B3KeyEntitySupport {
 	}
 	
 	@Override
-	public String getHashKey() {
+	public String getHashKeyInternal() {
 		/*if (sportId == null) {
 			return null;
 		}
@@ -71,7 +71,7 @@ public class B3KeyOffer extends B3KeyEntitySupport {
 	}
 	
 	@Override
-	String getRangeKey() {
+	String getRangeKeyInternal() {
 		if (outcomeTypeId == null) {
 			return null;
 		}

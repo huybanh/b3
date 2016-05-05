@@ -336,10 +336,14 @@ public class InitialDumpDeployer {
 						
 						//put linked entities to table main, lookup, link
 						LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
-						putToMainAndLookupAndLinkRecursively(table, b3key, b3Cells, null, b3entity, masterMap, jsonMapper);
+						putToLookupAndLinkRecursively(table, b3key, b3Cells, null, b3entity, false, masterMap, jsonMapper);
 						
 						//put main entity to main table
 						B3Update update = new B3Update(table, b3key, b3Cells.toArray(new B3CellString[b3Cells.size()]));
+						DynamoWorker.put(update);
+						
+						//put main entity revision to main table
+						b3key.setRevisionId("0");
 						DynamoWorker.put(update);
 						
 						//entity table
@@ -363,9 +367,9 @@ public class InitialDumpDeployer {
 		}
 	}
 	
-	public static <E extends Entity>void putToMainAndLookupAndLinkRecursively(
+	public static <E extends Entity>void putToLookupAndLinkRecursively(
 			B3Table mainTable, B3Key mainKey, LinkedList<B3Cell<?>> mainCells, 
-			final String cellName, B3Entity<?> b3entity, 
+			final String cellName, B3Entity<?> b3entity, boolean noActualPuts,
 			HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper jsonMapper) {
 		
 		String thisCellName;
@@ -380,10 +384,12 @@ public class InitialDumpDeployer {
 		mainCells.add(jsonCell);
 		
 		//put event to lookup
-		B3KeyLookup lookupKey = new B3KeyLookup(
-				b3entity.entity, mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), thisCellName);
-		B3Update update = new B3Update(B3Table.Lookup, lookupKey);
-		DynamoWorker.put(update);
+		if (!noActualPuts) {
+			B3KeyLookup lookupKey = new B3KeyLookup(
+					b3entity.entity, mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), thisCellName);
+			B3Update update = new B3Update(B3Table.Lookup, lookupKey);
+			DynamoWorker.put(update);
+		}
 		
 		EntityLink[] linkedEntities = b3entity.getDownlinkedEntities();
 		if (linkedEntities != null) {
@@ -395,17 +401,17 @@ public class InitialDumpDeployer {
 				}
 				
 				//put linked entity to table link
-				//B3KeyLink linkKey = new B3KeyLink(link.linkedEntity.entity, b3entity.entity, link.name); //reverse link direction
-				B3KeyLink linkKey = new B3KeyLink(link.linkedEntityClazz, link.linkedEntityId, b3entity.entity, link.name); //reverse link direction
-				update = new B3Update(B3Table.Link, linkKey);
-				DynamoWorker.put(update);
-				
-				//commented out, as we can always find a link without information from lookup table
-				//also, put link to lookup: Main entity -> link location
-				//lookupKey = new B3KeyLookup(b3entity.entity, B3Table.Link, linkKey.getHashKey(), linkKey.getRangeKey());
-				//update = new B3Update(B3Table.Lookup, lookupKey);
-				//DynamoWorker.put(bundleId, update);
-
+				if (!noActualPuts) {
+					B3KeyLink linkKey = new B3KeyLink(link.linkedEntityClazz, link.linkedEntityId, b3entity.entity, link.name); //reverse link direction
+					B3Update update = new B3Update(B3Table.Link, linkKey);
+					DynamoWorker.put(update);
+					
+					//commented out, as we can always find a link without information from lookup table
+					//also, put link to lookup: Main entity -> link location
+					//lookupKey = new B3KeyLookup(b3entity.entity, B3Table.Link, linkKey.getHashKey(), linkKey.getRangeKey());
+					//update = new B3Update(B3Table.Lookup, lookupKey);
+					//DynamoWorker.put(bundleId, update);
+				}
 				if (link.linkedEntity != null) {
 					String childCellName;
 					if (cellName == null) {
@@ -413,8 +419,8 @@ public class InitialDumpDeployer {
 					} else {
 						childCellName = cellName + B3Table.CELL_LOCATOR_SEP + link.name;
 					}
-					putToMainAndLookupAndLinkRecursively(mainTable, mainKey, mainCells, childCellName, link.linkedEntity, 
-							masterMap, jsonMapper);
+					putToLookupAndLinkRecursively(
+							mainTable, mainKey, mainCells, childCellName, link.linkedEntity, noActualPuts, masterMap, jsonMapper);
 				}
 			}
 		}

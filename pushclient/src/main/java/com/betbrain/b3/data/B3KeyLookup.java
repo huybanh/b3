@@ -25,12 +25,12 @@ public class B3KeyLookup extends B3Key {
 	}
 	
 	@Override
-	String getHashKey() {
+	String getHashKeyInternal() {
 		return hashKey;
 	}
 
 	@Override
-	String getRangeKey() {
+	String getRangeKeyInternal() {
 		return rangeKey;
 	}
 

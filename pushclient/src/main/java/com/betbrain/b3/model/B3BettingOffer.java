@@ -65,4 +65,9 @@ public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 				this.entity.getId());
 		
 	}
+	
+	@Override
+	String getRevisionId() {
+		return String.valueOf(this.entity.getLastChangedTime().getTime());
+	}
 }
