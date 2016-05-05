@@ -23,10 +23,10 @@ public class B3Event extends B3Entity<Event> {
 	public void getDownlinkedEntitiesInternal() {
 		
 		//unfollowed-link: same type
-		addDownlink(Event.PROPERTY_NAME_parentId, Event.class, entity.getParentId());
-		addDownlink(Event.PROPERTY_NAME_parentPartId, EventPart.class, entity.getParentPartId());
-		addDownlink(Event.PROPERTY_NAME_currentPartId, EventPart.class, entity.getCurrentPartId());
-		addDownlink(Event.PROPERTY_NAME_rootPartId, EventPart.class, entity.getRootPartId());
+		addDownlinkUnfollowed(Event.PROPERTY_NAME_parentId, Event.class/*, entity.getParentId()*/);
+		addDownlinkUnfollowed(Event.PROPERTY_NAME_parentPartId, EventPart.class/*, entity.getParentPartId()*/);
+		addDownlinkUnfollowed(Event.PROPERTY_NAME_currentPartId, EventPart.class/*, entity.getCurrentPartId()*/);
+		addDownlinkUnfollowed(Event.PROPERTY_NAME_rootPartId, EventPart.class/*, entity.getRootPartId()*/);
 		
 		addDownlink(Event.PROPERTY_NAME_sportId, sport); 
 		addDownlink(Event.PROPERTY_NAME_statusId, status);
@@ -36,15 +36,19 @@ public class B3Event extends B3Entity<Event> {
 	}
 
 	@Override
-	public void buildDownlinks(HashMap<String, HashMap<Long, Entity>> masterMap,
+	public void buildDownlinks(boolean forMainKeyOnly, HashMap<String, HashMap<Long, Entity>> masterMap,
 			JsonMapper mapper) {
-		this.sport = build(entity.getSportId(), new B3Sport(), 
+		
+		if (forMainKeyOnly) {
+			return;
+		}
+		this.sport = build(forMainKeyOnly, entity.getSportId(), new B3Sport(), 
 				Sport.class, masterMap, mapper);
-		this.status = build(entity.getStatusId(), new B3EventStatus(), 
+		this.status = build(forMainKeyOnly, entity.getStatusId(), new B3EventStatus(), 
 				EventStatus.class, masterMap, mapper);
-		this.template = build(entity.getTemplateId(), new B3EventTemplate(), 
+		this.template = build(forMainKeyOnly, entity.getTemplateId(), new B3EventTemplate(), 
 				EventTemplate.class, masterMap, mapper);
-		this.type = build(entity.getTypeId(), new B3EventType(),
+		this.type = build(forMainKeyOnly, entity.getTypeId(), new B3EventType(),
 				EventType.class, masterMap, mapper);
 	}
 

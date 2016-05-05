@@ -64,11 +64,21 @@ public class EntityUpdateWrapper extends EntityChangeBase {
 		return names;
 	}
 	
+	//TODO tempo
 	public void setPropertyValues(List<String> stringValues) {
 		this.stringValues = stringValues;
 	}
 	
+	//TODO tempo
 	public List<String> getPropertyValues() {
+		return null;
+	}
+	
+	public void setB3PropertyValues(List<String> stringValues) {
+		this.stringValues = stringValues;
+	}
+	
+	public List<String> getB3PropertyValues() {
 		if (update != null) {
 			LinkedList<String> stringValues = new LinkedList<String>();
 			for (Object obj : update.getPropertyValues()) {

@@ -26,8 +26,8 @@ public class B3EventInfo extends B3Entity<EventInfo> {
 	public void getDownlinkedEntitiesInternal() {
 		
 		//skip event/eventpart
-		addDownlink(EventInfo.PROPERTY_NAME_eventId, Event.class, entity.getEventId());
-		addDownlink(EventInfo.PROPERTY_NAME_eventPartId, EventPart.class, entity.getEventPartId());
+		addDownlinkUnfollowed(EventInfo.PROPERTY_NAME_eventId, Event.class/*, entity.getEventId()*/);
+		addDownlinkUnfollowed(EventInfo.PROPERTY_NAME_eventPartId, EventPart.class/*, entity.getEventPartId()*/);
 		
 		addDownlink(EventInfo.PROPERTY_NAME_providerId, provider);
 		addDownlink(EventInfo.PROPERTY_NAME_sourceId, source);
@@ -35,18 +35,22 @@ public class B3EventInfo extends B3Entity<EventInfo> {
 	}
 
 	@Override
-	public void buildDownlinks(HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper) {
-		this.provider = build(entity.getProviderId(), new B3Provider(),
+	public void buildDownlinks(boolean forMainKeyOnly, HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper) {
+
+		this.event = build(forMainKeyOnly, entity.getEventId(), new B3Event(), 
+				Event.class, masterMap, mapper);
+		
+		if (forMainKeyOnly) {
+			return;
+		}
+		this.provider = build(forMainKeyOnly, entity.getProviderId(), new B3Provider(),
 				Provider.class, masterMap, mapper);
-		this.source = build(entity.getSourceId(), new B3Source(), 
+		this.source = build(forMainKeyOnly, entity.getSourceId(), new B3Source(), 
 				Source.class, masterMap, mapper);
-		this.type = build(entity.getTypeId(), new B3EventInfoType(), 
+		this.type = build(forMainKeyOnly, entity.getTypeId(), new B3EventInfoType(), 
 				EventInfoType.class, masterMap, mapper);
 		
-		//need to link to event, but skip in b3 db
-		this.event = build(entity.getEventId(), new B3Event(), 
-				Event.class, masterMap, mapper);
-		this.eventPart = build(entity.getEventPartId(), new B3EventPart(), 
+		this.eventPart = build(forMainKeyOnly, entity.getEventPartId(), new B3EventPart(), 
 				EventPart.class, masterMap, mapper);
 	}
 

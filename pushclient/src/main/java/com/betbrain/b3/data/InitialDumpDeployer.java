@@ -330,7 +330,7 @@ public class InitialDumpDeployer {
 						}*/
 						B3Entity<E> b3entity = keyBuilder.newB3Entity();
 						b3entity.entity = (E) entity;
-						b3entity.buildDownlinks(masterMap, null);
+						b3entity.buildDownlinks(false, masterMap, null);
 						B3Key b3key = keyBuilder.buildKey(b3entity);
 						
 						//put linked entities to table main, lookup, link
@@ -390,7 +390,7 @@ public class InitialDumpDeployer {
 				
 				//link: From main entity -> linked entities
 				if (link.linkedEntity != null) {
-					link.linkedEntity.buildDownlinks(masterMap, jsonMapper);
+					link.linkedEntity.buildDownlinks(false, masterMap, jsonMapper);
 				}
 				
 				//put linked entity to table link

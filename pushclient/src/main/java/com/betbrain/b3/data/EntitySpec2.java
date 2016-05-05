@@ -1,6 +1,7 @@
 package com.betbrain.b3.data;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 
 import com.betbrain.b3.model.B3BettingOffer;
 import com.betbrain.b3.model.B3BettingOfferStatus;
@@ -19,6 +20,7 @@ import com.betbrain.b3.model.B3OutcomeType;
 import com.betbrain.b3.model.B3Provider;
 import com.betbrain.b3.model.B3Source;
 import com.betbrain.b3.model.B3Sport;
+import com.betbrain.b3.pushclient.EntityUpdateWrapper;
 
 public enum EntitySpec2 {
 
@@ -87,6 +89,29 @@ public enum EntitySpec2 {
 			return null;
 		}
 		return n.shortName;
+	}
+	
+	private LinkedList<String> idPropertyNames;
+	
+	public boolean isStructuralChange(EntityUpdateWrapper update) {
+		if (idPropertyNames == null) {
+			idPropertyNames = new LinkedList<>();
+			EntityLink[] links;
+			try {
+				links = ((B3Entity<?>) b3class.newInstance()).getDownlinkedNames();
+			} catch (InstantiationException | IllegalAccessException e) {
+				throw new RuntimeException(e);
+			}
+			for (EntityLink one : links) {
+				idPropertyNames.add(one.getLinkName());
+			}
+		}
+		for (String changedPropertyName : update.getPropertyNames()) {
+			if (idPropertyNames.contains(changedPropertyName)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 }

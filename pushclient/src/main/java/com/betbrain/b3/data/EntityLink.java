@@ -30,13 +30,18 @@ public class EntityLink {
 	}
 	
 	public EntityLink(String name, B3Entity<?> linkedEntity) {
-		if (linkedEntity == null) {
+		/*if (linkedEntity == null) {
 			throw new NullPointerException();
-		}
+		}*/
 		this.name = name;
-		this.linkedEntityId = linkedEntity.entity.getId();
-		this.linkedEntityClazz = linkedEntity.entity.getClass();
 		this.linkedEntity = linkedEntity;
+		if (linkedEntity != null) {
+			this.linkedEntityId = linkedEntity.entity.getId();
+			this.linkedEntityClazz = linkedEntity.entity.getClass();
+		} else {
+			this.linkedEntityId = null;
+			this.linkedEntityClazz = null;
+		}
 	}
 	
 	public String getLinkName() {

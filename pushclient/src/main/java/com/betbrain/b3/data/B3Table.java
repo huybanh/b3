@@ -24,6 +24,7 @@ public enum B3Table {
 	static final String CELL_LOCATOR_SEP = "_";
 	
 	static final String KEY_SEP = "/";
+	static final String KEY_SUFFIX_REVISION = "T";
 	
 	//name of lookup column, which contains hash key of target table
 	static final String LOOKUP_CELL_TARGET_HASH = "H";

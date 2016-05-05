@@ -32,7 +32,7 @@ public class B3Update {
 	@Override
 	public String toString() {
 		
-		String head = "PUT " + table.name + ": (" + key.getHashKey() + ", " + key.getRangeKey() + ")";
+		String head = table.name + ": (" + key.getHashKey() + ", " + key.getRangeKey() + ")";
 		String tail = null;
 		if (cells != null) {
 			for (int i = 0; i < cells.length; i++) {

@@ -206,7 +206,6 @@ public class DynamoWorker {
 			}
 		}*/
 		
-		Table dynaTable = B3Bundle.workingBundle.getTable(update.table);
 		String rangeKey = update.key.getRangeKey();
 		Item item ;
 		if (rangeKey != null) {
@@ -228,8 +227,9 @@ public class DynamoWorker {
 			}
 		}
 
+		Table dynaTable = B3Bundle.workingBundle.getTable(update.table);
 		//dynaTable.putItem(item);
-		System.out.println(update + ": " + update.toString().length());
+		System.out.println("DB-PUT " + update);
 	}
 	
 	public static void putSepc(String hashKey, String rangeKey, String[]... nameValuePairs ) {
@@ -244,9 +244,8 @@ public class DynamoWorker {
 		//System.out.println("SEPC: " + hash + "@" + value);
 	}
 
-	public static void updatex(B3Bundle bundle, B3Update update) {
+	public static void update(B3Update update) {
 
-		Table dynaTable = bundle.getTable(update.table);
 		UpdateItemSpec us = new UpdateItemSpec().withPrimaryKey(
 				HASH, update.key.getHashKey(), RANGE, update.key.getRangeKey());
 		if (update.cells != null) {
@@ -255,17 +254,19 @@ public class DynamoWorker {
 			}
 		}
 
-		dynaTable.updateItem(us);
+		Table dynaTable = B3Bundle.workingBundle.getTable(update.table);
+		//dynaTable.updateItem(us);
+		System.out.println("DB-UPDATE " + update);
 	}
 
 	public static Item get(B3Table b3table, String hashKey, String rangeKey) {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
 		if (rangeKey == null) {
-			System.out.println("GET " + table.getTableName() + ": " + hashKey);
+			System.out.println("DB-GET " + table.getTableName() + ": " + hashKey);
 			return table.getItem(HASH, hashKey);
 		} else {
-			System.out.println("GET " + table.getTableName() + ": " + hashKey + "@" + rangeKey);
+			System.out.println("DB-GET " + table.getTableName() + ": " + hashKey + "@" + rangeKey);
 			return table.getItem(HASH, hashKey, RANGE, rangeKey);
 		}
 	}
