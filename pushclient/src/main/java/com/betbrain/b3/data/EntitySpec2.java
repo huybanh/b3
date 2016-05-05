@@ -20,7 +20,7 @@ import com.betbrain.b3.model.B3Provider;
 import com.betbrain.b3.model.B3Source;
 import com.betbrain.b3.model.B3Sport;
 
-public enum ModelShortName {
+public enum EntitySpec2 {
 
 	//Short names are exact-two-character 
 	BettingOffer("BO", B3Table.BettingOffer, 
@@ -61,28 +61,28 @@ public enum ModelShortName {
 	public final Class<? extends B3Entity<?>> b3class;
 	public final String entityClassName;
 	
-	private ModelShortName(String shortName, B3Table mainTable, Class<? extends B3Entity<?>> b3class, String entityClassName) {
+	private EntitySpec2(String shortName, B3Table mainTable, Class<? extends B3Entity<?>> b3class, String entityClassName) {
 		this.shortName = shortName;
 		this.mainTable = mainTable;
 		this.b3class = b3class;
 		this.entityClassName = entityClassName;
 	}
 	
-	private static HashMap<String, ModelShortName> allShortNames;
+	private static HashMap<String, EntitySpec2> allShortNames;
 	
 	static void initialize() {
-		allShortNames = new HashMap<String, ModelShortName>();
-		for (ModelShortName em : ModelShortName.values()) {
+		allShortNames = new HashMap<String, EntitySpec2>();
+		for (EntitySpec2 em : EntitySpec2.values()) {
 			allShortNames.put(em.entityClassName, em);
 		}
 	}
 	
-	public static ModelShortName get(String entityClassName) {
+	public static EntitySpec2 get(String entityClassName) {
 		return allShortNames.get(entityClassName);
 	}
 	
 	public static String getShortName(String entityClassName) {
-		ModelShortName n = allShortNames.get(entityClassName);
+		EntitySpec2 n = allShortNames.get(entityClassName);
 		if (n == null) {
 			return null;
 		}

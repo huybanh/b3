@@ -61,7 +61,7 @@ public class DynamoWorker {
 	
 	private static void initialize() {
 
-		ModelShortName.initialize();
+		EntitySpec2.initialize();
 		dynaClient = new AmazonDynamoDBClient(new ProfileCredentialsProvider());
 		dynaClient.setRegion(Region.getRegion(Regions.AP_SOUTHEAST_1));
 		dynamoDB = new DynamoDB(dynaClient);

@@ -269,7 +269,7 @@ public class InitialDumpDeployer {
 						//int count = 0;
 						for (Entity entity : oneSubListFinal) {
 							//processedCount++;
-							String shortName = ModelShortName.get(entity.getClass().getName()).entityClassName;
+							String shortName = EntitySpec2.get(entity.getClass().getName()).entityClassName;
 							if (shortName == null) {
 								continue;
 							}

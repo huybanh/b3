@@ -23,25 +23,25 @@ public class B3KeyEntity extends B3Key {
 
 	public B3KeyEntity(Entity entity) {
 		super();
-		classShortName = ModelShortName.getShortName(entity.getClass().getName()); 
+		classShortName = EntitySpec2.getShortName(entity.getClass().getName()); 
 		id = entity.getId();
 	}
 
 	public B3KeyEntity(Class<? extends Entity> clazz, long id) {
 		super();
-		classShortName = ModelShortName.getShortName(clazz.getName()); 
+		classShortName = EntitySpec2.getShortName(clazz.getName()); 
 		this.id = id;
 	}
 
 	public B3KeyEntity(String className, long id) {
 		super();
-		classShortName = ModelShortName.getShortName(className); 
+		classShortName = EntitySpec2.getShortName(className); 
 		this.id = id;
 	}
 
 	public B3KeyEntity(Class<?> clazz) {
 		super();
-		classShortName = ModelShortName.getShortName(clazz.getName()); 
+		classShortName = EntitySpec2.getShortName(clazz.getName()); 
 		id = null;
 	}
 	

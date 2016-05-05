@@ -5,7 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.betbrain.b3.data.InitialDumpDeployer;
-import com.betbrain.b3.data.ModelShortName;
+import com.betbrain.b3.data.EntitySpec2;
 import com.betbrain.b3.pushclient.EntityChangeBase;
 import com.betbrain.b3.pushclient.EntityCreateWrapper;
 import com.betbrain.b3.pushclient.EntityDeleteWrapper;
@@ -29,7 +29,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 
 	public E entity;
 	
-	private ModelShortName entitySpec;
+	private EntitySpec2 entitySpec;
 	
 	protected B3Entity() {
 	}
@@ -152,7 +152,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 			}
 		}
 		
-		ModelShortName entitySpec = ModelShortName.get(change.getEntityClassName());
+		EntitySpec2 entitySpec = EntitySpec2.get(change.getEntityClassName());
 		if (entitySpec == null /*|| entitySpec.b3class == null*/) {
 			//System.out.println("Ignoring unconfigured change handler " + change.getEntityClassName());
 			return;

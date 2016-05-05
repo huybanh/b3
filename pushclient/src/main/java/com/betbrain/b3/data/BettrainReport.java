@@ -11,7 +11,7 @@ import com.betbrain.sepc.connector.sportsmodel.Sport;
 public class BettrainReport {
 
 	public static void main(String[] args) {
-		ModelShortName.initialize();
+		EntitySpec2.initialize();
 		String SportFilter = "Football";
 		//all sports
 		DynamoWorker.initBundleCurrent(); 
