@@ -57,26 +57,21 @@ public class B3KeyOffer extends B3KeyEntitySupport {
 	}
 	
 	@Override
-	public String getHashKey() {
-		if (sportId == null) {
+	public String getHashKeyInternal() {
+		/*if (sportId == null) {
 			return null;
 		}
 		if (eventTypeId == null) {
 			return sportId + B3Table.KEY_SEP;
 		}
-		/*if (eventPartFlag == null) {
-			return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP;
-		}
-		String eventPartMarker = eventPartFlag ? 
-				B3Table.EVENTKEY_MARKER_EVENTPART : B3Table.EVENTKEY_MARKER_EVENT;*/
 		if (eventId == null) {
 			return sportId + B3Table.KEY_SEP + eventTypeId;
-		}
+		}*/
 		return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventId;
 	}
 	
 	@Override
-	String getRangeKey() {
+	String getRangeKeyInternal() {
 		if (outcomeTypeId == null) {
 			return null;
 		}

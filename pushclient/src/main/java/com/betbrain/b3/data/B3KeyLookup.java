@@ -9,13 +9,13 @@ public class B3KeyLookup extends B3Key {
 
 	public B3KeyLookup(Entity entity, B3Table targetTable, String targetHash, String targetRange, String targetCell) {
 		super();
-		this.hashKey = ModelShortName.get(entity.getClass().getName()) + targetTable.shortName + entity.getId();
+		this.hashKey = EntitySpec2.get(entity.getClass().getName()) + targetTable.shortName + entity.getId();
 		this.rangeKey = targetHash + B3Table.CELL_LOCATOR_SEP + targetRange + B3Table.CELL_LOCATOR_SEP + targetCell;
 	}
 
 	public B3KeyLookup(Class<?> entityClazz, long entityId, B3Table targetTable) {
 		super();
-		this.hashKey = ModelShortName.get(entityClazz.getName()) + targetTable.shortName + entityId;
+		this.hashKey = EntitySpec2.get(entityClazz.getName()) + targetTable.shortName + entityId;
 		this.rangeKey = null;
 	}
 
@@ -25,12 +25,12 @@ public class B3KeyLookup extends B3Key {
 	}
 	
 	@Override
-	String getHashKey() {
+	String getHashKeyInternal() {
 		return hashKey;
 	}
 
 	@Override
-	String getRangeKey() {
+	String getRangeKeyInternal() {
 		return rangeKey;
 	}
 

@@ -53,7 +53,7 @@ public class B3KeyEventInfo extends B3KeyEntitySupport {
 				eventInfoTypeId != null && eventInfoId != null;
 	} 
 	
-	public String getHashKey() {
+	public String getHashKeyInternal() {
 		if (sportId == null) {
 			return null;
 		}
@@ -72,7 +72,7 @@ public class B3KeyEventInfo extends B3KeyEntitySupport {
 	}
 	
 	@Override
-	String getRangeKey() {
+	String getRangeKeyInternal() {
 		
 		return eventInfoTypeId + B3Table.KEY_SEP + eventInfoId;
 		//return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventPartMarker + eventId; 

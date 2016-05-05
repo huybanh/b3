@@ -17,6 +17,7 @@ import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
+import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 
@@ -47,6 +48,14 @@ public class DynamoWorker {
 	private static final String BUNDLE_CELL_ID = "ID";
 	private static final String BUNDLE_CELL_STATUS = "STATUS";
 	
+	public static final String BUNDLE_CELL_PUSHSTATUS = "PUSH_STATUS";
+	public static final String BUNDLE_CELL_LASTBATCH_RECEIVED_ID = "LAST_RECEIVED_ID";
+	public static final String BUNDLE_CELL_LASTBATCH_RECEIVED_TIMESTAMP = "LAST_RECEIVED_TIMESTAMP";
+
+	public static final String BUNDLE_CELL_DEPLOYSTATUS = "DEPLOY_STATUS";
+	public static final String BUNDLE_CELL_LASTBATCH_DEPLOYED_ID = "LAST_DEPLOYED_ID";
+	public static final String BUNDLE_CELL_LASTBATCH_DEPLOYED_TIMESTAMP = "LAST_DEPLOYED_TIMESTAMP";
+	
 	public static final String SEPC_INITIAL = "I";
 	public static final String SEPC_CHANGEBATCH = "B";
 	public static final String SEPC_CELLNAME_JSON = "JSON";
@@ -60,7 +69,7 @@ public class DynamoWorker {
 	
 	private static void initialize() {
 
-		ModelShortName.initialize();
+		EntitySpec2.initialize();
 		dynaClient = new AmazonDynamoDBClient(new ProfileCredentialsProvider());
 		dynaClient.setRegion(Region.getRegion(Regions.AP_SOUTHEAST_1));
 		dynamoDB = new DynamoDB(dynaClient);
@@ -195,6 +204,8 @@ public class DynamoWorker {
 		settingTable.updateItem(spec);
 	}
 	
+	public static boolean readOnly = false;
+	
 	public static void put(B3Update update) {
 		/*Table dynaTable = getTable(update.table);
 		UpdateItemSpec us = new UpdateItemSpec().withPrimaryKey(
@@ -205,7 +216,6 @@ public class DynamoWorker {
 			}
 		}*/
 		
-		Table dynaTable = B3Bundle.workingBundle.getTable(update.table);
 		String rangeKey = update.key.getRangeKey();
 		Item item ;
 		if (rangeKey != null) {
@@ -227,8 +237,11 @@ public class DynamoWorker {
 			}
 		}
 
-		dynaTable.putItem(item);
-		//System.out.println(update + ": " + update.toString().length());
+		Table dynaTable = B3Bundle.workingBundle.getTable(update.table);
+		System.out.println("DB-PUT " + update);
+		if (!readOnly) {
+			dynaTable.putItem(item);
+		}
 	}
 	
 	public static void putSepc(String hashKey, String rangeKey, String[]... nameValuePairs ) {
@@ -239,13 +252,15 @@ public class DynamoWorker {
 				item = item.withString(onePair[0], onePair[1]);
 			}
 		}
-		B3Bundle.workingBundle.sepcTable.putItem(item);
-		//System.out.println("SEPC: " + hash + "@" + value);
+
+		System.out.println("SEPC: " + hashKey + "/" + rangeKey);
+		if (!readOnly) {
+			B3Bundle.workingBundle.sepcTable.putItem(item);
+		}
 	}
 
-	public static void updatex(B3Bundle bundle, B3Update update) {
+	public static void update(B3Update update) {
 
-		Table dynaTable = bundle.getTable(update.table);
 		UpdateItemSpec us = new UpdateItemSpec().withPrimaryKey(
 				HASH, update.key.getHashKey(), RANGE, update.key.getRangeKey());
 		if (update.cells != null) {
@@ -254,18 +269,51 @@ public class DynamoWorker {
 			}
 		}
 
-		dynaTable.updateItem(us);
+		Table dynaTable = B3Bundle.workingBundle.getTable(update.table);
+		System.out.println("DB-UPDATE " + update);
+		if (!readOnly) {
+			dynaTable.updateItem(us);
+		}
+	}
+
+	public static void updateSetting(B3CellString... cells) {
+
+		UpdateItemSpec us = new UpdateItemSpec().withPrimaryKey(
+				HASH, BUNDLE_HASH, RANGE, B3Bundle.getWorkingBundleId());
+		if (cells != null) {
+			for (B3Cell<?> c : cells) {
+				us = us.addAttributeUpdate(new AttributeUpdate(c.columnName).put(c.value));
+			}
+		}
+
+		System.out.println("DB-UPDATE " + settingTable.getTableName());
+		if (!readOnly) {
+			settingTable.updateItem(us);
+		}
 	}
 
 	public static Item get(B3Table b3table, String hashKey, String rangeKey) {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
 		if (rangeKey == null) {
-			//System.out.println("GET " + table.getTableName() + ": " + hashKey);
+			System.out.println("DB-GET " + table.getTableName() + ": " + hashKey);
 			return table.getItem(HASH, hashKey);
 		} else {
-			//System.out.println("GET " + table.getTableName() + ": " + hashKey + "@" + rangeKey);
+			System.out.println("DB-GET " + table.getTableName() + ": " + hashKey + "@" + rangeKey);
 			return table.getItem(HASH, hashKey, RANGE, rangeKey);
+		}
+	}
+	
+	public static void delete(B3Table b3table, String hashKey, String rangeKey) {
+		
+		Table table = B3Bundle.workingBundle.getTable(b3table);
+		System.out.println("DB-DELETE " + b3table.name + " " + hashKey + "@" + rangeKey);
+		if (!readOnly) {
+			if (rangeKey != null) {
+				table.deleteItem(HASH, hashKey, RANGE, rangeKey);
+			} else {
+				table.deleteItem(HASH, hashKey);
+			}
 		}
 	}
 	
@@ -317,10 +365,18 @@ public class DynamoWorker {
 	}*/
 	
 	public static ItemCollection<QueryOutcome> query(B3Table b3table, String hashKey) {
+		return query(b3table, hashKey, null);
+	}
+	
+	public static ItemCollection<QueryOutcome> query(B3Table b3table, String hashKey, Integer maxResulteSize) {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
 		//System.out.println("QUERY " + table.getTableName() + ": hash=" + hashKey);
-		return table.query(HASH, hashKey);
+		QuerySpec spec = new QuerySpec().withHashKey(HASH, hashKey);
+		if (maxResulteSize != null) {
+			spec = spec.withMaxResultSize(maxResulteSize);
+		}
+		return table.query(spec);
 		/*ScanRequest scanRequest = new ScanRequest()
 		        .withTableName(table.getTableName())
 		        .withLimit(10)

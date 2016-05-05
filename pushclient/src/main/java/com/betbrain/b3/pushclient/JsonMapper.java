@@ -2,6 +2,7 @@ package com.betbrain.b3.pushclient;
 
 import java.util.Date;
 
+import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Event;
 import flexjson.JSONDeserializer;
@@ -20,7 +21,7 @@ public class JsonMapper {
 		flexDe = new JSONDeserializer();
 		ExcludeTransformer excludeTransformer = new ExcludeTransformer();
 		flexSer = new JSONSerializer().exclude("beanInfo").transform(excludeTransformer, void.class)
-				.include("propertyNames").include("propertyValues");
+				.include("b3PropertyNames").include("b3PropertyValues");
 	}
 
 	public String serialize(Object entity) {
@@ -80,6 +81,19 @@ public class JsonMapper {
 			System.out.println(json);			
 			Event entity = (Event) new JsonMapper().deserialize(json);
 			System.out.println(entity.getCurrentPartId());
+			
+			Date d = new Date();
+			System.out.println(d);
+			System.out.println(d.getTime());
+			BettingOffer o = new BettingOffer();
+			o.setLastChangedTime(d);
+			System.out.println(o);
+			String s = new JsonMapper().serialize(o);
+			System.out.println(s);
+			o = (BettingOffer) new JsonMapper().deserialize(s);
+			System.out.println(o);
+			System.out.println(o.getLastChangedTime());
+			System.out.println(o.getLastChangedTime().getTime());
 		}
 		catch (Exception ex) {
 			ex.printStackTrace();

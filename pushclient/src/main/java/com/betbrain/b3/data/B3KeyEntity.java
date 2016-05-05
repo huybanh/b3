@@ -23,25 +23,25 @@ public class B3KeyEntity extends B3Key {
 
 	public B3KeyEntity(Entity entity) {
 		super();
-		classShortName = ModelShortName.get(entity.getClass().getName()); 
+		classShortName = EntitySpec2.getShortName(entity.getClass().getName()); 
 		id = entity.getId();
 	}
 
 	public B3KeyEntity(Class<? extends Entity> clazz, long id) {
 		super();
-		classShortName = ModelShortName.get(clazz.getName()); 
+		classShortName = EntitySpec2.getShortName(clazz.getName()); 
 		this.id = id;
 	}
 
 	public B3KeyEntity(String className, long id) {
 		super();
-		classShortName = ModelShortName.get(className); 
+		classShortName = EntitySpec2.getShortName(className); 
 		this.id = id;
 	}
 
 	public B3KeyEntity(Class<?> clazz) {
 		super();
-		classShortName = ModelShortName.get(clazz.getName()); 
+		classShortName = EntitySpec2.getShortName(clazz.getName()); 
 		id = null;
 	}
 	
@@ -50,7 +50,7 @@ public class B3KeyEntity extends B3Key {
 		return classShortName != null && id != null;
 	}
 	
-	public String getHashKey() {
+	public String getHashKeyInternal() {
 		if (id == null) {
 			return classShortName;
 		}
@@ -59,7 +59,7 @@ public class B3KeyEntity extends B3Key {
 	}
 	
 	@Override
-	String getRangeKey() {
+	String getRangeKeyInternal() {
 		return null;//String.valueOf(id); 
 	}
 	

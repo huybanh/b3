@@ -4,11 +4,11 @@ import com.betbrain.b3.model.B3Entity;
 
 public class EntityLink {
 
-	final String name;
+	public final String name;
 	
-	final Long linkedEntityId;
+	public final Long linkedEntityId;
 	
-	final Class<?> linkedEntityClazz;
+	public final Class<?> linkedEntityClazz;
 	
 	final B3Entity<?> linkedEntity;
 
@@ -30,12 +30,21 @@ public class EntityLink {
 	}
 	
 	public EntityLink(String name, B3Entity<?> linkedEntity) {
-		if (linkedEntity == null) {
+		/*if (linkedEntity == null) {
 			throw new NullPointerException();
-		}
+		}*/
 		this.name = name;
-		this.linkedEntityId = linkedEntity.entity.getId();
-		this.linkedEntityClazz = linkedEntity.entity.getClass();
 		this.linkedEntity = linkedEntity;
+		if (linkedEntity != null) {
+			this.linkedEntityId = linkedEntity.entity.getId();
+			this.linkedEntityClazz = linkedEntity.entity.getClass();
+		} else {
+			this.linkedEntityId = null;
+			this.linkedEntityClazz = null;
+		}
+	}
+	
+	public String getLinkName() {
+		return this.name;
 	}
 }

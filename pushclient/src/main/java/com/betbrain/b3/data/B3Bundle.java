@@ -81,8 +81,8 @@ class B3Bundle {
 	static void createTables(DynamoDB dynamoDB, String id) {
 
 		Table[] tables = new Table[8];
-		int capaHigh = 200;
-		int capaLow = 200;
+		int capaHigh = 500;
+		int capaLow = 100;
 		int i = 0;
 		tables[i++] = createTable(dynamoDB, id, "offer", 1, capaLow, true);
 		tables[i++] = createTable(dynamoDB, id, "event", 1, capaLow, true);
@@ -91,7 +91,7 @@ class B3Bundle {
 		tables[i++] = createTable(dynamoDB, id, "lookup", 1, capaHigh, true);
 		tables[i++] = createTable(dynamoDB, id, "link", 1, capaHigh, true);
 		tables[i++] = createTable(dynamoDB, id, "entity", 1, /*capaHigh*/capaLow, false);
-		tables[i++] = createTable(dynamoDB, id, "sepc", 1, 1/*300*/, true);
+		tables[i++] = createTable(dynamoDB, id, "sepc", 1, 200/*capaLow*/, true);
 		for (Table t : tables) {
 			try {
 		        System.out.println("Waiting for " + t.getTableName() + " to be created...this may take a while...");

@@ -13,7 +13,7 @@ public class B3EntityLeaf<E extends Entity> extends B3Entity<E> {
 	}
 
 	@Override
-	public void buildDownlinks(HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper) {
+	public void buildDownlinks(boolean forMainKeyOnly, HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper) {
 		//no downlinks
 	}
 

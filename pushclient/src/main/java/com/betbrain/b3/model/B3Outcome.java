@@ -3,6 +3,7 @@ package com.betbrain.b3.model;
 import java.util.HashMap;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
+import com.betbrain.b3.data.B3KeyOutcome;
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
@@ -23,7 +24,7 @@ public class B3Outcome extends B3Entity<Outcome> {
 	public void getDownlinkedEntitiesInternal() {
 		
 		//unfollowed links
-		addDownlink(Outcome.PROPERTY_NAME_eventId, Event.class, entity.getEventId());
+		addDownlinkUnfollowed(Outcome.PROPERTY_NAME_eventId, Event.class/*, entity.getEventId()*/);
 		
 		//followed
 		addDownlink(Outcome.PROPERTY_NAME_eventPartId, eventPart);
@@ -32,21 +33,18 @@ public class B3Outcome extends B3Entity<Outcome> {
 	}
 
 	@Override
-	public void buildDownlinks(HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper) {
-		/*HashMap<Long, Entity> allEvents = masterMap.get(Event.class.getName());
-		Event one = (Event) allEvents.get(entity.getEventId());
-		this.event = new B3Event(one);*/
+	public void buildDownlinks(boolean forMainKeyOnly, HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper) {
 		
-		//we don't want event graph going into BettingOffer table
-		//this.event.buildDownlinks(masterMap);
-		
-		this.event = build(entity.getEventId(), 
+		this.event = build(forMainKeyOnly, entity.getEventId(), 
 				new B3Event(), Event.class, masterMap, mapper);
-		this.eventPart = build(entity.getEventPartId(), 
+		if (forMainKeyOnly) {
+			return;
+		}
+		this.eventPart = build(forMainKeyOnly, entity.getEventPartId(), 
 				new B3EventPart(), EventPart.class, masterMap, mapper);
-		this.status = build(entity.getStatusId(),
+		this.status = build(forMainKeyOnly, entity.getStatusId(),
 				new B3OutcomeStatus(), OutcomeStatus.class, masterMap, mapper);
-		this.type = build(entity.getTypeId(),
+		this.type = build(forMainKeyOnly, entity.getTypeId(),
 				new B3OutcomeType(), OutcomeType.class, masterMap, mapper);
 	}
 	
@@ -54,6 +52,16 @@ public class B3Outcome extends B3Entity<Outcome> {
 		deserialize(mapper, item, this, B3Table.CELL_LOCATOR_THIZ);
 		this.status = (B3OutcomeStatus) deserialize(mapper, item, new B3OutcomeStatus(), Outcome.PROPERTY_NAME_statusId);
 		this.type = (B3OutcomeType) deserialize(mapper, item, new B3OutcomeType(), Outcome.PROPERTY_NAME_typeId);
+	}
+
+	@Override
+	B3KeyOutcome createMainKey() {
+		if (entity == null || event == null) {
+			return null;
+		}
+		return new B3KeyOutcome(event.entity.getSportId(), event.entity.getTypeId(), event.entity.getId(),
+				entity.getEventPartId(), entity.getTypeId(), entity.getId());
+		
 	}
 
 }
