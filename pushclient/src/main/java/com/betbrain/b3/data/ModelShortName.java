@@ -64,8 +64,8 @@ public enum ModelShortName {
 	private ModelShortName(String shortName, B3Table mainTable, Class<? extends B3Entity<?>> b3class, String entityClassName) {
 		this.shortName = shortName;
 		this.mainTable = mainTable;
-		this.entityClassName = entityClassName;
 		this.b3class = b3class;
+		this.entityClassName = entityClassName;
 	}
 	
 	private static HashMap<String, ModelShortName> allShortNames;

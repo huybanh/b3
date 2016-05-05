@@ -158,11 +158,15 @@ class BatchWorker implements Runnable {
 			
 			//put
 			String rangeKey = String.valueOf(batch.getId());
-			String hashKey = DynamoWorker.SEPC_CHANGEBATCH + Math.abs(rangeKey.hashCode() % B3Table.DIST_FACTOR);
+			String hashKey = generateHashKey(batch.getId());
 			//DynamoWorker.putSepc(hashKey, "BATCH", mapper.serialize(batch));
 			DynamoWorker.putSepc(hashKey, rangeKey,
 				new String[] {DynamoWorker.SEPC_CELLNAME_CREATETIME, mapper.serialize(batch.getCreateTime())},
 				new String[] {DynamoWorker.SEPC_CELLNAME_CHANGES, mapper.serialize(changeList)});
 		}
+	}
+	
+	static String generateHashKey(long batchId) {
+		return DynamoWorker.SEPC_CHANGEBATCH + Math.abs(String.valueOf(batchId).hashCode() % B3Table.DIST_FACTOR);
 	}
 }
