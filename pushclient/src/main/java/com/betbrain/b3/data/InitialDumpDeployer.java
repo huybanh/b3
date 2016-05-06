@@ -122,7 +122,7 @@ public class InitialDumpDeployer {
 								}
 							}
 							remainPrint++;
-							if (remainPrint == 10) {
+							if (remainPrint == 50) {
 								remainPrint = 0;
 							}
 							//oneTask = allTasks.remove(0);
@@ -280,7 +280,11 @@ public class InitialDumpDeployer {
 			Collection<Entity>[] subLists = split(entities);
 			final int subTotalCount = entities.size();
 			final int[] subProcessedCount = new int[] {0};
-			final String subType = entry.getKey();
+			//final String subType = entry.getKey();
+			final EntitySpec2 spec = EntitySpec2.get(entry.getKey());
+			if (spec == null) {
+				continue;
+			}
 			for (Collection<Entity> oneSubList : subLists) {
 				final Collection<Entity> oneSubListFinal = oneSubList;
 				Runnable oneTask = new Runnable() {
@@ -294,11 +298,11 @@ public class InitialDumpDeployer {
 						//int count = 0;
 						for (Entity entity : oneSubListFinal) {
 							//processedCount++;
-							EntitySpec2 spec = EntitySpec2.get(entity.getClass().getName());
+							//EntitySpec2 spec = EntitySpec2.get(entity.getClass().getName());
 							//String shortName = spec.entityClassName;
-							if (spec == null) {
-								continue;
-							}
+							//if (spec == null) {
+							//	continue;
+							//}
 							//count++;
 							//if (processedCount % 1000 == 0) {
 								//logger.info("Entity " + shortName+ ": deployed " + processedCount + " of " + subTotalCount);
@@ -310,7 +314,7 @@ public class InitialDumpDeployer {
 						}
 						synchronized (subProcessedCount) {
 							subProcessedCount[0] += oneSubListFinal.size();
-							logger.info("Entity " + subType + ": deployed " + subProcessedCount[0] + " of " + subTotalCount);
+							logger.info(Thread.currentThread().getName() + ": Entity " + spec.shortName + ": deployed " + subProcessedCount[0] + " of " + subTotalCount);
 						}
 					}
 				};
@@ -383,7 +387,7 @@ public class InitialDumpDeployer {
 					}
 					synchronized (subProcessedCount) {
 						subProcessedCount[0] += oneSubListFinal.size();
-						logger.info(table.name + ": deployed " + subProcessedCount[0] + " of " + allEntities.size());
+						logger.info(Thread.currentThread().getName() + ": " + table.name + ": deployed " + subProcessedCount[0] + " of " + allEntities.size());
 					}
 				}
 			};
