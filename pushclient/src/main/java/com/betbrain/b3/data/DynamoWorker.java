@@ -210,7 +210,7 @@ public class DynamoWorker {
 	
 	public static boolean readOnly = false;
 	//public static boolean readOnly = true;
-	
+
 	public static void put(B3Update update) {
 		/*Table dynaTable = getTable(update.table);
 		UpdateItemSpec us = new UpdateItemSpec().withPrimaryKey(
@@ -279,8 +279,13 @@ public class DynamoWorker {
 
 	public static void update(B3Update update) {
 
-		UpdateItemSpec us = new UpdateItemSpec().withPrimaryKey(
-				HASH, update.key.getHashKey(), RANGE, update.key.getRangeKey());
+		UpdateItemSpec us;
+		String rangeKey = update.key.getRangeKey();
+		if (rangeKey != null) {
+			us = new UpdateItemSpec().withPrimaryKey(HASH, update.key.getHashKey(), RANGE, rangeKey);
+		} else {
+			us = new UpdateItemSpec().withPrimaryKey(HASH, update.key.getHashKey());
+		}
 		if (update.cells != null) {
 			for (B3Cell<?> c : update.cells) {
 				us = us.addAttributeUpdate(new AttributeUpdate(c.columnName).put(c.value));
@@ -288,13 +293,14 @@ public class DynamoWorker {
 		}
 
 		Table dynaTable = B3Bundle.workingBundle.getTable(update.table);
-		//System.out.println("DB-UPDATE " + update);
+		System.out.println("DB-UPDATE " + update);
 		if (!readOnly) {
 			while (true) {
 				try {
 					dynaTable.updateItem(us);
 					break;
 				} catch (RuntimeException re) {
+					re.printStackTrace();
 					logger.info(re.getClass().getName() + ": " + re.getMessage());
 					logger.info(update.table.name + ": Will retry in 100 ms");
 					try {
@@ -430,10 +436,5 @@ public class DynamoWorker {
 		QuerySpec spec = new QuerySpec().withHashKey(HASH, hashKey)
 				.withRangeKeyCondition(new RangeKeyCondition(RANGE).beginsWith(rangeStart));
 		return table.query(spec);
-	}
-
-	public static void main(String[] args) {
-		initBundleCurrent();
-		System.out.println(B3Bundle.workingBundle);
 	}
 }
