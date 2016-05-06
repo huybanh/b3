@@ -3,7 +3,6 @@ package com.betbrain.b3.pushclient;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 
 import org.apache.log4j.Logger;
 
@@ -47,56 +46,62 @@ public class ChangeBatchDeployer {
 
 		int deployCount = 0;
 		while (true) {
-			final ArrayList<Long> allBatcheIds = new ArrayList<Long>();
+			final ArrayList<String> allRangeIds = new ArrayList<String>();
 			for (int dist = 0; dist < B3Table.DIST_FACTOR; dist++) {
 				ItemCollection<QueryOutcome> coll = DynamoWorker.query(
 						B3Table.SEPC, DynamoWorker.SEPC_CHANGEBATCH + dist, 1);
 				IteratorSupport<Item, QueryOutcome> iter = coll.iterator();
 				while (iter.hasNext()) {
 					Item item = iter.next();
-					allBatcheIds.add(item.getLong(DynamoWorker.RANGE));
+					allRangeIds.add(item.getString(DynamoWorker.RANGE));
 				}
 			}
-			Collections.sort(allBatcheIds);
+			Collections.sort(allRangeIds);
 			
-			long batchId = allBatcheIds.get(0);
+			//String rangeStart = allRangeIds.get(0);
+			long batchId = Long.parseLong(allRangeIds.get(0).split(B3Table.KEY_SEP)[0]);
+			System.out.println("Processing batch " + batchId);
 			int retryCount = 0;
 			while (true) {
-				Item item = DynamoWorker.get(B3Table.SEPC, BatchWorker.generateHashKey(batchId), String.valueOf(batchId));
-				if (item == null) {
-					if (retryCount > 3) {
+				String hashKey = BatchWorker.generateHashKey(batchId);
+				ItemCollection<QueryOutcome> coll = DynamoWorker.queryRangeBeginsWith(
+						B3Table.SEPC, hashKey, String.valueOf(batchId));
+				IteratorSupport<Item, QueryOutcome> it = null;
+				if (coll != null) {
+					it = coll.iterator();
+				}
+
+				if (it == null) {
+					if (retryCount > 10) {
 						break;
 					}
-					try {
+					/*try {
 						Thread.sleep(5);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
-					}
+					}*/
 					retryCount++;
 					continue;
 				}
-	
-				String createTime = item.getString(DynamoWorker.SEPC_CELLNAME_CREATETIME);
-				String changesJson = item.getString(DynamoWorker.SEPC_CELLNAME_CHANGES);
-				@SuppressWarnings("unchecked")
-				List<Object> changes = (List<Object>) mapper.deserialize(changesJson);
-				System.out.println("Processing batch " + batchId + ", changes: " + changes.size());
-				for (Object oneChange : changes) {
-					B3Entity.applyChange(createTime, (EntityChangeBase) oneChange, mapper);
-				}
 				
-				DynamoWorker.delete(B3Table.SEPC, BatchWorker.generateHashKey(batchId), String.valueOf(batchId));
-
-				if (deployCount == 0) {
-					Date d = new Date(Long.parseLong(createTime));
-					DynamoWorker.updateSetting(
-							new B3CellString(DynamoWorker.BUNDLE_CELL_DEPLOYSTATUS, DynamoWorker.BUNDLE_PUSHSTATUS_ONGOING),
-							new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_ID, String.valueOf(batchId)),
-							new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_TIMESTAMP, d.toString()));
-				}
-				deployCount++;
-				if (deployCount == 1000) {
-					deployCount = 0;
+				while (it.hasNext()) {
+					Item item = it.next();
+					String createTime = item.getString(DynamoWorker.SEPC_CELLNAME_CREATETIME);
+					String changesJson = item.getString(DynamoWorker.SEPC_CELLNAME_JSON);
+					EntityChangeBase oneChange = (EntityChangeBase) mapper.deserialize(changesJson);
+					B3Entity.applyChange(createTime, (EntityChangeBase) oneChange, mapper);
+					DynamoWorker.delete(B3Table.SEPC, hashKey, item.getString(DynamoWorker.RANGE));
+					if (deployCount == 0) {
+						Date d = new Date(Long.parseLong(createTime));
+						DynamoWorker.updateSetting(
+								new B3CellString(DynamoWorker.BUNDLE_CELL_DEPLOYSTATUS, DynamoWorker.BUNDLE_PUSHSTATUS_ONGOING),
+								new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_ID, String.valueOf(batchId)),
+								new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_TIMESTAMP, d.toString()));
+					}
+					deployCount++;
+					if (deployCount == 1000) {
+						deployCount = 0;
+					}
 				}
 				batchId++;
 				/*logger.debug("Total batches to deploy: " + allBatches.size());

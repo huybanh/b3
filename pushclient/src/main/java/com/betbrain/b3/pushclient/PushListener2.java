@@ -2,7 +2,6 @@ package com.betbrain.b3.pushclient;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -158,26 +157,34 @@ class BatchWorker implements Runnable {
 			}
 
 			//new change list to replace EntityChange by its wrapper (we failed serialize EntityUpdate/EntityCreate)
-			LinkedList<Object> changeList = new LinkedList<Object>();
+			//LinkedList<Object> changeList = new LinkedList<Object>();
+			int i = 0;
 			for (EntityChange change : batch.getEntityChanges()) {
 				//nameValuePairs.add(new String[] {String.valueOf(i++), serializeChange(change)});
+				EntityChangeBase wrapper;
 				if (change instanceof EntityUpdate) {
-					changeList.add(new EntityUpdateWrapper((EntityUpdate) change));
+					wrapper = new EntityUpdateWrapper((EntityUpdate) change);
 				} else if (change instanceof EntityCreate) {
-					changeList.add(new EntityCreateWrapper((EntityCreate) change));
+					wrapper = new EntityCreateWrapper((EntityCreate) change);
 				} else if (change instanceof EntityDelete) {
-					changeList.add(new EntityDeleteWrapper((EntityDelete) change));
+					wrapper = new EntityDeleteWrapper((EntityDelete) change);
 				} else {
 					throw new RuntimeException("Unknown change class: " + change.getClass().getName());
 				}
+				String hashKey = generateHashKey(batch.getId());
+				String rangeKey = batch.getId() + B3Table.KEY_SEP + i;
+				i++;
+				DynamoWorker.putSepc(hashKey, rangeKey,
+					new String[] {DynamoWorker.SEPC_CELLNAME_CREATETIME, mapper.serialize(batch.getCreateTime())},
+					new String[] {DynamoWorker.SEPC_CELLNAME_JSON, mapper.serialize(wrapper)});
 			}
 			
 			//put
-			String rangeKey = String.valueOf(batch.getId());
+			/*String rangeKey = String.valueOf(batch.getId());
 			String hashKey = generateHashKey(batch.getId());
 			DynamoWorker.putSepc(hashKey, rangeKey,
 				new String[] {DynamoWorker.SEPC_CELLNAME_CREATETIME, mapper.serialize(batch.getCreateTime())},
-				new String[] {DynamoWorker.SEPC_CELLNAME_CHANGES, mapper.serialize(changeList)});
+				new String[] {DynamoWorker.SEPC_CELLNAME_CHANGES, mapper.serialize(changeList)});*/
 			
 		}
 	}

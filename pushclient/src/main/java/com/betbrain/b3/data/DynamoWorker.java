@@ -14,6 +14,7 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
+import com.amazonaws.services.dynamodbv2.document.RangeKeyCondition;
 import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
@@ -60,7 +61,7 @@ public class DynamoWorker {
 	public static final String SEPC_CHANGEBATCH = "B";
 	public static final String SEPC_CELLNAME_JSON = "JSON";
 	public static final String SEPC_CELLNAME_CREATETIME = "CREATE_TIME";
-	public static final String SEPC_CELLNAME_CHANGES = "CHANGES";
+	//public static final String SEPC_CELLNAME_CHANGES = "CHANGES";
 	
 	private  static AmazonDynamoDBClient dynaClient;
 	private static DynamoDB dynamoDB;
@@ -378,31 +379,15 @@ public class DynamoWorker {
 			spec = spec.withMaxResultSize(maxResulteSize);
 		}
 		return table.query(spec);
-		/*ScanRequest scanRequest = new ScanRequest()
-		        .withTableName(table.getTableName())
-		        .withLimit(10)
-		        .addExclusiveStartKeyEntry(HASH, new AttributeValue(hashKey));
-		scanRequest.addExclusiveStartKeyEntry(RANGE, new AttributeValue(""));
-		ScanResult result = dynaClient.scan(scanRequest);
-		for (Map<String, AttributeValue> item : result.getItems()){
-	        for (Entry<String, AttributeValue> x : item.entrySet()) {
-	        	System.out.println(x.getKey() + ": " + x.getValue());
-	        }
-	    }*/
+	}
+	
+	public static ItemCollection<QueryOutcome> queryRangeBeginsWith(
+			B3Table b3table, String hashKey, String rangeStart) {
 		
-		/*ScanSpec spec = new ScanSpec().withExclusiveStartKey(HASH, hashKey, RANGE, "a");
-		ItemCollection<ScanOutcome> coll = table.scan(spec);
-		IteratorSupport<Item, ScanOutcome> it = coll.iterator();
-		while (it.hasNext()) {
-			Item item = it.next();
-		}*/
-		
-		/*ItemCollection<QueryOutcome> coll = table.query(HASH, hashKey);
-		IteratorSupport<Item, QueryOutcome> it = coll.iterator();
-		while (it.hasNext()) {
-			Item item = it.next();
-			
-		}*/
+		Table table = B3Bundle.workingBundle.getTable(b3table);
+		QuerySpec spec = new QuerySpec().withHashKey(HASH, hashKey)
+				.withRangeKeyCondition(new RangeKeyCondition(RANGE).beginsWith(rangeStart));
+		return table.query(spec);
 	}
 
 	public static void main(String[] args) {
