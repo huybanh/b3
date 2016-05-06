@@ -251,7 +251,7 @@ public class DynamoWorker {
 					break;
 				} catch (RuntimeException re) {
 					logger.info(re.getClass().getName() + ": " + re.getMessage());
-					logger.info("Will retry in 100 ms");
+					logger.info(update.table.name + ": Will retry in 100 ms");
 					try {
 						Thread.sleep(100);
 					} catch (InterruptedException e) {
@@ -296,7 +296,7 @@ public class DynamoWorker {
 					break;
 				} catch (RuntimeException re) {
 					logger.info(re.getClass().getName() + ": " + re.getMessage());
-					logger.info("Will retry in 100 ms");
+					logger.info(update.table.name + ": Will retry in 100 ms");
 					try {
 						Thread.sleep(100);
 					} catch (InterruptedException e) {
@@ -350,7 +350,7 @@ public class DynamoWorker {
 					break;
 				} catch (RuntimeException re) {
 					logger.info(re.getClass().getName() + ": " + re.getMessage());
-					logger.info("Will retry in 100 ms");
+					logger.info(b3table.name + ": Will retry in 100 ms");
 					try {
 						Thread.sleep(100);
 					} catch (InterruptedException e) {
