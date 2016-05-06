@@ -144,6 +144,7 @@ public class InitialDumpDeployer {
 		//wait for all initial deploying threads to finish
 		while (true) {
 			synchronized (allTasks) {
+				logger.info("Running initial deploying threads: " + threadIds.size());
 				if (!threadIds.isEmpty()) {
 					try {
 						allTasks.wait();
