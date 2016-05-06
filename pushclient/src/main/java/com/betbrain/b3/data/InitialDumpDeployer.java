@@ -240,7 +240,7 @@ public class InitialDumpDeployer {
 			}
 			subList.add(e);
 			i++;
-			if (i == 1000) {
+			if (i == 500) {
 				subList = null;
 				i = 0;
 			}

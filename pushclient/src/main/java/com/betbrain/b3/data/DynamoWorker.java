@@ -238,7 +238,7 @@ public class DynamoWorker {
 		}
 
 		Table dynaTable = B3Bundle.workingBundle.getTable(update.table);
-		System.out.println("DB-PUT " + update);
+		//System.out.println("DB-PUT " + update);
 		if (!readOnly) {
 			dynaTable.putItem(item);
 		}
@@ -253,7 +253,7 @@ public class DynamoWorker {
 			}
 		}
 
-		System.out.println("SEPC: " + hashKey + "/" + rangeKey);
+		//System.out.println("SEPC: " + hashKey + "/" + rangeKey);
 		if (!readOnly) {
 			B3Bundle.workingBundle.sepcTable.putItem(item);
 		}
@@ -270,7 +270,7 @@ public class DynamoWorker {
 		}
 
 		Table dynaTable = B3Bundle.workingBundle.getTable(update.table);
-		System.out.println("DB-UPDATE " + update);
+		//System.out.println("DB-UPDATE " + update);
 		if (!readOnly) {
 			dynaTable.updateItem(us);
 		}
@@ -286,7 +286,7 @@ public class DynamoWorker {
 			}
 		}
 
-		System.out.println("DB-UPDATE " + settingTable.getTableName());
+		//System.out.println("DB-UPDATE " + settingTable.getTableName());
 		if (!readOnly) {
 			settingTable.updateItem(us);
 		}
@@ -296,10 +296,10 @@ public class DynamoWorker {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
 		if (rangeKey == null) {
-			System.out.println("DB-GET " + table.getTableName() + ": " + hashKey);
+			//System.out.println("DB-GET " + table.getTableName() + ": " + hashKey);
 			return table.getItem(HASH, hashKey);
 		} else {
-			System.out.println("DB-GET " + table.getTableName() + ": " + hashKey + "@" + rangeKey);
+			//System.out.println("DB-GET " + table.getTableName() + ": " + hashKey + "@" + rangeKey);
 			return table.getItem(HASH, hashKey, RANGE, rangeKey);
 		}
 	}
@@ -307,7 +307,7 @@ public class DynamoWorker {
 	public static void delete(B3Table b3table, String hashKey, String rangeKey) {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
-		System.out.println("DB-DELETE " + b3table.name + " " + hashKey + "@" + rangeKey);
+		//System.out.println("DB-DELETE " + b3table.name + " " + hashKey + "@" + rangeKey);
 		if (!readOnly) {
 			if (rangeKey != null) {
 				table.deleteItem(HASH, hashKey, RANGE, rangeKey);
@@ -341,7 +341,7 @@ public class DynamoWorker {
 			/*if (!hashKey.startsWith(bundle.id)) {
 				return;
 			}*/
-			System.out.println(hashKey);
+			//System.out.println(hashKey);
 			//table.deleteItem(HASH, hashKey, RANGE, currentItem.getString(RANGE));
         }
 	}
