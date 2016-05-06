@@ -91,8 +91,10 @@ public class InitialDumpDeployer {
 			threadIds.add(oneThreadId);
 			new Thread() {
 				public void run() {
+					int remainPrint = 0;
 					do {
 						Runnable oneTask;
+						Integer remainTaskCount = null;
 						synchronized (allTasks) {
 							int taskTypeCount = 0;
 							do {
@@ -113,15 +115,23 @@ public class InitialDumpDeployer {
 								}
 							} while (true);
 							oneTask = allTasks[taskTypeIndex].remove(0);
+							if (remainPrint == 0) {
+								remainTaskCount = 0;
+								for (ArrayList<?> subList : allTasks) {
+									remainTaskCount += subList.size();
+								}
+							}
+							remainPrint++;
+							if (remainPrint == 10) {
+								remainPrint = 0;
+							}
 							//oneTask = allTasks.remove(0);
 						}
 
-						int remainTaskCount = 0;
-						for (ArrayList<?> subList : allTasks) {
-							remainTaskCount += subList.size();
+						if (remainTaskCount != null) {
+							logger.info(Thread.currentThread().getName() +  
+									": Tasks remain: " + remainTaskCount + " of " + allTaskCountFinal);
 						}
-						logger.info(Thread.currentThread().getName() +  
-								": Tasks remain: " + remainTaskCount + " of " + allTaskCountFinal);
 						oneTask.run();
 						//totalProcessedCount += oneTask.subTotalCount;
 						//logger.info("Totally deployed " + totalProcessedCount + " of " + totalCount);

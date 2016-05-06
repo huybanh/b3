@@ -90,7 +90,7 @@ class B3Bundle {
 		tables[i++] = createTable(dynamoDB, id, "outcome", 1, 800, true);
 		tables[i++] = createTable(dynamoDB, id, "lookup", 1, capaHigh, true);
 		tables[i++] = createTable(dynamoDB, id, "link", 1, capaHigh, true);
-		tables[i++] = createTable(dynamoDB, id, "entity", 1, 150, false);
+		tables[i++] = createTable(dynamoDB, id, "entity", 1, 800, false);
 		tables[i++] = createTable(dynamoDB, id, "sepc", 1, 300/*capaLow*/, true);
 		for (Table t : tables) {
 			try {
