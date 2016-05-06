@@ -153,7 +153,7 @@ class BatchWorker implements Runnable {
 				batch = batches.remove(0);
 				if (System.currentTimeMillis() - printTimestamp > 5000) {
 					printTimestamp = System.currentTimeMillis();
-					logger.info("Batches in queue: " + batches.size());
+					logger.info(Thread.currentThread().getName() + ": Batches in queue: " + batches.size());
 				}
 			}
 
@@ -175,7 +175,6 @@ class BatchWorker implements Runnable {
 			//put
 			String rangeKey = String.valueOf(batch.getId());
 			String hashKey = generateHashKey(batch.getId());
-			//DynamoWorker.putSepc(hashKey, "BATCH", mapper.serialize(batch));
 			DynamoWorker.putSepc(hashKey, rangeKey,
 				new String[] {DynamoWorker.SEPC_CELLNAME_CREATETIME, mapper.serialize(batch.getCreateTime())},
 				new String[] {DynamoWorker.SEPC_CELLNAME_CHANGES, mapper.serialize(changeList)});

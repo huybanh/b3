@@ -53,25 +53,15 @@ public class EntityUpdateWrapper extends EntityChangeBase {
 		return entityId;
 	}
 
-	public void setPropertyNames(List<String> names) {
+	public void setB3PropertyNames(List<String> names) {
 		this.names = names;
 	}
 
-	public List<String> getPropertyNames() {
+	public List<String> getB3PropertyNames() {
 		if (update != null) {
 			return update.getPropertyNames();
 		}
 		return names;
-	}
-	
-	//TODO tempo
-	public void setPropertyValues(List<String> stringValues) {
-		this.stringValues = stringValues;
-	}
-	
-	//TODO tempo
-	public List<String> getPropertyValues() {
-		return null;
 	}
 	
 	public void setB3PropertyValues(List<String> stringValues) {

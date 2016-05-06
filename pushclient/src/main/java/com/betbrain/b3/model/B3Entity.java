@@ -180,7 +180,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		}*/
 		if (Source.class.getName().equals(change.getEntityClassName())) {
 			if (change instanceof EntityUpdateWrapper) {
-				List<String> changedNames = ((EntityUpdateWrapper) change).getPropertyNames();
+				List<String> changedNames = ((EntityUpdateWrapper) change).getB3PropertyNames();
 				if (changedNames == null || 
 						(changedNames.size() == 1 && changedNames.contains(Source.PROPERTY_NAME_lastCollectedTime))) {
 					
@@ -232,7 +232,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 			
 		} else if (change instanceof EntityUpdateWrapper) {
 			
-			System.out.println("CHANGE-UPDATE: " + change.getEntityClassName());
+			System.out.println("CHANGE-UPDATE: " + change);
 			EntityUpdateWrapper update = (EntityUpdateWrapper) change;
 			B3KeyEntity entityKey = new B3KeyEntity(update.getEntityClassName(), update.getEntityId());
 			Entity targetEntity = entityKey.load(mapper);
