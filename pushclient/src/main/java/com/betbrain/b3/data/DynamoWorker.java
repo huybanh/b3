@@ -3,7 +3,8 @@ package com.betbrain.b3.data;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.logging.Logger;
+
+import org.apache.log4j.Logger;
 
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.regions.Region;
@@ -23,6 +24,8 @@ import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 
 public class DynamoWorker {
+	
+	private static Logger logger = Logger.getLogger(DynamoWorker.class);
 	
 	static String HASH = "HASH";
 	public static String RANGE = "RANGE";
@@ -172,7 +175,7 @@ public class DynamoWorker {
 			if (count >= BUNDLEIDS.length) {
 				//throw new RuntimeException("Found no bundles with status of " + requiredStatus);
 				//return null;
-				Logger.getLogger(DynamoWorker.class.getName()).info("Found no bundles with status " + requiredStatus);
+				logger.info("Found no bundles with status " + requiredStatus);
 				return false;
 			}
 		}
@@ -242,7 +245,20 @@ public class DynamoWorker {
 		Table dynaTable = B3Bundle.workingBundle.getTable(update.table);
 		//System.out.println("DB-PUT " + update);
 		if (!readOnly) {
-			dynaTable.putItem(item);
+			while (true) {
+				try {
+					dynaTable.putItem(item);
+					break;
+				} catch (RuntimeException re) {
+					logger.info(re.getClass().getName() + ": " + re.getMessage());
+					logger.info("Will retry in 100 ms");
+					try {
+						Thread.sleep(100);
+					} catch (InterruptedException e) {
+						// ignore
+					}
+				}
+			}
 		}
 	}
 	
@@ -274,7 +290,20 @@ public class DynamoWorker {
 		Table dynaTable = B3Bundle.workingBundle.getTable(update.table);
 		//System.out.println("DB-UPDATE " + update);
 		if (!readOnly) {
-			dynaTable.updateItem(us);
+			while (true) {
+				try {
+					dynaTable.updateItem(us);
+					break;
+				} catch (RuntimeException re) {
+					logger.info(re.getClass().getName() + ": " + re.getMessage());
+					logger.info("Will retry in 100 ms");
+					try {
+						Thread.sleep(100);
+					} catch (InterruptedException e) {
+						// ignore
+					}
+				}
+			}
 		}
 	}
 
@@ -311,10 +340,23 @@ public class DynamoWorker {
 		Table table = B3Bundle.workingBundle.getTable(b3table);
 		//System.out.println("DB-DELETE " + b3table.name + " " + hashKey + "@" + rangeKey);
 		if (!readOnly) {
-			if (rangeKey != null) {
-				table.deleteItem(HASH, hashKey, RANGE, rangeKey);
-			} else {
-				table.deleteItem(HASH, hashKey);
+			while (true) {
+				try {
+					if (rangeKey != null) {
+						table.deleteItem(HASH, hashKey, RANGE, rangeKey);
+					} else {
+						table.deleteItem(HASH, hashKey);
+					}
+					break;
+				} catch (RuntimeException re) {
+					logger.info(re.getClass().getName() + ": " + re.getMessage());
+					logger.info("Will retry in 100 ms");
+					try {
+						Thread.sleep(100);
+					} catch (InterruptedException e) {
+						// ignore
+					}
+				}
 			}
 		}
 	}
