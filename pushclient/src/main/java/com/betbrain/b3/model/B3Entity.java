@@ -174,6 +174,10 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 	
 	public static void applyChange(String createTime, EntityChangeBase change, JsonMapper mapper) {
 		
+		/*if (true) {
+			System.out.println(change);
+			return;
+		}*/
 		if (Source.class.getName().equals(change.getEntityClassName())) {
 			if (change instanceof EntityUpdateWrapper) {
 				List<String> changedNames = ((EntityUpdateWrapper) change).getPropertyNames();

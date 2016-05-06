@@ -205,6 +205,7 @@ public class DynamoWorker {
 	}
 	
 	public static boolean readOnly = false;
+	//public static boolean readOnly = true;
 	
 	public static void put(B3Update update) {
 		/*Table dynaTable = getTable(update.table);
