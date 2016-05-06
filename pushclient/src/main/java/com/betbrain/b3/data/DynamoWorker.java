@@ -293,7 +293,7 @@ public class DynamoWorker {
 		}
 
 		Table dynaTable = B3Bundle.workingBundle.getTable(update.table);
-		System.out.println("DB-UPDATE " + update);
+		//System.out.println("DB-UPDATE " + update);
 		if (!readOnly) {
 			while (true) {
 				try {
