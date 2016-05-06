@@ -23,7 +23,7 @@ import com.betbrain.sepc.connector.sportsmodel.Outcome;
 
 public class InitialDumpDeployer {
 	
-    //private final Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = Logger.getLogger(this.getClass());
 	
 	//private final int totalCount;
 	
@@ -42,25 +42,27 @@ public class InitialDumpDeployer {
 	}*/
 	
 	@SuppressWarnings("unchecked")
-	private final LinkedList<Runnable>[] allTasks = new LinkedList[] {
+	private final ArrayList<Runnable>[] allTasks = new ArrayList[] {
 			//entity
-			new LinkedList<Runnable>(),
+			new ArrayList<Runnable>(),
 			//event
-			new LinkedList<Runnable>(),
+			new ArrayList<Runnable>(),
 			//eventIno
-			new LinkedList<Runnable>(),
+			new ArrayList<Runnable>(),
 			//outcome
-			new LinkedList<Runnable>(),
+			new ArrayList<Runnable>(),
 			//offer
-			new LinkedList<Runnable>()
+			new ArrayList<Runnable>()
 	};
 	
-	private LinkedList<Runnable> entityTasks = allTasks[0];
-	private LinkedList<Runnable> eventTasks = allTasks[1];
-	private LinkedList<Runnable> eventInfoTasks = allTasks[2];
-	private LinkedList<Runnable> outcomeTasks = allTasks[3];
-	private LinkedList<Runnable> offerTasks = allTasks[4];
+	private ArrayList<Runnable> entityTasks = allTasks[0];
+	private ArrayList<Runnable> eventTasks = allTasks[1];
+	private ArrayList<Runnable> eventInfoTasks = allTasks[2];
+	private ArrayList<Runnable> outcomeTasks = allTasks[3];
+	private ArrayList<Runnable> offerTasks = allTasks[4];
 	private int taskTypeIndex = 0;
+	
+	//private ArrayList<Runnable> allTasks = new ArrayList<>();
 	
 	public InitialDumpDeployer(HashMap<String, HashMap<Long, Entity>> masterMap, int totalCount) {
 
@@ -76,6 +78,12 @@ public class InitialDumpDeployer {
 		initialPutAllEventInfos();
 		initialPutAllOutcomes();
 		initialPutAllOffers();
+		
+		int allTaskCount = 0;
+		for (ArrayList<?> subList : allTasks) {
+			allTaskCount += subList.size();
+		}
+		final int allTaskCountFinal = allTaskCount;
 		
 		final ArrayList<Object> threadIds = new ArrayList<Object>();
 		for (int i = 0; i < threads; i++) {
@@ -104,9 +112,16 @@ public class InitialDumpDeployer {
 									return;
 								}
 							} while (true);
-							oneTask = allTasks[taskTypeIndex].remove();
+							oneTask = allTasks[taskTypeIndex].remove(0);
+							//oneTask = allTasks.remove(0);
 						}
-						
+
+						int remainTaskCount = 0;
+						for (ArrayList<?> subList : allTasks) {
+							remainTaskCount += subList.size();
+						}
+						logger.info(Thread.currentThread().getName() +  
+								": Tasks remain: " + remainTaskCount + " of " + allTaskCountFinal);
 						oneTask.run();
 						//totalProcessedCount += oneTask.subTotalCount;
 						//logger.info("Totally deployed " + totalProcessedCount + " of " + totalCount);
@@ -303,7 +318,7 @@ public class InitialDumpDeployer {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private <E extends Entity> void initialPutAllToMainTable(LinkedList<Runnable> runnerList, 
+	private <E extends Entity> void initialPutAllToMainTable(ArrayList<Runnable> runnerList, 
 			final B3Table table, /*final int start, final Integer end,*/
 			final Class<E> entityClazz, final B3KeyBuilder<E> keyBuilder) {
 
