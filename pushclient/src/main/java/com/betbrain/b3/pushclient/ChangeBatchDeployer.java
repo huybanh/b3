@@ -11,6 +11,7 @@ import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.internal.IteratorSupport;
 import com.betbrain.b3.data.B3CellString;
+import com.betbrain.b3.data.B3Key;
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.model.B3Entity;
@@ -63,9 +64,9 @@ public class ChangeBatchDeployer {
 			System.out.println("Processing batch " + batchId);
 			int retryCount = 0;
 			while (true) {
-				String hashKey = BatchWorker.generateHashKey(batchId);
+				String hashKey = BatchWorker.generateChangeBatchHashKey(batchId);
 				ItemCollection<QueryOutcome> coll = DynamoWorker.queryRangeBeginsWith(
-						B3Table.SEPC, hashKey, String.valueOf(batchId));
+						B3Table.SEPC, hashKey, B3Key.zeroPadding(BatchWorker.BATCHID_DIGIT_COUNT, batchId));
 				IteratorSupport<Item, QueryOutcome> it = null;
 				if (coll != null) {
 					it = coll.iterator();

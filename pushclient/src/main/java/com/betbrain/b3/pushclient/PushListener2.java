@@ -130,6 +130,8 @@ class BatchWorker implements Runnable {
 	
 	//private static boolean firstBatch = true;
 	
+	static final int BATCHID_DIGIT_COUNT = "00026473973523".length(); //sample batch id: 26473973523
+	
 	BatchWorker(ArrayList<EntityChangeBatch> batches) {
 		this.batches = batches;
 	}
@@ -178,8 +180,9 @@ class BatchWorker implements Runnable {
 				} else {
 					throw new RuntimeException("Unknown change class: " + change.getClass().getName());
 				}
-				String hashKey = generateHashKey(batch.getId());
-				String rangeKey = batch.getId() + B3Table.KEY_SEP + B3Key.zeroPadding(batchDigitCount, i);
+				String hashKey = generateChangeBatchHashKey(batch.getId());
+				String rangeKey = B3Key.zeroPadding(BATCHID_DIGIT_COUNT, batch.getId()) +
+						B3Table.KEY_SEP + B3Key.zeroPadding(batchDigitCount, i);
 				i++;
 				DynamoWorker.putSepc(hashKey, rangeKey,
 					new String[] {DynamoWorker.SEPC_CELLNAME_CREATETIME, mapper.serialize(batch.getCreateTime())},
@@ -196,7 +199,7 @@ class BatchWorker implements Runnable {
 		}
 	}
 	
-	static String generateHashKey(long batchId) {
+	static String generateChangeBatchHashKey(long batchId) {
 		return DynamoWorker.SEPC_CHANGEBATCH + Math.abs(String.valueOf(batchId).hashCode() % B3Table.DIST_FACTOR);
 	}
 }
