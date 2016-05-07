@@ -14,6 +14,7 @@ import com.betbrain.sepc.connector.sportsmodel.EntityCreate;
 import com.betbrain.sepc.connector.sportsmodel.EntityDelete;
 import com.betbrain.sepc.connector.sportsmodel.EntityUpdate;
 import com.betbrain.b3.data.B3CellString;
+import com.betbrain.b3.data.B3Key;
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.data.InitialDumpDeployer;
@@ -159,6 +160,7 @@ class BatchWorker implements Runnable {
 			//new change list to replace EntityChange by its wrapper (we failed serialize EntityUpdate/EntityCreate)
 			//LinkedList<Object> changeList = new LinkedList<Object>();
 			int i = 0;
+			int batchDigitCount = String.valueOf(batch.getEntityChanges().size()).length();
 			for (EntityChange change : batch.getEntityChanges()) {
 				//nameValuePairs.add(new String[] {String.valueOf(i++), serializeChange(change)});
 				EntityChangeBase wrapper;
@@ -177,7 +179,7 @@ class BatchWorker implements Runnable {
 					throw new RuntimeException("Unknown change class: " + change.getClass().getName());
 				}
 				String hashKey = generateHashKey(batch.getId());
-				String rangeKey = batch.getId() + B3Table.KEY_SEP + i;
+				String rangeKey = batch.getId() + B3Table.KEY_SEP + B3Key.zeroPadding(batchDigitCount, i);
 				i++;
 				DynamoWorker.putSepc(hashKey, rangeKey,
 					new String[] {DynamoWorker.SEPC_CELLNAME_CREATETIME, mapper.serialize(batch.getCreateTime())},

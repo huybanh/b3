@@ -104,13 +104,6 @@ public class ChangeBatchDeployer {
 					}
 				}
 				batchId++;
-				/*logger.debug("Total batches to deploy: " + allBatches.size());
-				for (B3ChangeBatch oneBatch : allBatches) {
-					System.out.println("Processing batch " + oneBatch.batchId);
-					for (EntityChangeBase oneChange : oneBatch.changes) {
-						B3Entity.applyChange(oneChange, mapper);
-					}
-				}*/
 			}
 		}
 	}
