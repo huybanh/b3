@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
+import com.betbrain.b3.data.B3CellString;
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.sepc.connector.sdql.EntityChangeBatchProcessingMonitor;
@@ -103,8 +104,8 @@ class InitialWorker implements Runnable {
 			String rangeKey = entity.getClass().getName().substring(prefixLength) + "/" + entity.getId();
 			String hashKey = DynamoWorker.SEPC_INITIAL + Math.abs(rangeKey.hashCode() % B3Table.DIST_FACTOR);
 			String json = mapper.serialize(entity);
-			String[] nameValue = new String[] {DynamoWorker.SEPC_CELLNAME_JSON, json};
-			DynamoWorker.putSepc(hashKey, rangeKey, nameValue);
+			//B3CellString[] nameValue = new B3CellString[] {new B3CellString(DynamoWorker.SEPC_CELLNAME_JSON, json)};
+			DynamoWorker.put(B3Table.SEPC, hashKey, rangeKey, new B3CellString(DynamoWorker.SEPC_CELLNAME_JSON, json));
 		}
 	}
 }

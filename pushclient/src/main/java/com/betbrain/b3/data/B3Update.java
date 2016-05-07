@@ -1,5 +1,6 @@
 package com.betbrain.b3.data;
 
+@Deprecated
 public class B3Update {
 
 	final B3Table table;

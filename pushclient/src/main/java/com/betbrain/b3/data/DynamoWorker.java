@@ -227,25 +227,21 @@ public class DynamoWorker {
 	public static boolean readOnly = false;
 	//public static boolean readOnly = true;
 
-	public static void put(B3Update update) {
-		/*Table dynaTable = getTable(update.table);
-		UpdateItemSpec us = new UpdateItemSpec().withPrimaryKey(
-				HASH, bundleId + update.key.getHashKey(), RANGE, update.key.getRangeKey());
-		if (update.cells != null) {
-			for (B3Cell<?> c : update.cells) {
-				us = us.addAttributeUpdate(new AttributeUpdate(c.columnName).put(c.value));
-			}
-		}*/
+	/*public static void put(B3Update update) {
+		put(update.table, update.key.getHashKey(), update.key.getRangeKey(), update.cells);
+	}*/
+	
+	public static void put(B3Table b3table, String hashKey, String rangeKey, B3Cell<?>... cells) {
 		
-		String rangeKey = update.key.getRangeKey();
+		//String rangeKey = update.key.getRangeKey();
 		Item item ;
 		if (rangeKey != null) {
-			item = new Item().withPrimaryKey(HASH, update.key.getHashKey(), RANGE, update.key.getRangeKey());
+			item = new Item().withPrimaryKey(HASH, hashKey, RANGE, rangeKey);
 		} else {
-			item = new Item().withPrimaryKey(HASH, update.key.getHashKey());
+			item = new Item().withPrimaryKey(HASH, hashKey);
 		}
-		if (update.cells != null) {
-			for (B3Cell<?> c : update.cells) {
+		if (cells != null) {
+			for (B3Cell<?> c : cells) {
 				if (c instanceof B3CellString) {
 					item = item.withString(c.columnName, ((B3CellString) c).value);
 				} else if (c instanceof B3CellLong) {
@@ -258,7 +254,7 @@ public class DynamoWorker {
 			}
 		}
 
-		Table dynaTable = B3Bundle.workingBundle.getTable(update.table);
+		Table dynaTable = B3Bundle.workingBundle.getTable(b3table);
 		//System.out.println("DB-PUT " + update);
 		if (!readOnly) {
 			while (true) {
@@ -267,7 +263,7 @@ public class DynamoWorker {
 					break;
 				} catch (RuntimeException re) {
 					logger.info(re.getClass().getName() + ": " + re.getMessage());
-					logger.info(update.table.name + ": Will retry in 100 ms");
+					logger.info(b3table.name + ": Will retry in 100 ms");
 					try {
 						Thread.sleep(100);
 					} catch (InterruptedException e) {
@@ -278,7 +274,7 @@ public class DynamoWorker {
 		}
 	}
 	
-	public static void putSepc(String hashKey, String rangeKey, String[]... nameValuePairs ) {
+	/*public static void putSepc(String hashKey, String rangeKey, String[]... nameValuePairs ) {
 		
 		Item item = new Item().withPrimaryKey(HASH, hashKey, RANGE, rangeKey);
 		if (nameValuePairs != null) {
@@ -291,24 +287,28 @@ public class DynamoWorker {
 		if (!readOnly) {
 			B3Bundle.workingBundle.sepcTable.putItem(item);
 		}
-	}
+	}*/
 
-	public static void update(B3Update update) {
+	/*public static void update(B3Update b3update) {
+		update(b3update.table, b3update.key.getHashKey(), b3update.key.getRangeKey(), b3update.cells);
+	}*/
+	
+	public static void update(B3Table b3table, String hashKey, String rangeKey, B3Cell<?>... cells) {
 
 		UpdateItemSpec us;
-		String rangeKey = update.key.getRangeKey();
+		//String rangeKey = update.key.getRangeKey();
 		if (rangeKey != null) {
-			us = new UpdateItemSpec().withPrimaryKey(HASH, update.key.getHashKey(), RANGE, rangeKey);
+			us = new UpdateItemSpec().withPrimaryKey(HASH, hashKey, RANGE, rangeKey);
 		} else {
-			us = new UpdateItemSpec().withPrimaryKey(HASH, update.key.getHashKey());
+			us = new UpdateItemSpec().withPrimaryKey(HASH, hashKey);
 		}
-		if (update.cells != null) {
-			for (B3Cell<?> c : update.cells) {
+		if (cells != null) {
+			for (B3Cell<?> c : cells) {
 				us = us.addAttributeUpdate(new AttributeUpdate(c.columnName).put(c.value));
 			}
 		}
 
-		Table dynaTable = B3Bundle.workingBundle.getTable(update.table);
+		Table dynaTable = B3Bundle.workingBundle.getTable(b3table);
 		//System.out.println("DB-UPDATE " + update);
 		if (!readOnly) {
 			while (true) {
@@ -318,7 +318,7 @@ public class DynamoWorker {
 				} catch (RuntimeException re) {
 					re.printStackTrace();
 					logger.info(re.getClass().getName() + ": " + re.getMessage());
-					logger.info(update.table.name + ": Will retry in 100 ms");
+					logger.info(b3table.name + ": Will retry in 100 ms");
 					try {
 						Thread.sleep(100);
 					} catch (InterruptedException e) {
@@ -330,29 +330,33 @@ public class DynamoWorker {
 	}
 	
 	public static void logError(String error) {
-		Item item = new Item().withPrimaryKey(HASH, BUNDLE_ERROR, RANGE, B3Bundle.getWorkingBundleId() + System.currentTimeMillis());
+		/*Item item = new Item().withPrimaryKey(HASH, BUNDLE_ERROR, RANGE,
+				B3Bundle.getWorkingBundleId() + System.currentTimeMillis());
 		item = item
 				.withString("time", new Date().toString())
 				.withString("message", error);
+		settingTable.putItem(item);*/
+		
+		put(B3Table.Setting, BUNDLE_ERROR, B3Bundle.getWorkingBundleId() + System.currentTimeMillis(),
+				new B3CellString("time", new Date().toString()),
+				new B3CellString("message", error));
 
 		logger.error(error);
-		settingTable.putItem(item);
 	}
 
 	public static void updateSetting(B3CellString... cells) {
 
-		UpdateItemSpec us = new UpdateItemSpec().withPrimaryKey(
+		update(B3Table.Setting, BUNDLE_HASH, B3Bundle.getWorkingBundleId(), cells);
+		/*UpdateItemSpec us = new UpdateItemSpec().withPrimaryKey(
 				HASH, BUNDLE_HASH, RANGE, B3Bundle.getWorkingBundleId());
 		if (cells != null) {
 			for (B3Cell<?> c : cells) {
 				us = us.addAttributeUpdate(new AttributeUpdate(c.columnName).put(c.value));
 			}
 		}
-
-		//System.out.println("DB-UPDATE " + settingTable.getTableName());
 		if (!readOnly) {
 			settingTable.updateItem(us);
-		}
+		}*/
 	}
 
 	public static Item get(B3Table b3table, String hashKey, String rangeKey) {

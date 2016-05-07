@@ -21,7 +21,6 @@ import com.betbrain.b3.data.B3KeyEntity;
 import com.betbrain.b3.data.B3KeyLink;
 import com.betbrain.b3.data.B3KeyLookup;
 import com.betbrain.b3.data.B3Table;
-import com.betbrain.b3.data.B3Update;
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.data.EntityLink;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
@@ -284,9 +283,10 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		//this.entity = (E) entity;
 		String entityJson = mapper.serialize(this.entity);
 		B3KeyEntity entityKey = new B3KeyEntity(entity.getClass().getName(), entity.getId());
-		B3Update update = new B3Update(B3Table.Entity, entityKey,
+		//B3Update update = new B3Update(B3Table.Entity, entityKey,
+		//		new B3CellString(B3Table.CELL_LOCATOR_THIZ, entityJson));
+		DynamoWorker.update(B3Table.Entity, entityKey.getHashKey(), entityKey.getRangeKey(),
 				new B3CellString(B3Table.CELL_LOCATOR_THIZ, entityJson));
-		DynamoWorker.update(update);
 		
 		//main table / lookup / link
 		if (entitySpec.mainTable == null) {
@@ -300,8 +300,9 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		}
 		
 		//put main entity to main table
-		update = new B3Update(entitySpec.mainTable, mainKey, new B3CellString(B3Table.CELL_LOCATOR_THIZ, entityJson));
-		DynamoWorker.update(update);
+		//update = new B3Update(entitySpec.mainTable, mainKey, new B3CellString(B3Table.CELL_LOCATOR_THIZ, entityJson));
+		DynamoWorker.update(entitySpec.mainTable, mainKey.getHashKey(), mainKey.getRangeKey(),
+				new B3CellString(B3Table.CELL_LOCATOR_THIZ, entityJson));
 	}
 	
 	private void putCurrent(JsonMapper mapper) {
@@ -309,9 +310,10 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		//table entity
 		//this.entity = (E) entity;
 		B3KeyEntity entityKey = new B3KeyEntity(entity.getClass().getName(), entity.getId());
-		B3Update put = new B3Update(B3Table.Entity, entityKey,
-				new B3CellString(B3Table.CELL_LOCATOR_THIZ, mapper.serialize(this.entity)));
-		DynamoWorker.put(put);
+		//B3Update put = new B3Update(B3Table.Entity, entityKey,
+		//		new B3CellString(B3Table.CELL_LOCATOR_THIZ, mapper.serialize(this.entity)));
+		DynamoWorker.put(B3Table.Entity, entityKey.getHashKey(), entityKey.getRangeKey(),
+						new B3CellString(B3Table.CELL_LOCATOR_THIZ, mapper.serialize(this.entity)));
 		
 		//main table / lookup / link
 		if (entitySpec.mainTable == null) {
@@ -330,8 +332,9 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 				entitySpec.mainTable, mainKey, b3Cells, null, this, noActualPutsFalse, null, mapper);
 		
 		//put main entity to main table
-		B3Update update = new B3Update(entitySpec.mainTable, mainKey, b3Cells.toArray(new B3CellString[b3Cells.size()]));
-		DynamoWorker.put(update);
+		//B3Update update = new B3Update(entitySpec.mainTable, mainKey, b3Cells.toArray(new B3CellString[b3Cells.size()]));
+		DynamoWorker.put(entitySpec.mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), 
+				b3Cells.toArray(new B3CellString[b3Cells.size()]));
 	}
 	
 	private void putRevision(String createTime, JsonMapper mapper) {
@@ -358,8 +361,9 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 			revisionId = createTime;
 		}
 		mainKey.setRevisionId(revisionId);
-		B3Update update = new B3Update(entitySpec.mainTable, mainKey, b3Cells.toArray(new B3CellString[b3Cells.size()]));
-		DynamoWorker.put(update);
+		//B3Update update = new B3Update(entitySpec.mainTable, mainKey, b3Cells.toArray(new B3CellString[b3Cells.size()]));
+		DynamoWorker.put(entitySpec.mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), 
+				b3Cells.toArray(new B3CellString[b3Cells.size()]));
 	}
 	
 	private void deleteCurrent(JsonMapper mapper) {

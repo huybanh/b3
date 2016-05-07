@@ -184,9 +184,9 @@ class BatchWorker implements Runnable {
 				String rangeKey = B3Key.zeroPadding(BATCHID_DIGIT_COUNT, batch.getId()) +
 						B3Table.KEY_SEP + B3Key.zeroPadding(batchDigitCount, i);
 				i++;
-				DynamoWorker.putSepc(hashKey, rangeKey,
-					new String[] {DynamoWorker.SEPC_CELLNAME_CREATETIME, mapper.serialize(batch.getCreateTime())},
-					new String[] {DynamoWorker.SEPC_CELLNAME_JSON, mapper.serialize(wrapper)});
+				DynamoWorker.put(B3Table.SEPC, hashKey, rangeKey,
+					new B3CellString(DynamoWorker.SEPC_CELLNAME_CREATETIME, mapper.serialize(batch.getCreateTime())),
+					new B3CellString(DynamoWorker.SEPC_CELLNAME_JSON, mapper.serialize(wrapper)));
 			}
 			
 			//put
