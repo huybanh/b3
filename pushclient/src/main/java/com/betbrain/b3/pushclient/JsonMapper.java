@@ -19,8 +19,9 @@ public class JsonMapper {
 	public JsonMapper() {
 
 		flexDe = new JSONDeserializer();
-		ExcludeTransformer excludeTransformer = new ExcludeTransformer();
-		flexSer = new JSONSerializer().exclude("beanInfo").transform(excludeTransformer, void.class)
+		//ExcludeTransformer excludeTransformer = new ExcludeTransformer();
+		flexSer = new JSONSerializer().exclude("beanInfo")
+				.transform(new ExcludeTransformer(), void.class)
 				.include("b3PropertyNames").include("b3PropertyValues");
 	}
 

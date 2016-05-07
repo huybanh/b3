@@ -1,12 +1,14 @@
 package com.betbrain.b3.pushclient;
 
 import java.beans.PropertyDescriptor;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityUpdate;
 import com.betbrain.sepc.connector.sportsmodel.Event;
+import com.betbrain.sepc.connector.sportsmodel.EventInfo;
 import com.betbrain.sepc.connector.util.StringUtil;
 import com.betbrain.sepc.connector.util.beans.BeanUtil;
 
@@ -86,7 +88,7 @@ public class EntityUpdateWrapper extends EntityChangeBase {
 				if (obj != null) {
 					stringValues.add(obj.toString());
 				} else {
-					stringValues.add(null);
+					stringValues.add("NULL");
 				}
 			}
 			return stringValues;
@@ -101,7 +103,13 @@ public class EntityUpdateWrapper extends EntityChangeBase {
 			PropertyDescriptor desc = BeanUtil.getPropertyDescriptor(entity.getClass(), propertyName);
 			Object objectValue;
 			String stringValue = stringValues.get(i);
-			if (stringValue == null) {
+			/*if (stringValue == null) {
+				objectValue = null;
+			} else {
+				objectValue = StringUtil.parseValue(stringValue, desc.getPropertyType());
+			}*/
+			//hack flexjson: force nulls in list
+			if ("NULL".equals(stringValue)) {
 				objectValue = null;
 			} else {
 				objectValue = StringUtil.parseValue(stringValue, desc.getPropertyType());
@@ -139,15 +147,15 @@ public class EntityUpdateWrapper extends EntityChangeBase {
 	public static void main(String[] args) {
 		
 		JsonMapper mapper = new JsonMapper();
-		LinkedList<String> names = new LinkedList<String>();
+		List<String> names = new LinkedList<String>();
 		names.add(Event.PROPERTY_NAME_endTime);
-		LinkedList<Object> values = new LinkedList<Object>();
+		List<Object> values = new LinkedList<Object>();
 		values.add("x");
 		values.add(2);
 		LinkedList<Long> longList = new LinkedList<Long>();
 		longList.add(3l);
 		longList.add(4l);
-		values.add(longList);
+		//values.add(longList);
 		EntityUpdate update = new EntityUpdate(Event.class, 9, names, values);
 		System.out.println("Original: " + update);
 		
@@ -157,9 +165,22 @@ public class EntityUpdateWrapper extends EntityChangeBase {
 		Object x = mapper.deserialize(s);
 		System.out.println("deserialized: " + BeanUtil.toString(x));
 		
-		System.out.println("SEPC utils");
+		System.out.println("Testing nulls");
 		//System.out.println(StringUtil.EMPTY_STRING)
 		//BeanUtil.setPropertyValue(bean, propertyName, propertyValue);
 		//System.out.println(mapper.deserializeObject("9").getClass().getName());
+		
+		names = Arrays.asList("paramFloat1", "paramParticipantId1", "paramString1");
+		LinkedList<Object> valuesWithNulls = new LinkedList<>();
+		valuesWithNulls.add(null);
+		valuesWithNulls.add(null);
+		valuesWithNulls.add("Injury");
+		EntityUpdate u = new EntityUpdate(EventInfo.class, 1L, names, valuesWithNulls);
+		System.out.println(u);
+		wrapper = new EntityUpdateWrapper(u);
+		s = new JsonMapper().serialize(wrapper);
+		System.out.println(s);
+		Object o = new JsonMapper().deserialize(s);
+		System.out.println(o);
 	}
 }
