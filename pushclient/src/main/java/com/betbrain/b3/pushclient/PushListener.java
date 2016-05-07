@@ -105,7 +105,7 @@ class InitialWorker implements Runnable {
 			String hashKey = DynamoWorker.SEPC_INITIAL + Math.abs(rangeKey.hashCode() % B3Table.DIST_FACTOR);
 			String json = mapper.serialize(entity);
 			//B3CellString[] nameValue = new B3CellString[] {new B3CellString(DynamoWorker.SEPC_CELLNAME_JSON, json)};
-			DynamoWorker.put(B3Table.SEPC, hashKey, rangeKey, new B3CellString(DynamoWorker.SEPC_CELLNAME_JSON, json));
+			DynamoWorker.put(true, B3Table.SEPC, hashKey, rangeKey, new B3CellString(DynamoWorker.SEPC_CELLNAME_JSON, json));
 		}
 	}
 }

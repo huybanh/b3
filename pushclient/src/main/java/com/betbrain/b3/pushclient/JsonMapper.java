@@ -22,7 +22,9 @@ public class JsonMapper {
 		//ExcludeTransformer excludeTransformer = new ExcludeTransformer();
 		flexSer = new JSONSerializer().exclude("beanInfo")
 				.transform(new ExcludeTransformer(), void.class)
-				.include("b3PropertyNames").include("b3PropertyValues");
+				.include("b3PropertyNames")
+				.include("b3PropertyValues")
+				.include("b3Cells");
 	}
 
 	public String serialize(Object entity) {

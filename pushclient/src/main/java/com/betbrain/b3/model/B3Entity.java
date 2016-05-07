@@ -312,7 +312,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		B3KeyEntity entityKey = new B3KeyEntity(entity.getClass().getName(), entity.getId());
 		//B3Update put = new B3Update(B3Table.Entity, entityKey,
 		//		new B3CellString(B3Table.CELL_LOCATOR_THIZ, mapper.serialize(this.entity)));
-		DynamoWorker.put(B3Table.Entity, entityKey.getHashKey(), entityKey.getRangeKey(),
+		DynamoWorker.put(true, B3Table.Entity, entityKey.getHashKey(), entityKey.getRangeKey(),
 						new B3CellString(B3Table.CELL_LOCATOR_THIZ, mapper.serialize(this.entity)));
 		
 		//main table / lookup / link
@@ -333,7 +333,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		
 		//put main entity to main table
 		//B3Update update = new B3Update(entitySpec.mainTable, mainKey, b3Cells.toArray(new B3CellString[b3Cells.size()]));
-		DynamoWorker.put(entitySpec.mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), 
+		DynamoWorker.put(true, entitySpec.mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), 
 				b3Cells.toArray(new B3CellString[b3Cells.size()]));
 	}
 	
@@ -362,7 +362,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		}
 		mainKey.setRevisionId(revisionId);
 		//B3Update update = new B3Update(entitySpec.mainTable, mainKey, b3Cells.toArray(new B3CellString[b3Cells.size()]));
-		DynamoWorker.put(entitySpec.mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), 
+		DynamoWorker.put(true, entitySpec.mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), 
 				b3Cells.toArray(new B3CellString[b3Cells.size()]));
 	}
 	

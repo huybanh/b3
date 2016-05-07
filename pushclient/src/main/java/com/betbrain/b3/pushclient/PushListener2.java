@@ -110,8 +110,9 @@ public class PushListener2 implements SEPCConnectorListener, EntityChangeBatchPr
 		}
 		new Thread() {
 			public void run() {
-
+				DynamoWorker.openLocalWriters();
 				new InitialDumpDeployer(masterMap, 0).initialPutMaster(initialThreads);
+				DynamoWorker.putAllFromLocal();
 				DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSH_WAIT);
 			}
 		}.start();
@@ -184,7 +185,7 @@ class BatchWorker implements Runnable {
 				String rangeKey = B3Key.zeroPadding(BATCHID_DIGIT_COUNT, batch.getId()) +
 						B3Table.KEY_SEP + B3Key.zeroPadding(batchDigitCount, i);
 				i++;
-				DynamoWorker.put(B3Table.SEPC, hashKey, rangeKey,
+				DynamoWorker.put(true, B3Table.SEPC, hashKey, rangeKey,
 					new B3CellString(DynamoWorker.SEPC_CELLNAME_CREATETIME, mapper.serialize(batch.getCreateTime())),
 					new B3CellString(DynamoWorker.SEPC_CELLNAME_JSON, mapper.serialize(wrapper)));
 			}
