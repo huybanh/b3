@@ -73,6 +73,8 @@ class B3Bundle {
 			return entityTable;
 		} else if (b3table == B3Table.SEPC) {
 			return sepcTable;
+		} else if (b3table == B3Table.Setting) {
+			return DynamoWorker.settingTable;
 		} else {
 			throw new RuntimeException("Unmapped table: " + b3table);
 		}

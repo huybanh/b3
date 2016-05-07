@@ -11,7 +11,8 @@ public enum B3Table {
 	EventInfo("event_info", "I"),
 	Outcome("outcome", "C"),
 	BettingOffer("betting_offer", "B"),
-	SEPC("sepc", null);
+	SEPC("sepc", null),
+	Setting("setting", null);
 	
 	public final String name;
 	

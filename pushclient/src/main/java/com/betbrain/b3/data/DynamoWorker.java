@@ -19,6 +19,7 @@ import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.RangeKeyCondition;
 import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.internal.IteratorSupport;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
@@ -53,6 +54,8 @@ public class DynamoWorker {
 	private static final String BUNDLE_CELL_ID = "ID";
 	private static final String BUNDLE_CELL_STATUS = "STATUS";
 	
+	private static final String BUNDLE_ERROR = "ERROR";
+	
 	public static final String BUNDLE_CELL_PUSHSTATUS = "PUSH_STATUS";
 	public static final String BUNDLE_CELL_LASTBATCH_RECEIVED_ID = "LAST_RECEIVED_ID";
 	public static final String BUNDLE_CELL_LASTBATCH_RECEIVED_TIMESTAMP = "LAST_RECEIVED_TIMESTAMP";
@@ -70,7 +73,7 @@ public class DynamoWorker {
 	private  static AmazonDynamoDBClient dynaClient;
 	private static DynamoDB dynamoDB;
 	
-	private static Table settingTable;
+	static Table settingTable;
 	
 	private static void initialize() {
 
@@ -92,6 +95,18 @@ public class DynamoWorker {
 		initBundleByStatus(BUNDLE_STATUS_DELETEWAIT);
 		B3Bundle.workingBundle.deleteTables(dynamoDB);
 		setWorkingBundleStatus(BUNDLE_STATUS_NOTEXIST);
+		
+		QuerySpec spec = new QuerySpec().withHashKey(HASH, BUNDLE_ERROR)
+				.withRangeKeyCondition(new RangeKeyCondition(RANGE).beginsWith(B3Bundle.getWorkingBundleId()));
+		ItemCollection<QueryOutcome> coll = settingTable.query(spec);
+		if (coll == null) {
+			return;
+		}
+		IteratorSupport<Item, QueryOutcome> it = coll.iterator();
+		while (it.hasNext()) {
+			Item item = it.next();
+			delete(B3Table.Setting, BUNDLE_ERROR, item.getString(RANGE));
+		}
 	}
 
 	public static void initBundleCurrent() {
@@ -315,7 +330,7 @@ public class DynamoWorker {
 	}
 	
 	public static void logError(String error) {
-		Item item = new Item().withPrimaryKey(HASH, "ERROR", RANGE, B3Bundle.getWorkingBundleId() + System.currentTimeMillis());
+		Item item = new Item().withPrimaryKey(HASH, BUNDLE_ERROR, RANGE, B3Bundle.getWorkingBundleId() + System.currentTimeMillis());
 		item = item
 				.withString("time", new Date().toString())
 				.withString("message", error);
@@ -367,7 +382,7 @@ public class DynamoWorker {
 					break;
 				} catch (RuntimeException re) {
 					logger.info(re.getClass().getName() + ": " + re.getMessage());
-					logger.info(b3table.name + ": Will retry in 100 ms");
+					logger.info(table.getTableName() + ": Will retry in 100 ms");
 					try {
 						Thread.sleep(100);
 					} catch (InterruptedException e) {
