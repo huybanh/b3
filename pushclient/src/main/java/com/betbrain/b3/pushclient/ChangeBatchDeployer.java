@@ -32,9 +32,9 @@ public class ChangeBatchDeployer {
 				return;
 			}
 		}
-		//DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYING);
+		//DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYING); //for testing only
 		
-		//DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSHING);
+		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSHING);
 		new ChangeBatchDeployer().deployChangeBatches();
 	}
 	

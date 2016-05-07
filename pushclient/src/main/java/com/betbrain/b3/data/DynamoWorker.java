@@ -1,6 +1,7 @@
 package com.betbrain.b3.data;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -311,6 +312,16 @@ public class DynamoWorker {
 				}
 			}
 		}
+	}
+	
+	public static void logError(String error) {
+		Item item = new Item().withPrimaryKey(HASH, "ERROR", RANGE, B3Bundle.getWorkingBundleId() + System.currentTimeMillis());
+		item = item
+				.withString("time", new Date().toString())
+				.withString("message", error);
+
+		logger.error(error);
+		settingTable.putItem(item);
 	}
 
 	public static void updateSetting(B3CellString... cells) {

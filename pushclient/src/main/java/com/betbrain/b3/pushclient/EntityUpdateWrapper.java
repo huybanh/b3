@@ -29,6 +29,17 @@ public class EntityUpdateWrapper extends EntityChangeBase {
 	public EntityUpdateWrapper(EntityUpdate update) {
 		this.update = update;
 	}
+	
+	String validate() {
+		try {
+			if (update.getPropertyNames().size() != update.getPropertyValues().size()) {
+				return "Update with different numbers of names and values";
+			}
+		} catch (NullPointerException ne) {
+			return "Update with null lists of names/values";
+		}
+		return null;
+	}
 
 	public void setEntityClassName(String s) {
 		this.entityClassName = s;

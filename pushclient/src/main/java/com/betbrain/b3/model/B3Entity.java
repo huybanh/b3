@@ -226,6 +226,11 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 			EntityDeleteWrapper delete = (EntityDeleteWrapper) change;
 			B3KeyEntity entityKey = new B3KeyEntity(delete.getEntityClassName(), delete.getEntityId());
 			this.entity = (E) entityKey.load(mapper);
+			if (this.entity == null) {
+				DynamoWorker.logError("Got change-delete, but no entity found: " + 
+						delete.getEntityClassName() + "/" + delete.getEntityId());
+				return;
+			}
 			boolean forMainKeyOnlyFalse = true;
 			buildDownlinks(forMainKeyOnlyFalse, null, mapper);
 			deleteCurrent(mapper);
@@ -235,11 +240,16 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 			System.out.println("CHANGE-UPDATE: " + change);
 			EntityUpdateWrapper update = (EntityUpdateWrapper) change;
 			B3KeyEntity entityKey = new B3KeyEntity(update.getEntityClassName(), update.getEntityId());
-			Entity targetEntity = entityKey.load(mapper);
+			this.entity = entityKey.load(mapper);
+			if (this.entity == null) {
+				DynamoWorker.logError("Got change-update, but no entity found: " + 
+						update.getEntityClassName() + "/" + update.getEntityId());
+				return;
+			}
 			//System.out.println("BEFORE: " + ((BettingOffer) targetEntity).getLastChangedTime().getTime());
-			update.applyChanges(targetEntity);
+			update.applyChanges(this.entity);
 			//System.out.println("AFTER: " + ((BettingOffer) targetEntity).getLastChangedTime().getTime());
-			this.entity = (E) targetEntity;
+			//this.entity = (E) targetEntity;
 			
 			if (entitySpec.revisioned) {
 				boolean forMainKeyOnlyFalse = false;

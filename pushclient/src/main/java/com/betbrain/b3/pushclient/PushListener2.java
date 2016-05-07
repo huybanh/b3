@@ -164,6 +164,11 @@ class BatchWorker implements Runnable {
 				EntityChangeBase wrapper;
 				if (change instanceof EntityUpdate) {
 					wrapper = new EntityUpdateWrapper((EntityUpdate) change);
+					String error = ((EntityUpdateWrapper) wrapper).validate();
+					if (error != null) {
+						DynamoWorker.logError(error);
+						continue;
+					}
 				} else if (change instanceof EntityCreate) {
 					wrapper = new EntityCreateWrapper((EntityCreate) change);
 				} else if (change instanceof EntityDelete) {
