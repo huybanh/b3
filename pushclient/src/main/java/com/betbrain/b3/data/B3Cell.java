@@ -2,9 +2,13 @@ package com.betbrain.b3.data;
 
 public abstract class B3Cell<T> {
 	
-	final String columnName;
+	String columnName;
 	
-	final T value;
+	T value;
+	
+	public B3Cell() {
+		//for flexjson
+	}
 
 	public B3Cell(String columnName, T value) {
 		super();
@@ -13,4 +17,12 @@ public abstract class B3Cell<T> {
 	}
 	
 	abstract String getTypeName();
+	
+	public String getColumnName() {
+		return this.columnName;
+	}
+	
+	public void setColumnName(String name) {
+		this.columnName = name;
+	}
 }

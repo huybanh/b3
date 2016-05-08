@@ -1,9 +1,17 @@
 package com.betbrain.b3.data;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.logging.Logger;
+import java.util.LinkedList;
+
+import org.apache.log4j.Logger;
 
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.regions.Region;
@@ -14,14 +22,23 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
+import com.amazonaws.services.dynamodbv2.document.RangeKeyCondition;
 import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.internal.IteratorSupport;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
+import com.betbrain.b3.pushclient.JsonMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 public class DynamoWorker {
+	
+	private static Logger logger = Logger.getLogger(DynamoWorker.class);
 	
 	static String HASH = "HASH";
 	public static String RANGE = "RANGE";
@@ -48,6 +65,8 @@ public class DynamoWorker {
 	private static final String BUNDLE_CELL_ID = "ID";
 	private static final String BUNDLE_CELL_STATUS = "STATUS";
 	
+	private static final String BUNDLE_ERROR = "ERROR";
+	
 	public static final String BUNDLE_CELL_PUSHSTATUS = "PUSH_STATUS";
 	public static final String BUNDLE_CELL_LASTBATCH_RECEIVED_ID = "LAST_RECEIVED_ID";
 	public static final String BUNDLE_CELL_LASTBATCH_RECEIVED_TIMESTAMP = "LAST_RECEIVED_TIMESTAMP";
@@ -60,12 +79,12 @@ public class DynamoWorker {
 	public static final String SEPC_CHANGEBATCH = "B";
 	public static final String SEPC_CELLNAME_JSON = "JSON";
 	public static final String SEPC_CELLNAME_CREATETIME = "CREATE_TIME";
-	public static final String SEPC_CELLNAME_CHANGES = "CHANGES";
+	//public static final String SEPC_CELLNAME_CHANGES = "CHANGES";
 	
 	private  static AmazonDynamoDBClient dynaClient;
 	private static DynamoDB dynamoDB;
 	
-	private static Table settingTable;
+	static Table settingTable;
 	
 	private static void initialize() {
 
@@ -87,6 +106,18 @@ public class DynamoWorker {
 		initBundleByStatus(BUNDLE_STATUS_DELETEWAIT);
 		B3Bundle.workingBundle.deleteTables(dynamoDB);
 		setWorkingBundleStatus(BUNDLE_STATUS_NOTEXIST);
+		
+		QuerySpec spec = new QuerySpec().withHashKey(HASH, BUNDLE_ERROR)
+				.withRangeKeyCondition(new RangeKeyCondition(RANGE).beginsWith(B3Bundle.getWorkingBundleId()));
+		ItemCollection<QueryOutcome> coll = settingTable.query(spec);
+		if (coll == null) {
+			return;
+		}
+		IteratorSupport<Item, QueryOutcome> it = coll.iterator();
+		while (it.hasNext()) {
+			Item item = it.next();
+			delete(B3Table.Setting, BUNDLE_ERROR, item.getString(RANGE));
+		}
 	}
 
 	public static void initBundleCurrent() {
@@ -171,7 +202,7 @@ public class DynamoWorker {
 			if (count >= BUNDLEIDS.length) {
 				//throw new RuntimeException("Found no bundles with status of " + requiredStatus);
 				//return null;
-				Logger.getLogger(DynamoWorker.class.getName()).info("Found no bundles with status " + requiredStatus);
+				logger.info("Found no bundles with status " + requiredStatus);
 				return false;
 			}
 		}
@@ -205,26 +236,299 @@ public class DynamoWorker {
 	}
 	
 	public static boolean readOnly = false;
+	//public static boolean readOnly = true;
+
+	/*public static void put(B3Update update) {
+		put(update.table, update.key.getHashKey(), update.key.getRangeKey(), update.cells);
+	}*/
 	
-	public static void put(B3Update update) {
-		/*Table dynaTable = getTable(update.table);
-		UpdateItemSpec us = new UpdateItemSpec().withPrimaryKey(
-				HASH, bundleId + update.key.getHashKey(), RANGE, update.key.getRangeKey());
-		if (update.cells != null) {
-			for (B3Cell<?> c : update.cells) {
-				us = us.addAttributeUpdate(new AttributeUpdate(c.columnName).put(c.value));
-			}
-		}*/
+	private static BufferedWriter outOffer;
+	private static BufferedWriter outOutcome;
+	private static BufferedWriter outInfo;
+	private static BufferedWriter outEvent;
+	
+	private static BufferedWriter outEntity;
+	private static BufferedWriter outLink;
+	private static BufferedWriter outLookup;
+	
+	private static BufferedReader inOffer;
+	private static BufferedReader inOutcome;
+	private static BufferedReader inInfo;
+	private static BufferedReader inEvent;
+	
+	private static BufferedReader inEntity;
+	private static BufferedReader inLink;
+	private static BufferedReader inLookup;
+	
+	private static BufferedReader[] allReaders;
+	
+	private static B3Table[] tableByReader;
+	private static Long[] pendTimes = new Long[] {null, null, null, null, null, null, null};
+	private static long[] recordCount = new long[] {0, 0, 0, 0, 0, 0, 0};
+	private static JsonObject[] pendPuts = new JsonObject[] {null, null, null, null, null, null, null};
+
+	private static int readerIndex = 0;
+	
+	public static void openLocalWriters() {
+		try {
+			outOffer = new BufferedWriter(new FileWriter("T_" + B3Table.BettingOffer.name, false));
+			outOutcome = new BufferedWriter(new FileWriter("T_" + B3Table.Outcome.name, false));
+			outInfo = new BufferedWriter(new FileWriter("T_" + B3Table.EventInfo.name, false));
+			outEvent = new BufferedWriter(new FileWriter("T_" + B3Table.Event.name, false));
+			
+			outEntity = new BufferedWriter(new FileWriter("T_" + B3Table.Entity.name, false));
+			outLink = new BufferedWriter(new FileWriter("T_" + B3Table.Link.name, false));
+			outLookup = new BufferedWriter(new FileWriter("T_" + B3Table.Lookup.name, false));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	private static void closeWriters() {
+		try {
+			outOffer.close();
+			outOutcome.close();
+			outInfo.close();
+			outEvent.close();
+			
+			outEntity.close();
+			outLink.close();
+			outLookup.close();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	private static void openLocalReaders() {
+		try {
+			inOffer = new BufferedReader(new FileReader("T_" + B3Table.BettingOffer.name));
+			inOutcome = new BufferedReader(new FileReader("T_" + B3Table.Outcome.name));
+			inInfo = new BufferedReader(new FileReader("T_" + B3Table.EventInfo.name));
+			inEvent = new BufferedReader(new FileReader("T_" + B3Table.Event.name));
+			
+			inEntity = new BufferedReader(new FileReader("T_" + B3Table.Entity.name));
+			inLink = new BufferedReader(new FileReader("T_" + B3Table.Link.name));
+			inLookup = new BufferedReader(new FileReader("T_" + B3Table.Lookup.name));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 		
-		String rangeKey = update.key.getRangeKey();
+		allReaders = new BufferedReader[] {
+				inOffer, inOutcome, inInfo, inEvent, inEntity, inLink, inLookup
+		};
+		tableByReader = new B3Table[] {
+				B3Table.BettingOffer, B3Table.Outcome, B3Table.EventInfo, B3Table.Event,
+				B3Table.Entity, B3Table.Link, B3Table.Lookup
+		};
+	}
+	
+	private static void closeReaders() {
+		try {
+			inOffer.close();
+			inOutcome.close();
+			inInfo.close();
+			inEvent.close();
+			
+			inEntity.close();
+			inLink.close();
+			inLookup.close();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	private static BufferedWriter getWriter(B3Table b3table) {
+
+		if (b3table == B3Table.BettingOffer) {
+			return outOffer;
+		} else if (b3table == B3Table.Event) {
+			return outEvent;
+		} else if (b3table == B3Table.EventInfo) {
+			return outInfo;
+		} else if (b3table == B3Table.Outcome) {
+			return outOutcome;
+		} else if (b3table == B3Table.Lookup) {
+			return outLookup;
+		} else if (b3table == B3Table.Link) {
+			return outLink;
+		} else if (b3table == B3Table.Entity) {
+			return outEntity;
+		} else {
+			throw new RuntimeException("Unmapped table: " + b3table);
+		}
+	}
+	
+	public static void putAllFromLocal() {
+		
+		closeWriters();
+		openLocalReaders();
+		
+		final LinkedList<Object> threadIds = new LinkedList<>();
+		for (int i = 0; i < 100; i++) {
+			final Object tid = new Object();
+			threadIds.add(tid);
+			new Thread() {
+				
+				//private JsonMapper mapper = new JsonMapper();
+				private Gson gson = new Gson();
+				
+				public void run() {
+					int printCount = 0;
+					while (true) {
+						BufferedReader reader = null;
+						int readerChecked = 0;
+						JsonObject putBean = null;
+						String line = null;
+						int thisReaderIndex;
+						synchronized (DynamoWorker.class) {
+							while (readerChecked < allReaders.length + 1) {
+								readerChecked++;
+								readerIndex++;
+								if (readerIndex == allReaders.length) {
+									readerIndex = 0;
+								}
+								if (pendTimes[readerIndex] != null && 
+										System.currentTimeMillis() - pendTimes[readerIndex] < 100) {
+									continue;
+								}
+								reader = allReaders[readerIndex];
+								if (reader != null) {
+									break;
+								}
+							}
+							if (reader == null) {
+								boolean foundReader = false;
+								for (BufferedReader r : allReaders) {
+									if (r != null) {
+										foundReader = true;
+										break;
+									}
+								}
+								if (foundReader) {
+									try {
+										System.out.println(Thread.currentThread().getName() + 
+												": All tables are busy, sleep 1000 ms");
+										Thread.sleep(1000);
+									} catch (InterruptedException e) {
+									}
+									continue;
+								}
+								System.out.println(Thread.currentThread().getName() + 
+										": No more readers, stop thread");
+								synchronized (threadIds) {
+									threadIds.remove(tid);
+									threadIds.notifyAll();
+								}
+								return;
+							}
+						
+							//readerIndex pointing to a put
+							thisReaderIndex = readerIndex;
+							putBean = pendPuts[readerIndex];
+							pendPuts[readerIndex] = null;
+							if (putBean == null) {
+								try {
+									line = reader.readLine();
+								} catch (IOException e) {
+									throw new RuntimeException(e);
+								}
+								if (line == null) {
+									allReaders[readerIndex] = null;
+									continue;
+								}
+							}
+						}
+						
+						if (putBean == null) {
+							//System.out.println(line);
+							//putBean = (PutBean) mapper.deserialize(line);
+							putBean = gson.fromJson(line, JsonObject.class);
+						}
+						
+						//List<B3Cell<?>> cells = putBean.getB3Cells();
+						JsonElement ele = putBean.get("b3Cells");
+						B3Cell<?>[] cells = null;
+						if (ele != null && !ele.isJsonNull()) {
+							JsonArray arr = ele.getAsJsonArray();
+							cells = new B3Cell<?>[arr.size()];
+							for (int i = 0; i < arr.size(); i++) {
+								JsonObject oneCell = arr.get(i).getAsJsonObject();
+								String colName = oneCell.get("columnName").getAsString();
+								String colValue = oneCell.get("value").getAsString();
+								cells[i] = new B3CellString(colName, colValue);
+							}
+						}
+						
+						String range = null;
+						ele = putBean.get("range");
+						if (ele != null && !ele.isJsonNull()) {
+							range = ele.getAsString();
+						}
+						boolean success = put(false, tableByReader[thisReaderIndex], 
+								putBean.get("hash").getAsString(), 
+								range,
+								cells);
+						
+						synchronized (DynamoWorker.class) {
+							if (!success) {
+								pendPuts[thisReaderIndex] = putBean;
+								pendTimes[thisReaderIndex] = System.currentTimeMillis();
+							} else {
+								recordCount[thisReaderIndex]++;
+								printCount++;
+								if (printCount == 5000) {
+									printCount = 0;
+									System.out.println(Thread.currentThread().getName() + 
+											": Table " + tableByReader[readerIndex].name + 
+											": records: " + recordCount[readerIndex]);
+								}
+							}
+						}
+					}
+				}
+			}.start();
+		}
+		
+		synchronized (threadIds) {
+			while (true) {
+				if (threadIds.isEmpty()) {
+					break;
+				}
+				try {
+					threadIds.wait();
+				} catch (InterruptedException e) {
+				}
+			}
+		}
+		
+		System.out.println("Finishing");
+		closeReaders();
+	}
+	
+	static void putFile(JsonMapper mapper, B3Table b3table, String hashKey, String rangeKey, B3Cell<?>... cells) {
+
+		try {
+			BufferedWriter writer = getWriter(b3table);
+			synchronized (writer) {
+				writer.write(mapper.serialize(new PutBean(hashKey, rangeKey, cells)));
+				writer.newLine();
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public static boolean put(boolean tryToDie, B3Table b3table, String hashKey, String rangeKey, B3Cell<?>... cells) {
+		
+		//String rangeKey = update.key.getRangeKey();
 		Item item ;
 		if (rangeKey != null) {
-			item = new Item().withPrimaryKey(HASH, update.key.getHashKey(), RANGE, update.key.getRangeKey());
+			item = new Item().withPrimaryKey(HASH, hashKey, RANGE, rangeKey);
 		} else {
-			item = new Item().withPrimaryKey(HASH, update.key.getHashKey());
+			item = new Item().withPrimaryKey(HASH, hashKey);
 		}
-		if (update.cells != null) {
-			for (B3Cell<?> c : update.cells) {
+		if (cells != null) {
+			for (B3Cell<?> c : cells) {
 				if (c instanceof B3CellString) {
 					item = item.withString(c.columnName, ((B3CellString) c).value);
 				} else if (c instanceof B3CellLong) {
@@ -237,14 +541,31 @@ public class DynamoWorker {
 			}
 		}
 
-		Table dynaTable = B3Bundle.workingBundle.getTable(update.table);
-		System.out.println("DB-PUT " + update);
+		Table dynaTable = B3Bundle.workingBundle.getTable(b3table);
+		//System.out.println("DB-PUT " + update);
 		if (!readOnly) {
-			dynaTable.putItem(item);
+			while (true) {
+				try {
+					dynaTable.putItem(item);
+					break;
+				} catch (RuntimeException re) {
+					logger.info(Thread.currentThread().getName() + ": " + b3table.name + ": " + re.getMessage());
+					if (!tryToDie) {
+						return false;
+					}
+					logger.info(b3table.name + ": Will retry in 100 ms");
+					try {
+						Thread.sleep(100);
+					} catch (InterruptedException e) {
+						// ignore
+					}
+				}
+			}
 		}
+		return true;
 	}
 	
-	public static void putSepc(String hashKey, String rangeKey, String[]... nameValuePairs ) {
+	/*public static void putSepc(String hashKey, String rangeKey, String[]... nameValuePairs ) {
 		
 		Item item = new Item().withPrimaryKey(HASH, hashKey, RANGE, rangeKey);
 		if (nameValuePairs != null) {
@@ -253,53 +574,90 @@ public class DynamoWorker {
 			}
 		}
 
-		System.out.println("SEPC: " + hashKey + "/" + rangeKey);
+		//System.out.println("SEPC: " + hashKey + "/" + rangeKey);
 		if (!readOnly) {
 			B3Bundle.workingBundle.sepcTable.putItem(item);
 		}
-	}
+	}*/
 
-	public static void update(B3Update update) {
+	/*public static void update(B3Update b3update) {
+		update(b3update.table, b3update.key.getHashKey(), b3update.key.getRangeKey(), b3update.cells);
+	}*/
+	
+	public static void update(B3Table b3table, String hashKey, String rangeKey, B3Cell<?>... cells) {
 
-		UpdateItemSpec us = new UpdateItemSpec().withPrimaryKey(
-				HASH, update.key.getHashKey(), RANGE, update.key.getRangeKey());
-		if (update.cells != null) {
-			for (B3Cell<?> c : update.cells) {
-				us = us.addAttributeUpdate(new AttributeUpdate(c.columnName).put(c.value));
-			}
+		UpdateItemSpec us;
+		//String rangeKey = update.key.getRangeKey();
+		if (rangeKey != null) {
+			us = new UpdateItemSpec().withPrimaryKey(HASH, hashKey, RANGE, rangeKey);
+		} else {
+			us = new UpdateItemSpec().withPrimaryKey(HASH, hashKey);
 		}
-
-		Table dynaTable = B3Bundle.workingBundle.getTable(update.table);
-		System.out.println("DB-UPDATE " + update);
-		if (!readOnly) {
-			dynaTable.updateItem(us);
-		}
-	}
-
-	public static void updateSetting(B3CellString... cells) {
-
-		UpdateItemSpec us = new UpdateItemSpec().withPrimaryKey(
-				HASH, BUNDLE_HASH, RANGE, B3Bundle.getWorkingBundleId());
 		if (cells != null) {
 			for (B3Cell<?> c : cells) {
 				us = us.addAttributeUpdate(new AttributeUpdate(c.columnName).put(c.value));
 			}
 		}
 
-		System.out.println("DB-UPDATE " + settingTable.getTableName());
+		Table dynaTable = B3Bundle.workingBundle.getTable(b3table);
+		//System.out.println("DB-UPDATE " + update);
+		if (!readOnly) {
+			while (true) {
+				try {
+					dynaTable.updateItem(us);
+					break;
+				} catch (RuntimeException re) {
+					re.printStackTrace();
+					logger.info(re.getClass().getName() + ": " + re.getMessage());
+					logger.info(b3table.name + ": Will retry in 100 ms");
+					try {
+						Thread.sleep(100);
+					} catch (InterruptedException e) {
+						// ignore
+					}
+				}
+			}
+		}
+	}
+	
+	public static void logError(String error) {
+		/*Item item = new Item().withPrimaryKey(HASH, BUNDLE_ERROR, RANGE,
+				B3Bundle.getWorkingBundleId() + System.currentTimeMillis());
+		item = item
+				.withString("time", new Date().toString())
+				.withString("message", error);
+		settingTable.putItem(item);*/
+		
+		put(true, B3Table.Setting, BUNDLE_ERROR, B3Bundle.getWorkingBundleId() + System.currentTimeMillis(),
+				new B3CellString("time", new Date().toString()),
+				new B3CellString("message", error));
+
+		logger.error(error);
+	}
+
+	public static void updateSetting(B3CellString... cells) {
+
+		update(B3Table.Setting, BUNDLE_HASH, B3Bundle.getWorkingBundleId(), cells);
+		/*UpdateItemSpec us = new UpdateItemSpec().withPrimaryKey(
+				HASH, BUNDLE_HASH, RANGE, B3Bundle.getWorkingBundleId());
+		if (cells != null) {
+			for (B3Cell<?> c : cells) {
+				us = us.addAttributeUpdate(new AttributeUpdate(c.columnName).put(c.value));
+			}
+		}
 		if (!readOnly) {
 			settingTable.updateItem(us);
-		}
+		}*/
 	}
 
 	public static Item get(B3Table b3table, String hashKey, String rangeKey) {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
 		if (rangeKey == null) {
-			System.out.println("DB-GET " + table.getTableName() + ": " + hashKey);
+			//System.out.println("DB-GET " + table.getTableName() + ": " + hashKey);
 			return table.getItem(HASH, hashKey);
 		} else {
-			System.out.println("DB-GET " + table.getTableName() + ": " + hashKey + "@" + rangeKey);
+			//System.out.println("DB-GET " + table.getTableName() + ": " + hashKey + "@" + rangeKey);
 			return table.getItem(HASH, hashKey, RANGE, rangeKey);
 		}
 	}
@@ -307,12 +665,25 @@ public class DynamoWorker {
 	public static void delete(B3Table b3table, String hashKey, String rangeKey) {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
-		System.out.println("DB-DELETE " + b3table.name + " " + hashKey + "@" + rangeKey);
+		//System.out.println("DB-DELETE " + b3table.name + " " + hashKey + "@" + rangeKey);
 		if (!readOnly) {
-			if (rangeKey != null) {
-				table.deleteItem(HASH, hashKey, RANGE, rangeKey);
-			} else {
-				table.deleteItem(HASH, hashKey);
+			while (true) {
+				try {
+					if (rangeKey != null) {
+						table.deleteItem(HASH, hashKey, RANGE, rangeKey);
+					} else {
+						table.deleteItem(HASH, hashKey);
+					}
+					break;
+				} catch (RuntimeException re) {
+					logger.info(re.getClass().getName() + ": " + re.getMessage());
+					logger.info(table.getTableName() + ": Will retry in 100 ms");
+					try {
+						Thread.sleep(100);
+					} catch (InterruptedException e) {
+						// ignore
+					}
+				}
 			}
 		}
 	}
@@ -341,7 +712,7 @@ public class DynamoWorker {
 			/*if (!hashKey.startsWith(bundle.id)) {
 				return;
 			}*/
-			System.out.println(hashKey);
+			//System.out.println(hashKey);
 			//table.deleteItem(HASH, hashKey, RANGE, currentItem.getString(RANGE));
         }
 	}
@@ -377,35 +748,14 @@ public class DynamoWorker {
 			spec = spec.withMaxResultSize(maxResulteSize);
 		}
 		return table.query(spec);
-		/*ScanRequest scanRequest = new ScanRequest()
-		        .withTableName(table.getTableName())
-		        .withLimit(10)
-		        .addExclusiveStartKeyEntry(HASH, new AttributeValue(hashKey));
-		scanRequest.addExclusiveStartKeyEntry(RANGE, new AttributeValue(""));
-		ScanResult result = dynaClient.scan(scanRequest);
-		for (Map<String, AttributeValue> item : result.getItems()){
-	        for (Entry<String, AttributeValue> x : item.entrySet()) {
-	        	System.out.println(x.getKey() + ": " + x.getValue());
-	        }
-	    }*/
-		
-		/*ScanSpec spec = new ScanSpec().withExclusiveStartKey(HASH, hashKey, RANGE, "a");
-		ItemCollection<ScanOutcome> coll = table.scan(spec);
-		IteratorSupport<Item, ScanOutcome> it = coll.iterator();
-		while (it.hasNext()) {
-			Item item = it.next();
-		}*/
-		
-		/*ItemCollection<QueryOutcome> coll = table.query(HASH, hashKey);
-		IteratorSupport<Item, QueryOutcome> it = coll.iterator();
-		while (it.hasNext()) {
-			Item item = it.next();
-			
-		}*/
 	}
-
-	public static void main(String[] args) {
-		initBundleCurrent();
-		System.out.println(B3Bundle.workingBundle);
+	
+	public static ItemCollection<QueryOutcome> queryRangeBeginsWith(
+			B3Table b3table, String hashKey, String rangeStart) {
+		
+		Table table = B3Bundle.workingBundle.getTable(b3table);
+		QuerySpec spec = new QuerySpec().withHashKey(HASH, hashKey)
+				.withRangeKeyCondition(new RangeKeyCondition(RANGE).beginsWith(rangeStart));
+		return table.query(spec);
 	}
 }

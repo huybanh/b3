@@ -73,6 +73,8 @@ class B3Bundle {
 			return entityTable;
 		} else if (b3table == B3Table.SEPC) {
 			return sepcTable;
+		} else if (b3table == B3Table.Setting) {
+			return DynamoWorker.settingTable;
 		} else {
 			throw new RuntimeException("Unmapped table: " + b3table);
 		}
@@ -81,17 +83,17 @@ class B3Bundle {
 	static void createTables(DynamoDB dynamoDB, String id) {
 
 		Table[] tables = new Table[8];
-		int capaHigh = 500;
-		int capaLow = 100;
+		int capaHigh = 1500;
+		//int capaLow = 200;
 		int i = 0;
-		tables[i++] = createTable(dynamoDB, id, "offer", 1, capaLow, true);
-		tables[i++] = createTable(dynamoDB, id, "event", 1, capaLow, true);
-		tables[i++] = createTable(dynamoDB, id, "event_info", 1, 10, true);
-		tables[i++] = createTable(dynamoDB, id, "outcome", 1, capaLow, true);
-		tables[i++] = createTable(dynamoDB, id, "lookup", 1, capaHigh, true);
+		tables[i++] = createTable(dynamoDB, id, "offer", 1, 500, true);
+		tables[i++] = createTable(dynamoDB, id, "event", 1, 100, true);
+		tables[i++] = createTable(dynamoDB, id, "event_info", 1, 50, true);
+		tables[i++] = createTable(dynamoDB, id, "outcome", 1, capaHigh, true);
+		tables[i++] = createTable(dynamoDB, id, "lookup", 1, 2000, true);
 		tables[i++] = createTable(dynamoDB, id, "link", 1, capaHigh, true);
-		tables[i++] = createTable(dynamoDB, id, "entity", 1, /*capaHigh*/capaLow, false);
-		tables[i++] = createTable(dynamoDB, id, "sepc", 1, 200/*capaLow*/, true);
+		tables[i++] = createTable(dynamoDB, id, "entity", 1, capaHigh, true);
+		tables[i++] = createTable(dynamoDB, id, "sepc", 1, 400/*capaLow*/, true);
 		for (Table t : tables) {
 			try {
 		        System.out.println("Waiting for " + t.getTableName() + " to be created...this may take a while...");
@@ -130,7 +132,9 @@ class B3Bundle {
             attributeDefinitions, 
             new ProvisionedThroughput()
                 .withReadCapacityUnits(readCapacityUnits)
+            	//.withReadCapacityUnits(1L)
                 .withWriteCapacityUnits(writeCapacityUnits));
+            	//.withWriteCapacityUnits(1L));
         //table.waitForActive();
         return table;
     }

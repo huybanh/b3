@@ -23,7 +23,7 @@ import com.betbrain.sepc.connector.sportsmodel.Outcome;
 
 public class InitialDumpDeployer {
 	
-    //private final Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = Logger.getLogger(this.getClass());
 	
 	//private final int totalCount;
 	
@@ -42,25 +42,27 @@ public class InitialDumpDeployer {
 	}*/
 	
 	@SuppressWarnings("unchecked")
-	private final LinkedList<Runnable>[] allTasks = new LinkedList[] {
+	private final ArrayList<Runnable>[] allTasks = new ArrayList[] {
 			//entity
-			new LinkedList<Runnable>(),
+			new ArrayList<Runnable>(),
 			//event
-			new LinkedList<Runnable>(),
+			new ArrayList<Runnable>(),
 			//eventIno
-			new LinkedList<Runnable>(),
+			new ArrayList<Runnable>(),
 			//outcome
-			new LinkedList<Runnable>(),
+			new ArrayList<Runnable>(),
 			//offer
-			new LinkedList<Runnable>()
+			new ArrayList<Runnable>()
 	};
 	
-	private LinkedList<Runnable> entityTasks = allTasks[0];
-	private LinkedList<Runnable> eventTasks = allTasks[1];
-	private LinkedList<Runnable> eventInfoTasks = allTasks[2];
-	private LinkedList<Runnable> outcomeTasks = allTasks[3];
-	private LinkedList<Runnable> offerTasks = allTasks[4];
+	private ArrayList<Runnable> entityTasks = allTasks[0];
+	private ArrayList<Runnable> eventTasks = allTasks[1];
+	private ArrayList<Runnable> eventInfoTasks = allTasks[2];
+	private ArrayList<Runnable> outcomeTasks = allTasks[3];
+	private ArrayList<Runnable> offerTasks = allTasks[4];
 	private int taskTypeIndex = 0;
+	
+	//private ArrayList<Runnable> allTasks = new ArrayList<>();
 	
 	public InitialDumpDeployer(HashMap<String, HashMap<Long, Entity>> masterMap, int totalCount) {
 
@@ -77,14 +79,22 @@ public class InitialDumpDeployer {
 		initialPutAllOutcomes();
 		initialPutAllOffers();
 		
+		int allTaskCount = 0;
+		for (ArrayList<?> subList : allTasks) {
+			allTaskCount += subList.size();
+		}
+		final int allTaskCountFinal = allTaskCount;
+		
 		final ArrayList<Object> threadIds = new ArrayList<Object>();
 		for (int i = 0; i < threads; i++) {
 			final Object oneThreadId = new Object();
 			threadIds.add(oneThreadId);
 			new Thread() {
 				public void run() {
+					int remainPrint = 0;
 					do {
 						Runnable oneTask;
+						Integer remainTaskCount = null;
 						synchronized (allTasks) {
 							int taskTypeCount = 0;
 							do {
@@ -104,9 +114,24 @@ public class InitialDumpDeployer {
 									return;
 								}
 							} while (true);
-							oneTask = allTasks[taskTypeIndex].remove();
+							oneTask = allTasks[taskTypeIndex].remove(0);
+							if (remainPrint == 0) {
+								remainTaskCount = 0;
+								for (ArrayList<?> subList : allTasks) {
+									remainTaskCount += subList.size();
+								}
+							}
+							remainPrint++;
+							if (remainPrint == 50) {
+								remainPrint = 0;
+							}
+							//oneTask = allTasks.remove(0);
 						}
-						
+
+						if (remainTaskCount != null) {
+							logger.info(Thread.currentThread().getName() +  
+									": Tasks remain: " + remainTaskCount + " of " + allTaskCountFinal);
+						}
 						oneTask.run();
 						//totalProcessedCount += oneTask.subTotalCount;
 						//logger.info("Totally deployed " + totalProcessedCount + " of " + totalCount);
@@ -119,6 +144,7 @@ public class InitialDumpDeployer {
 		//wait for all initial deploying threads to finish
 		while (true) {
 			synchronized (allTasks) {
+				logger.info("Running initial deploying threads: " + threadIds.size());
 				if (!threadIds.isEmpty()) {
 					try {
 						allTasks.wait();
@@ -240,7 +266,7 @@ public class InitialDumpDeployer {
 			}
 			subList.add(e);
 			i++;
-			if (i == 1000) {
+			if (i == 50000) {
 				subList = null;
 				i = 0;
 			}
@@ -255,7 +281,11 @@ public class InitialDumpDeployer {
 			Collection<Entity>[] subLists = split(entities);
 			final int subTotalCount = entities.size();
 			final int[] subProcessedCount = new int[] {0};
-			final String subType = entry.getKey();
+			//final String subType = entry.getKey();
+			final EntitySpec2 spec = EntitySpec2.get(entry.getKey());
+			if (spec == null) {
+				continue;
+			}
 			for (Collection<Entity> oneSubList : subLists) {
 				final Collection<Entity> oneSubListFinal = oneSubList;
 				Runnable oneTask = new Runnable() {
@@ -269,23 +299,24 @@ public class InitialDumpDeployer {
 						//int count = 0;
 						for (Entity entity : oneSubListFinal) {
 							//processedCount++;
-							EntitySpec2 spec = EntitySpec2.get(entity.getClass().getName());
+							//EntitySpec2 spec = EntitySpec2.get(entity.getClass().getName());
 							//String shortName = spec.entityClassName;
-							if (spec == null) {
-								continue;
-							}
+							//if (spec == null) {
+							//	continue;
+							//}
 							//count++;
 							//if (processedCount % 1000 == 0) {
 								//logger.info("Entity " + shortName+ ": deployed " + processedCount + " of " + subTotalCount);
 							//}
 							B3KeyEntity entityKey = new B3KeyEntity(entity);
-							B3Update update = new B3Update(B3Table.Entity, entityKey, 
+							//B3Update update = new B3Update(B3Table.Entity, entityKey, 
+							//		new B3CellString(B3Table.CELL_LOCATOR_THIZ, jsonMapper.serialize(entity)));
+							DynamoWorker.putFile(jsonMapper, B3Table.Entity, entityKey.getHashKey(), entityKey.getRangeKey(), 
 									new B3CellString(B3Table.CELL_LOCATOR_THIZ, jsonMapper.serialize(entity)));
-							DynamoWorker.put(update);
 						}
 						synchronized (subProcessedCount) {
 							subProcessedCount[0] += oneSubListFinal.size();
-							logger.info("Entity " + subType + ": deployed " + subProcessedCount[0] + " of " + subTotalCount);
+							logger.info(Thread.currentThread().getName() + ": Entity " + spec.shortName + ": deployed " + subProcessedCount[0] + " of " + subTotalCount);
 						}
 					}
 				};
@@ -303,7 +334,7 @@ public class InitialDumpDeployer {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private <E extends Entity> void initialPutAllToMainTable(LinkedList<Runnable> runnerList, 
+	private <E extends Entity> void initialPutAllToMainTable(ArrayList<Runnable> runnerList, 
 			final B3Table table, /*final int start, final Integer end,*/
 			final Class<E> entityClazz, final B3KeyBuilder<E> keyBuilder) {
 
@@ -336,15 +367,17 @@ public class InitialDumpDeployer {
 						
 						//put linked entities to table main, lookup, link
 						LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
-						putToLookupAndLinkRecursively(table, b3key, b3Cells, null, b3entity, false, masterMap, jsonMapper);
+						putToLookupAndLinkRecursively(true, table, b3key, b3Cells, null, b3entity, false, masterMap, jsonMapper);
 						
 						//put main entity to main table
-						B3Update update = new B3Update(table, b3key, b3Cells.toArray(new B3CellString[b3Cells.size()]));
-						DynamoWorker.put(update);
+						//B3Update update = new B3Update(table, b3key, b3Cells.toArray(new B3CellString[b3Cells.size()]));
+						DynamoWorker.putFile(jsonMapper, table, b3key.getHashKey(), b3key.getRangeKey(), 
+								b3Cells.toArray(new B3CellString[b3Cells.size()]));
 						
 						//put main entity revision to main table
 						b3key.setRevisionId("0");
-						DynamoWorker.put(update);
+						DynamoWorker.putFile(jsonMapper, table, b3key.getHashKey(), b3key.getRangeKey(), 
+								b3Cells.toArray(new B3CellString[b3Cells.size()]));
 						
 						//entity table
 						/*B3KeyEntity entityKey = new B3KeyEntity(entity);
@@ -358,7 +391,7 @@ public class InitialDumpDeployer {
 					}
 					synchronized (subProcessedCount) {
 						subProcessedCount[0] += oneSubListFinal.size();
-						logger.info(table.name + ": deployed " + subProcessedCount[0] + " of " + allEntities.size());
+						logger.info(Thread.currentThread().getName() + ": " + table.name + ": deployed " + subProcessedCount[0] + " of " + allEntities.size());
 					}
 				}
 			};
@@ -367,7 +400,7 @@ public class InitialDumpDeployer {
 		}
 	}
 	
-	public static <E extends Entity>void putToLookupAndLinkRecursively(
+	public static <E extends Entity>void putToLookupAndLinkRecursively(boolean putToFile,
 			B3Table mainTable, B3Key mainKey, LinkedList<B3Cell<?>> mainCells, 
 			final String cellName, B3Entity<?> b3entity, boolean noActualPuts,
 			HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper jsonMapper) {
@@ -387,8 +420,12 @@ public class InitialDumpDeployer {
 		if (!noActualPuts) {
 			B3KeyLookup lookupKey = new B3KeyLookup(
 					b3entity.entity, mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), thisCellName);
-			B3Update update = new B3Update(B3Table.Lookup, lookupKey);
-			DynamoWorker.put(update);
+			//B3Update update = new B3Update(B3Table.Lookup, lookupKey);
+			if (putToFile) {
+				DynamoWorker.putFile(jsonMapper, B3Table.Lookup, lookupKey.getHashKey(), lookupKey.getRangeKey());
+			} else {
+				DynamoWorker.put(true, B3Table.Lookup, lookupKey.getHashKey(), lookupKey.getRangeKey());
+			}
 		}
 		
 		EntityLink[] linkedEntities = b3entity.getDownlinkedEntities();
@@ -403,8 +440,12 @@ public class InitialDumpDeployer {
 				//put linked entity to table link
 				if (!noActualPuts) {
 					B3KeyLink linkKey = new B3KeyLink(link.linkedEntityClazz, link.linkedEntityId, b3entity.entity, link.name); //reverse link direction
-					B3Update update = new B3Update(B3Table.Link, linkKey);
-					DynamoWorker.put(update);
+					//B3Update update = new B3Update(B3Table.Link, linkKey);
+					if (putToFile) {
+						DynamoWorker.putFile(jsonMapper, B3Table.Link, linkKey.getHashKey(), linkKey.getRangeKey());
+					} else {
+						DynamoWorker.put(true, B3Table.Link, linkKey.getHashKey(), linkKey.getRangeKey());
+					}
 					
 					//commented out, as we can always find a link without information from lookup table
 					//also, put link to lookup: Main entity -> link location
@@ -420,7 +461,7 @@ public class InitialDumpDeployer {
 						childCellName = cellName + B3Table.CELL_LOCATOR_SEP + link.name;
 					}
 					putToLookupAndLinkRecursively(
-							mainTable, mainKey, mainCells, childCellName, link.linkedEntity, noActualPuts, masterMap, jsonMapper);
+							putToFile, mainTable, mainKey, mainCells, childCellName, link.linkedEntity, noActualPuts, masterMap, jsonMapper);
 				}
 			}
 		}

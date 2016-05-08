@@ -111,7 +111,7 @@ public enum EntitySpec2 {
 				idPropertyNames.add(one.getLinkName());
 			}
 		}
-		for (String changedPropertyName : update.getPropertyNames()) {
+		for (String changedPropertyName : update.getB3PropertyNames()) {
 			if (idPropertyNames.contains(changedPropertyName)) {
 				return true;
 			}
