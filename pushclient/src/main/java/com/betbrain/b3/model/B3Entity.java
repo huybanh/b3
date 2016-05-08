@@ -95,7 +95,8 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		return links;
 	}
 	
-	abstract public void buildDownlinks(boolean forMainKeyOnly, HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper);
+	abstract public void buildDownlinks(boolean forMainKeyOnly, 
+			HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper);
 	
 	/*@SuppressWarnings("rawtypes")
 	static <E extends B3Entity, F> E build(Long id, E e, Class<? extends Entity> clazz,
@@ -171,7 +172,8 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		throw new RuntimeException();
 	}
 	
-	public static void applyChange(String createTime, EntityChangeBase change, JsonMapper mapper) {
+	public static void applyChange(String createTime, EntityChangeBase change, 
+			HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper) {
 		
 		/*if (true) {
 			System.out.println(change);
@@ -199,7 +201,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		try {
 			b3entity = entitySpec.b3class.newInstance();
 			b3entity.entitySpec = entitySpec;
-			b3entity.applyChangeInternal(createTime, change, mapper);
+			b3entity.applyChangeInternal(createTime, change, masterMap, mapper);
 		} catch (InstantiationException e) {
 			throw new RuntimeException(e);
 		} catch (IllegalAccessException e) {
@@ -208,38 +210,41 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private void applyChangeInternal(String createTime, EntityChangeBase change, JsonMapper mapper) {
+	private void applyChangeInternal(String createTime, EntityChangeBase change, 
+			HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper) {
 		
 		if (change instanceof EntityCreateWrapper) {
 			System.out.println("CHANGE-CREATE: " + change);
 			this.entity = (E) ((EntityCreateWrapper) change).getEntity();
 			boolean forMainKeyOnlyFalse = false;
-			buildDownlinks(forMainKeyOnlyFalse, null, mapper);
-			putCurrent(mapper);
+			buildDownlinks(forMainKeyOnlyFalse, masterMap, null);
+			putCurrent(masterMap, mapper);
 			if (entitySpec.revisioned) {
-				putRevision(createTime, mapper);
+				putRevision(createTime, masterMap, mapper);
 			}
 		
 		} else if (change instanceof EntityDeleteWrapper) {
 			System.out.println("CHANGE-DELETE: " + change);
 			EntityDeleteWrapper delete = (EntityDeleteWrapper) change;
-			B3KeyEntity entityKey = new B3KeyEntity(delete.getEntityClassName(), delete.getEntityId());
-			this.entity = (E) entityKey.load(mapper);
+			//B3KeyEntity entityKey = new B3KeyEntity(delete.getEntityClassName(), delete.getEntityId());
+			//this.entity = (E) entityKey.load(mapper);
+			this.entity = (E) masterMap.get(delete.getEntityClassName()).get(delete.getEntityId());
 			if (this.entity == null) {
 				DynamoWorker.logError("Got change-delete, but no entity found: " + 
 						delete.getEntityClassName() + "/" + delete.getEntityId());
 				return;
 			}
 			boolean forMainKeyOnlyFalse = true;
-			buildDownlinks(forMainKeyOnlyFalse, null, mapper);
+			buildDownlinks(forMainKeyOnlyFalse, masterMap, null);
 			deleteCurrent(mapper);
 			
 		} else if (change instanceof EntityUpdateWrapper) {
 			
 			System.out.println("CHANGE-UPDATE: " + change);
 			EntityUpdateWrapper update = (EntityUpdateWrapper) change;
-			B3KeyEntity entityKey = new B3KeyEntity(update.getEntityClassName(), update.getEntityId());
-			this.entity = entityKey.load(mapper);
+			//B3KeyEntity entityKey = new B3KeyEntity(update.getEntityClassName(), update.getEntityId());
+			//this.entity = entityKey.load(mapper);
+			this.entity = (E) masterMap.get(update.getEntityClassName()).get(update.getEntityId());
 			if (this.entity == null) {
 				DynamoWorker.logError("Got change-update, but no entity found: " + 
 						update.getEntityClassName() + "/" + update.getEntityId());
@@ -252,20 +257,20 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 			
 			if (entitySpec.revisioned) {
 				boolean forMainKeyOnlyFalse = false;
-				buildDownlinks(forMainKeyOnlyFalse, null, mapper);
-				putRevision(createTime, mapper);
+				buildDownlinks(forMainKeyOnlyFalse, masterMap, null);
+				putRevision(createTime, masterMap, mapper);
 				if (entitySpec.isStructuralChange(update)) {
 					deleteCurrent(mapper);
-					putCurrent(mapper);
+					putCurrent(masterMap, mapper);
 				} else {
 					updateCurrent(mapper);
 				}
 			} else {
 				if (entitySpec.isStructuralChange(update)) {
 					boolean forMainKeyOnlyFalse = false;
-					buildDownlinks(forMainKeyOnlyFalse, null, mapper);
+					buildDownlinks(forMainKeyOnlyFalse, masterMap, null);
 					deleteCurrent(mapper);
-					putCurrent(mapper);
+					putCurrent(masterMap, mapper);
 				} else {
 					boolean forMainKeyOnlyFalse = true;
 					buildDownlinks(forMainKeyOnlyFalse, null, mapper);
@@ -305,7 +310,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 				new B3CellString(B3Table.CELL_LOCATOR_THIZ, entityJson));
 	}
 	
-	private void putCurrent(JsonMapper mapper) {
+	private void putCurrent(HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper) {
 		
 		//table entity
 		//this.entity = (E) entity;
@@ -329,7 +334,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
 		boolean noActualPutsFalse = false;
 		InitialDumpDeployer.putToLookupAndLinkRecursively(
-				entitySpec.mainTable, mainKey, b3Cells, null, this, noActualPutsFalse, null, mapper);
+				false, entitySpec.mainTable, mainKey, b3Cells, null, this, noActualPutsFalse, masterMap, mapper);
 		
 		//put main entity to main table
 		//B3Update update = new B3Update(entitySpec.mainTable, mainKey, b3Cells.toArray(new B3CellString[b3Cells.size()]));
@@ -337,7 +342,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 				b3Cells.toArray(new B3CellString[b3Cells.size()]));
 	}
 	
-	private void putRevision(String createTime, JsonMapper mapper) {
+	private void putRevision(String createTime, HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper) {
 		//main table / lookup / link
 		if (entitySpec.mainTable == null) {
 			return;
@@ -352,8 +357,8 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		//put linked entities to table lookup, link
 		LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
 		boolean noActualPutsTrue = true;
-		InitialDumpDeployer.putToLookupAndLinkRecursively(entitySpec.mainTable, 
-				mainKey, b3Cells, null, this, noActualPutsTrue, null, mapper);
+		InitialDumpDeployer.putToLookupAndLinkRecursively(false, entitySpec.mainTable, 
+				mainKey, b3Cells, null, this, noActualPutsTrue, masterMap, mapper);
 		
 		//put main entity to main table
 		String revisionId = getRevisionId();

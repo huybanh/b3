@@ -3,6 +3,8 @@ package com.betbrain.b3.pushclient;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 
@@ -27,7 +29,8 @@ public class ChangeBatchDeployer {
 	
 	//private ExecutorService executor;
 
-	private final ArrayList<?>[] allEntityLists = new ArrayList<?>[EntitySpec2.values().length];
+	//private final ArrayList<?>[] allEntityLists = new ArrayList<?>[EntitySpec2.values().length];
+	private final HashMap<String, HashMap<Long, Entity>> masterMap = new HashMap<>();
 	
 	public static void main(String[] args) {
 
@@ -43,6 +46,11 @@ public class ChangeBatchDeployer {
 		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSHING);
 		ChangeBatchDeployer deployer = new ChangeBatchDeployer();
 		deployer.loadEntities(Integer.parseInt(args[0]));
+		//dump masterMap
+		for (Entry<String, HashMap<Long, Entity>> entry : deployer.masterMap.entrySet()) {
+			System.out.println(entry.getKey() + ": " + entry.getValue().size());
+		}
+		//deployer.masterMap.get(key)
 		deployer.deployChangeBatches();
 	}
 	
@@ -97,7 +105,7 @@ public class ChangeBatchDeployer {
 					String createTime = item.getString(DynamoWorker.SEPC_CELLNAME_CREATETIME);
 					String changesJson = item.getString(DynamoWorker.SEPC_CELLNAME_JSON);
 					EntityChangeBase oneChange = (EntityChangeBase) mapper.deserialize(changesJson);
-					B3Entity.applyChange(createTime, (EntityChangeBase) oneChange, mapper);
+					B3Entity.applyChange(createTime, (EntityChangeBase) oneChange, masterMap, mapper);
 					DynamoWorker.delete(B3Table.SEPC, hashKey, item.getString(DynamoWorker.RANGE));
 					if (deployCount == 0) {
 						Date d = new Date(Long.parseLong(createTime));
@@ -118,22 +126,25 @@ public class ChangeBatchDeployer {
 	
 	private void loadEntities(int loadingThreadCount) {
 		
-		for (int i = 0; i < allEntityLists.length; i++) {
+		/*for (int i = 0; i < allEntityLists.length; i++) {
 			allEntityLists[i] = new ArrayList<>();
-		}
+		}*/
 		final ArrayList<EntityLoadingTask> allLoadingTasks = new ArrayList<>();
 		for (EntitySpec2 spec : EntitySpec2.values()) {
 			final EntitySpec2 specFinal = spec;
 			//final ArrayList<Entity> entityList = new ArrayList<>();
+			final HashMap<Long, Entity> entityMap = new HashMap<>();
+			masterMap.put(spec.entityClass.getName(), entityMap);
+			System.out.println("Creating loading tasks for " + spec.entityClass.getName());
 			for (int partition = 0; partition < B3Table.DIST_FACTOR; partition++) {
 				final int partitionFinal = partition;
 				allLoadingTasks.add(new EntityLoadingTask() {
 					
-					@SuppressWarnings("unchecked")
 					@Override
 					public void run(JsonMapper mapper) {
 						loadEntities(specFinal.entityClass, partitionFinal, 
-								(ArrayList<Entity>) allEntityLists[specFinal.ordinal()], mapper);
+								//(ArrayList<Entity>) allEntityLists[specFinal.ordinal()], mapper);
+								entityMap, mapper);
 					}
 				});
 			}
@@ -186,11 +197,14 @@ public class ChangeBatchDeployer {
 	}
 	
 	private static void loadEntities(Class<?> clazz, int partition,
-			final ArrayList<Entity> entityList, JsonMapper mapper) {
+			//final ArrayList<Entity> entityList, JsonMapper mapper) {
+			HashMap<Long, Entity> entityMap, JsonMapper mapper) {
 		
+		System.out.println("Querying entity " + EntitySpec2.getShortName(clazz.getName()) + partition);
 		ItemCollection<QueryOutcome> coll = DynamoWorker.query(
 				B3Table.Entity, EntitySpec2.getShortName(clazz.getName()) + partition);
 		IteratorSupport<Item, QueryOutcome> iter = coll.iterator();
+		int counter = 0;
 		while (true) {
 			String json = null;
 			while (true) {
@@ -217,10 +231,19 @@ public class ChangeBatchDeployer {
 				break;
 			}
 			Entity entity = (Entity) mapper.deserialize(json);
-			synchronized (entityList) {
-				entityList.add(entity);
+			synchronized (entityMap) {
+				//entityList.add(entity);
+				entityMap.put(entity.getId(), entity);
+			}
+			counter++;
+			if (counter == 1000) {
+				counter = 0;
+				System.out.println(Thread.currentThread().getName() +
+						": Loaded " + clazz.getName() + ": " + entityMap.size());
 			}
 		}
+		System.out.println(Thread.currentThread().getName() +
+				": Loaded " + clazz.getName() + ": " + entityMap.size());
 	}
 	
 	/*private ArrayList<B3ChangeBatch> queryForChanges() {

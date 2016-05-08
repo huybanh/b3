@@ -367,7 +367,7 @@ public class InitialDumpDeployer {
 						
 						//put linked entities to table main, lookup, link
 						LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
-						putToLookupAndLinkRecursively(table, b3key, b3Cells, null, b3entity, false, masterMap, jsonMapper);
+						putToLookupAndLinkRecursively(true, table, b3key, b3Cells, null, b3entity, false, masterMap, jsonMapper);
 						
 						//put main entity to main table
 						//B3Update update = new B3Update(table, b3key, b3Cells.toArray(new B3CellString[b3Cells.size()]));
@@ -400,7 +400,7 @@ public class InitialDumpDeployer {
 		}
 	}
 	
-	public static <E extends Entity>void putToLookupAndLinkRecursively(
+	public static <E extends Entity>void putToLookupAndLinkRecursively(boolean putToFile,
 			B3Table mainTable, B3Key mainKey, LinkedList<B3Cell<?>> mainCells, 
 			final String cellName, B3Entity<?> b3entity, boolean noActualPuts,
 			HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper jsonMapper) {
@@ -421,7 +421,11 @@ public class InitialDumpDeployer {
 			B3KeyLookup lookupKey = new B3KeyLookup(
 					b3entity.entity, mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), thisCellName);
 			//B3Update update = new B3Update(B3Table.Lookup, lookupKey);
-			DynamoWorker.putFile(jsonMapper, B3Table.Lookup, lookupKey.getHashKey(), lookupKey.getRangeKey());
+			if (putToFile) {
+				DynamoWorker.putFile(jsonMapper, B3Table.Lookup, lookupKey.getHashKey(), lookupKey.getRangeKey());
+			} else {
+				DynamoWorker.put(true, B3Table.Lookup, lookupKey.getHashKey(), lookupKey.getRangeKey());
+			}
 		}
 		
 		EntityLink[] linkedEntities = b3entity.getDownlinkedEntities();
@@ -437,7 +441,11 @@ public class InitialDumpDeployer {
 				if (!noActualPuts) {
 					B3KeyLink linkKey = new B3KeyLink(link.linkedEntityClazz, link.linkedEntityId, b3entity.entity, link.name); //reverse link direction
 					//B3Update update = new B3Update(B3Table.Link, linkKey);
-					DynamoWorker.putFile(jsonMapper, B3Table.Link, linkKey.getHashKey(), linkKey.getRangeKey());
+					if (putToFile) {
+						DynamoWorker.putFile(jsonMapper, B3Table.Link, linkKey.getHashKey(), linkKey.getRangeKey());
+					} else {
+						DynamoWorker.put(true, B3Table.Link, linkKey.getHashKey(), linkKey.getRangeKey());
+					}
 					
 					//commented out, as we can always find a link without information from lookup table
 					//also, put link to lookup: Main entity -> link location
@@ -453,7 +461,7 @@ public class InitialDumpDeployer {
 						childCellName = cellName + B3Table.CELL_LOCATOR_SEP + link.name;
 					}
 					putToLookupAndLinkRecursively(
-							mainTable, mainKey, mainCells, childCellName, link.linkedEntity, noActualPuts, masterMap, jsonMapper);
+							putToFile, mainTable, mainKey, mainCells, childCellName, link.linkedEntity, noActualPuts, masterMap, jsonMapper);
 				}
 			}
 		}
