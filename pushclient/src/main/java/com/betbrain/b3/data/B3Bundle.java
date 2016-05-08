@@ -92,7 +92,7 @@ class B3Bundle {
 		tables[i++] = createTable(dynamoDB, id, "outcome", 1, capaHigh, true);
 		tables[i++] = createTable(dynamoDB, id, "lookup", 1, 2000, true);
 		tables[i++] = createTable(dynamoDB, id, "link", 1, capaHigh, true);
-		tables[i++] = createTable(dynamoDB, id, "entity", 1, capaHigh, false);
+		tables[i++] = createTable(dynamoDB, id, "entity", 1, capaHigh, true);
 		tables[i++] = createTable(dynamoDB, id, "sepc", 1, 400/*capaLow*/, true);
 		for (Table t : tables) {
 			try {
@@ -132,7 +132,9 @@ class B3Bundle {
             attributeDefinitions, 
             new ProvisionedThroughput()
                 .withReadCapacityUnits(readCapacityUnits)
+            	//.withReadCapacityUnits(1L)
                 .withWriteCapacityUnits(writeCapacityUnits));
+            	//.withWriteCapacityUnits(1L));
         //table.waitForActive();
         return table;
     }

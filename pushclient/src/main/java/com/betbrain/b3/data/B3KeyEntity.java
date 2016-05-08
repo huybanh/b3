@@ -54,13 +54,13 @@ public class B3KeyEntity extends B3Key {
 		if (id == null) {
 			return classShortName;
 		}
-		//return classShortName + Math.abs(((Long) id).hashCode() % B3Table.DIST_FACTOR);
-		return classShortName + id;
+		return classShortName + Math.abs(((Long) id).hashCode() % B3Table.DIST_FACTOR);
+		//return classShortName + id;
 	}
 	
 	@Override
 	String getRangeKeyInternal() {
-		return null;//String.valueOf(id); 
+		return String.valueOf(id); 
 	}
 	
 	static final int hardLimit = 50;

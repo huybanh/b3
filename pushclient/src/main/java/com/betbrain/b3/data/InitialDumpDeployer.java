@@ -266,7 +266,7 @@ public class InitialDumpDeployer {
 			}
 			subList.add(e);
 			i++;
-			if (i == 5000) {
+			if (i == 50000) {
 				subList = null;
 				i = 0;
 			}

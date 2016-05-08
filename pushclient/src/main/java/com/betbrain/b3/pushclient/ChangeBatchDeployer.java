@@ -10,19 +10,24 @@ import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.internal.IteratorSupport;
+import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputExceededException;
 import com.betbrain.b3.data.B3CellString;
 import com.betbrain.b3.data.B3Key;
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.DynamoWorker;
+import com.betbrain.b3.data.EntitySpec2;
 import com.betbrain.b3.model.B3Entity;
+import com.betbrain.sepc.connector.sportsmodel.Entity;
 
 public class ChangeBatchDeployer {
 	
     //private final Logger logger = Logger.getLogger(this.getClass());
 	
-	private JsonMapper mapper = new JsonMapper();
+	//private JsonMapper mapper = new JsonMapper();
 	
 	//private ExecutorService executor;
+
+	private final ArrayList<?>[] allEntityLists = new ArrayList<?>[EntitySpec2.values().length];
 	
 	public static void main(String[] args) {
 
@@ -34,17 +39,19 @@ public class ChangeBatchDeployer {
 			}
 		}
 		//DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYING); //for testing only
-		
+
 		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSHING);
-		new ChangeBatchDeployer().deployChangeBatches();
+		ChangeBatchDeployer deployer = new ChangeBatchDeployer();
+		deployer.loadEntities(Integer.parseInt(args[0]));
+		deployer.deployChangeBatches();
 	}
 	
-	public ChangeBatchDeployer() {
+	private ChangeBatchDeployer() {
 		//executor = Executors.newFixedThreadPool(threadCount);
 	}
 
-	public void deployChangeBatches() {
-
+	private void deployChangeBatches() {
+		JsonMapper mapper = new JsonMapper();
 		int deployCount = 0;
 		while (true) {
 			final ArrayList<String> allRangeIds = new ArrayList<String>();
@@ -109,6 +116,113 @@ public class ChangeBatchDeployer {
 		}
 	}
 	
+	private void loadEntities(int loadingThreadCount) {
+		
+		for (int i = 0; i < allEntityLists.length; i++) {
+			allEntityLists[i] = new ArrayList<>();
+		}
+		final ArrayList<EntityLoadingTask> allLoadingTasks = new ArrayList<>();
+		for (EntitySpec2 spec : EntitySpec2.values()) {
+			final EntitySpec2 specFinal = spec;
+			//final ArrayList<Entity> entityList = new ArrayList<>();
+			for (int partition = 0; partition < B3Table.DIST_FACTOR; partition++) {
+				final int partitionFinal = partition;
+				allLoadingTasks.add(new EntityLoadingTask() {
+					
+					@SuppressWarnings("unchecked")
+					@Override
+					public void run(JsonMapper mapper) {
+						loadEntities(specFinal.entityClass, partitionFinal, 
+								(ArrayList<Entity>) allEntityLists[specFinal.ordinal()], mapper);
+					}
+				});
+			}
+		}
+		
+		final ArrayList<Object> threadIds = new ArrayList<>();
+		for (int i = 0; i < loadingThreadCount; i++) {
+			final Object oneThreadId = new Object();
+			threadIds.add(oneThreadId);
+			new Thread() {
+
+				final JsonMapper mapper = new JsonMapper();
+				
+				public void run() {
+					while (true) {
+						EntityLoadingTask task = null;
+						synchronized (allLoadingTasks) {
+							if (!allLoadingTasks.isEmpty()) {
+								task = allLoadingTasks.remove(0);
+							}
+						}
+						if (task == null) {
+							break;
+						}
+						task.run(mapper);
+					}
+					
+					synchronized (threadIds) {
+						threadIds.remove(oneThreadId);
+						threadIds.notifyAll();
+					}
+					System.out.println(Thread.currentThread().getName() + 
+							": No more loading tasks, thread ended");
+					return;
+				}
+			}.start();
+		}
+		
+		synchronized (threadIds) {
+			while (true) {
+				if (threadIds.isEmpty()) {
+					break;
+				}
+				try {
+					threadIds.wait();
+				} catch (InterruptedException e) {
+				}
+			}
+		}
+	}
+	
+	private static void loadEntities(Class<?> clazz, int partition,
+			final ArrayList<Entity> entityList, JsonMapper mapper) {
+		
+		ItemCollection<QueryOutcome> coll = DynamoWorker.query(
+				B3Table.Entity, EntitySpec2.getShortName(clazz.getName()) + partition);
+		IteratorSupport<Item, QueryOutcome> iter = coll.iterator();
+		while (true) {
+			String json = null;
+			while (true) {
+				try {
+					if (!iter.hasNext()) {
+						break;
+					}
+					Item item = iter.next();
+					//long id = Long.parseLong(item.getString(DynamoWorker.RANGE));
+					json = item.getString(B3Table.CELL_LOCATOR_THIZ);
+					break;
+				} catch (ProvisionedThroughputExceededException e) {
+					System.out.println(Thread.currentThread().getName() + ": " + 
+							B3Table.Entity.name + ": " +  e.getMessage() + ". Sleep 1000 ms now...");
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e1) {
+					}
+				}
+			}
+			
+			if (json == null) {
+				//no more item from table
+				break;
+			}
+			Entity entity = (Entity) mapper.deserialize(json);
+			synchronized (entityList) {
+				entityList.add(entity);
+			}
+		}
+	}
+	
 	/*private ArrayList<B3ChangeBatch> queryForChanges() {
 		
 		LinkedList<Future<Integer>> executions = new LinkedList<Future<Integer>>(); 
@@ -168,4 +282,9 @@ public class ChangeBatchDeployer {
 		}
 		return allBatches;
 	}*/
+}
+
+abstract class EntityLoadingTask {
+	
+	abstract void run(JsonMapper mapper);
 }

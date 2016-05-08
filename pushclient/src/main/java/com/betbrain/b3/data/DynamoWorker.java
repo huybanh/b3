@@ -10,7 +10,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 
 import org.apache.log4j.Logger;
 
@@ -32,6 +31,10 @@ import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.betbrain.b3.pushclient.JsonMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 public class DynamoWorker {
 	
@@ -262,7 +265,7 @@ public class DynamoWorker {
 	private static B3Table[] tableByReader;
 	private static Long[] pendTimes = new Long[] {null, null, null, null, null, null, null};
 	private static long[] recordCount = new long[] {0, 0, 0, 0, 0, 0, 0};
-	private static PutBean[] pendPuts = new PutBean[] {null, null, null, null, null, null, null};
+	private static JsonObject[] pendPuts = new JsonObject[] {null, null, null, null, null, null, null};
 
 	private static int readerIndex = 0;
 	
@@ -353,17 +356,6 @@ public class DynamoWorker {
 		} else {
 			throw new RuntimeException("Unmapped table: " + b3table);
 		}
-	} 
-	
-	static void putFile(JsonMapper mapper, B3Table b3table, String hashKey, String rangeKey, B3Cell<?>... cells) {
-
-		try {
-			BufferedWriter writer = getWriter(b3table);
-			writer.write(mapper.serialize(new PutBean(hashKey, rangeKey, cells)));
-			writer.newLine();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
 	}
 	
 	public static void putAllFromLocal() {
@@ -377,18 +369,19 @@ public class DynamoWorker {
 			threadIds.add(tid);
 			new Thread() {
 				
-				private JsonMapper mapper = new JsonMapper();
+				//private JsonMapper mapper = new JsonMapper();
+				private Gson gson = new Gson();
 				
 				public void run() {
 					int printCount = 0;
 					while (true) {
 						BufferedReader reader = null;
 						int readerChecked = 0;
-						PutBean putBean = null;
+						JsonObject putBean = null;
 						String line = null;
 						int thisReaderIndex;
 						synchronized (DynamoWorker.class) {
-							while (readerChecked > allReaders.length + 1) {
+							while (readerChecked < allReaders.length + 1) {
 								readerChecked++;
 								readerIndex++;
 								if (readerIndex == allReaders.length) {
@@ -414,8 +407,8 @@ public class DynamoWorker {
 								if (foundReader) {
 									try {
 										System.out.println(Thread.currentThread().getName() + 
-												": All tables are busy, sleep 10 ms");
-										Thread.sleep(10);
+												": All tables are busy, sleep 1000 ms");
+										Thread.sleep(1000);
 									} catch (InterruptedException e) {
 									}
 									continue;
@@ -447,11 +440,34 @@ public class DynamoWorker {
 						}
 						
 						if (putBean == null) {
-							putBean = (PutBean) mapper.deserialize(line);
+							//System.out.println(line);
+							//putBean = (PutBean) mapper.deserialize(line);
+							putBean = gson.fromJson(line, JsonObject.class);
 						}
-						List<B3Cell<?>> cells = putBean.getB3Cells();
-						boolean success = put(false, tableByReader[thisReaderIndex], putBean.getHash(), putBean.getRange(),
-								cells.toArray(new B3Cell<?>[cells.size()]));
+						
+						//List<B3Cell<?>> cells = putBean.getB3Cells();
+						JsonElement ele = putBean.get("b3Cells");
+						B3Cell<?>[] cells = null;
+						if (ele != null && !ele.isJsonNull()) {
+							JsonArray arr = ele.getAsJsonArray();
+							cells = new B3Cell<?>[arr.size()];
+							for (int i = 0; i < arr.size(); i++) {
+								JsonObject oneCell = arr.get(i).getAsJsonObject();
+								String colName = oneCell.get("columnName").getAsString();
+								String colValue = oneCell.get("value").getAsString();
+								cells[i] = new B3CellString(colName, colValue);
+							}
+						}
+						
+						String range = null;
+						ele = putBean.get("range");
+						if (ele != null && !ele.isJsonNull()) {
+							range = ele.getAsString();
+						}
+						boolean success = put(false, tableByReader[thisReaderIndex], 
+								putBean.get("hash").getAsString(), 
+								range,
+								cells);
 						
 						synchronized (DynamoWorker.class) {
 							if (!success) {
@@ -460,10 +476,11 @@ public class DynamoWorker {
 							} else {
 								recordCount[thisReaderIndex]++;
 								printCount++;
-								if (printCount == 1000) {
+								if (printCount == 5000) {
 									printCount = 0;
 									System.out.println(Thread.currentThread().getName() + 
-											": Table " + readerIndex + ": " + recordCount[readerIndex]);
+											": Table " + tableByReader[readerIndex].name + 
+											": records: " + recordCount[readerIndex]);
 								}
 							}
 						}
@@ -486,6 +503,19 @@ public class DynamoWorker {
 		
 		System.out.println("Finishing");
 		closeReaders();
+	}
+	
+	static void putFile(JsonMapper mapper, B3Table b3table, String hashKey, String rangeKey, B3Cell<?>... cells) {
+
+		try {
+			BufferedWriter writer = getWriter(b3table);
+			synchronized (writer) {
+				writer.write(mapper.serialize(new PutBean(hashKey, rangeKey, cells)));
+				writer.newLine();
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	public static boolean put(boolean tryToDie, B3Table b3table, String hashKey, String rangeKey, B3Cell<?>... cells) {
@@ -519,7 +549,7 @@ public class DynamoWorker {
 					dynaTable.putItem(item);
 					break;
 				} catch (RuntimeException re) {
-					logger.info(re.getClass().getName() + ": " + re.getMessage());
+					logger.info(Thread.currentThread().getName() + ": " + b3table.name + ": " + re.getMessage());
 					if (!tryToDie) {
 						return false;
 					}
