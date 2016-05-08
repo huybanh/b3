@@ -2,6 +2,8 @@ package com.betbrain.b3.model;
 
 import java.util.HashMap;
 
+import com.betbrain.b3.data.B3KeyEventInfo;
+import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Event;
 import com.betbrain.sepc.connector.sportsmodel.EventInfo;
@@ -24,8 +26,8 @@ public class B3EventInfo extends B3Entity<EventInfo> {
 	public void getDownlinkedEntitiesInternal() {
 		
 		//skip event/eventpart
-		//addDownlink(EventInfo.PROPERTY_NAME_eventId, );
-		//addDownlink(EventInfo.PROPERTY_NAME_eventPartId, );
+		addDownlinkUnfollowed(EventInfo.PROPERTY_NAME_eventId, Event.class/*, entity.getEventId()*/);
+		addDownlinkUnfollowed(EventInfo.PROPERTY_NAME_eventPartId, EventPart.class/*, entity.getEventPartId()*/);
 		
 		addDownlink(EventInfo.PROPERTY_NAME_providerId, provider);
 		addDownlink(EventInfo.PROPERTY_NAME_sourceId, source);
@@ -33,14 +35,39 @@ public class B3EventInfo extends B3Entity<EventInfo> {
 	}
 
 	@Override
-	public void buildDownlinks(HashMap<String, HashMap<Long, Entity>> masterMap) {
-		this.provider = build(entity.getProviderId(), new B3Provider(), Provider.class, masterMap);
-		this.source = build(entity.getSourceId(), new B3Source(), Source.class, masterMap);
-		this.type = build(entity.getTypeId(), new B3EventInfoType(), EventInfoType.class, masterMap);
+	public void buildDownlinks(boolean forMainKeyOnly, HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper) {
+
+		this.event = build(forMainKeyOnly, entity.getEventId(), new B3Event(), 
+				Event.class, masterMap, mapper);
 		
-		//need to link to event, but skip in b3 db
-		this.event = build(entity.getEventId(), new B3Event(), Event.class, masterMap);
-		this.eventPart = build(entity.getEventPartId(), new B3EventPart(), EventPart.class, masterMap);
+		if (forMainKeyOnly) {
+			return;
+		}
+		this.provider = build(forMainKeyOnly, entity.getProviderId(), new B3Provider(),
+				Provider.class, masterMap, mapper);
+		this.source = build(forMainKeyOnly, entity.getSourceId(), new B3Source(), 
+				Source.class, masterMap, mapper);
+		this.type = build(forMainKeyOnly, entity.getTypeId(), new B3EventInfoType(), 
+				EventInfoType.class, masterMap, mapper);
+		
+		this.eventPart = build(forMainKeyOnly, entity.getEventPartId(), new B3EventPart(), 
+				EventPart.class, masterMap, mapper);
+	}
+
+	@Override
+	B3KeyEventInfo createMainKey() {
+		if (entity == null || event == null) {
+			return null;
+		}
+		EventInfo info = (EventInfo) entity;
+		return new B3KeyEventInfo(event.entity.getId(), event.entity.getTypeId(), 
+				info.getEventId(), info.getTypeId(), info.getId());
+		
+	}
+	
+	@Override
+	String getRevisionId() {
+		return null;
 	}
 
 }

@@ -1,0 +1,1 @@
+{"b3Cells":[{"class":"com.betbrain.b3.data.B3CellInt","columnName":"x","typeName":"int","value":1},{"class":"com.betbrain.b3.data.B3CellString","columnName":"y","typeName":"String","value":"z"}],"class":"com.betbrain.b3.data.PutBean","hash":"x","range":"y"}

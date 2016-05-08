@@ -13,6 +13,7 @@ import com.betbrain.sepc.connector.sdql.SEPCConnector;
 import com.betbrain.sepc.connector.sdql.SEPCConnectorListener;
 import com.betbrain.sepc.connector.sdql.SEPCPushConnector;
 
+@Deprecated
 public class InitialDumpLocalWriter implements SEPCConnectorListener {
 	
 	public static void main(String[] args) {
@@ -29,13 +30,16 @@ public class InitialDumpLocalWriter implements SEPCConnectorListener {
 	public void notifyInitialDump(final List<? extends Entity> entityList) {
 		
 		new Thread() {
+			
+			private JsonMapper jsonMapper = new JsonMapper();
+			
 			public void run() {
 				try {
 					FileOutputStream fos = new FileOutputStream("initial_dump.json", false);
 					BufferedOutputStream out = new BufferedOutputStream(fos);
 					OutputStreamWriter writer = new OutputStreamWriter(out);
 					for (Entity e : entityList) {
-						writer.write((JsonMapper.SerializeF(e) + "\n"));
+						writer.write((jsonMapper.serialize(e) + "\n"));
 					}
 					System.out.println("Got all entities in file");
 					writer.close();

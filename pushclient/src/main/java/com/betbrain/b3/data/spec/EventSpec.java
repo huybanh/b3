@@ -31,6 +31,7 @@ import com.betbrain.sepc.connector.sportsmodel.Sport;
       Query: NONEED
  *
  */
+@Deprecated
 public class EventSpec extends EntitySpec<Event, B3KeyEvent> {
 
 	public EventSpec() {
@@ -39,7 +40,7 @@ public class EventSpec extends EntitySpec<Event, B3KeyEvent> {
 
 	@Override
 	public B3KeyEvent getB3KeyMain(Event e) {
-		return new B3KeyEvent(e.getSportId(), e.getTypeId(), false, e.getId());
+		return new B3KeyEvent(e.getSportId(), e.getTypeId(), e.getId());
 	}
 
 	/*@Override

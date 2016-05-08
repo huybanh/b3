@@ -2,8 +2,11 @@ package com.betbrain.b3.model;
 
 import java.util.HashMap;
 
+import com.betbrain.b3.data.B3KeyEvent;
+import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Event;
+import com.betbrain.sepc.connector.sportsmodel.EventPart;
 import com.betbrain.sepc.connector.sportsmodel.EventStatus;
 import com.betbrain.sepc.connector.sportsmodel.EventTemplate;
 import com.betbrain.sepc.connector.sportsmodel.EventType;
@@ -20,8 +23,10 @@ public class B3Event extends B3Entity<Event> {
 	public void getDownlinkedEntitiesInternal() {
 		
 		//unfollowed-link: same type
-		//addDownlink(Event.PROPERTY_NAME_currentPartId, currentPart),
-		//addDownlink(Event.PROPERTY_NAME_rootPartId, linkedEntity),
+		addDownlinkUnfollowed(Event.PROPERTY_NAME_parentId, Event.class/*, entity.getParentId()*/);
+		addDownlinkUnfollowed(Event.PROPERTY_NAME_parentPartId, EventPart.class/*, entity.getParentPartId()*/);
+		addDownlinkUnfollowed(Event.PROPERTY_NAME_currentPartId, EventPart.class/*, entity.getCurrentPartId()*/);
+		addDownlinkUnfollowed(Event.PROPERTY_NAME_rootPartId, EventPart.class/*, entity.getRootPartId()*/);
 		
 		addDownlink(Event.PROPERTY_NAME_sportId, sport); 
 		addDownlink(Event.PROPERTY_NAME_statusId, status);
@@ -31,11 +36,29 @@ public class B3Event extends B3Entity<Event> {
 	}
 
 	@Override
-	public void buildDownlinks(HashMap<String, HashMap<Long, Entity>> masterMap) {
-		this.sport = build(entity.getSportId(), new B3Sport(), Sport.class, masterMap);
-		this.status = build(entity.getStatusId(), new B3EventStatus(), EventStatus.class, masterMap);
-		this.template = build(entity.getTemplateId(), new B3EventTemplate(), EventTemplate.class, masterMap);
-		this.type = build(entity.getTypeId(), new B3EventType(), EventType.class, masterMap);
+	public void buildDownlinks(boolean forMainKeyOnly, HashMap<String, HashMap<Long, Entity>> masterMap,
+			JsonMapper mapper) {
+		
+		if (forMainKeyOnly) {
+			return;
+		}
+		this.sport = build(forMainKeyOnly, entity.getSportId(), new B3Sport(), 
+				Sport.class, masterMap, mapper);
+		this.status = build(forMainKeyOnly, entity.getStatusId(), new B3EventStatus(), 
+				EventStatus.class, masterMap, mapper);
+		this.template = build(forMainKeyOnly, entity.getTemplateId(), new B3EventTemplate(), 
+				EventTemplate.class, masterMap, mapper);
+		this.type = build(forMainKeyOnly, entity.getTypeId(), new B3EventType(),
+				EventType.class, masterMap, mapper);
+	}
+
+	@Override
+	B3KeyEvent createMainKey() {
+		if (entity == null) {
+			return null;
+		}
+		return new B3KeyEvent(entity.getSportId(), entity.getTypeId(), entity.getId());
+		
 	}
 
 }

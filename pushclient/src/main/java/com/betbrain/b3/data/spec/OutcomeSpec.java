@@ -12,6 +12,7 @@ import com.betbrain.sepc.connector.sportsmodel.Outcome;
 import com.betbrain.sepc.connector.sportsmodel.OutcomeStatus;
 import com.betbrain.sepc.connector.sportsmodel.OutcomeType;
 
+@Deprecated
 public class OutcomeSpec extends EntitySpec<Outcome, B3KeyOffer> {
 
 	public OutcomeSpec() {

@@ -9,6 +9,7 @@ import com.betbrain.sepc.connector.sportsmodel.Entity;
  * Key spec: sportId/eventTypeId/[EVENT|EVENTPART]/eventId
  *
  */
+@Deprecated
 public abstract class EntitySpec<E extends Entity, K extends B3Key> {
 	
 	//private static final String COLUMNNAME_ENTITY_SUFFIX = "_B3";

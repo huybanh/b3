@@ -1,13 +1,8 @@
 package com.betbrain.b3.pushclient;
 
-import java.io.IOException;
 import java.util.Date;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.ObjectMapper.DefaultTyping;
+import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Event;
 import flexjson.JSONDeserializer;
@@ -16,75 +11,92 @@ import flexjson.JSONSerializer;
 
 public class JsonMapper {
 
-	private static ObjectMapper mapper = new ObjectMapper();
-	private static JSONSerializer flexSer = new JSONSerializer();
-	private static JSONDeserializer flexDe = new JSONDeserializer();
+	@SuppressWarnings("rawtypes")
+	private JSONDeserializer flexDe;
+	private JSONSerializer flexSer;
+	
+	@SuppressWarnings("rawtypes")
+	public JsonMapper() {
 
-	public static String SerializeF(Object entity) {
-		String jsonString = "[]";
-		jsonString = flexSer.exclude("beanInfo")
+		flexDe = new JSONDeserializer();
+		//ExcludeTransformer excludeTransformer = new ExcludeTransformer();
+		flexSer = new JSONSerializer().exclude("beanInfo")
 				.transform(new ExcludeTransformer(), void.class)
-				.serialize(entity);
-		return jsonString;
+				.include("b3PropertyNames")
+				.include("b3PropertyValues")
+				.include("b3Cells");
+	}
+
+	public String serialize(Object entity) {
+		return flexSer.serialize(entity);
 	}
 	
-	public static String SerializeExcludeClassName(Object entity) {
+	public Entity deserializeEntity(String json) {
+		return (Entity) flexDe.deserialize(json);
+	}
+	
+	public Object deserialize(String json) {
+		return flexDe.deserialize(json);
+	}
+	
+	/*public String SerializeExcludeClassName(Object entity) {
 		String jsonString = "[]";
 		jsonString = flexSer.exclude("*.class").serialize(entity);
 		return jsonString + ",";
 	}
 	
-	public static Entity Deserialize(String json) {
+	public Entity Deserialize(String json) {
 		Entity entity = null;
 		try {
 			entity = mapper.readValue(json, Entity.class);
 		} catch (JsonParseException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (JsonMappingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return entity;
 	}
-	public static String Serialize(Entity entity) {
+	
+	public String Serialize(Entity entity) {
 		String jsonString = "[]";
 		try {
 			mapper.enableDefaultTyping(DefaultTyping.NON_FINAL);
 			jsonString = mapper.writeValueAsString(entity);
 		} catch (JsonGenerationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (JsonMappingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return jsonString;
-	}
-	
-	public static Entity DeserializeF(String json) {
-		Entity entity = null;
-		entity = (Entity)flexDe.deserialize(json);
-		return entity;
-	}
-	
+	}*/
+
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 		try {
 			System.out.println("Hello Word");
 			Event event = new Event();
 			event.setCurrentPartId(100L);
 			event.setStartTime(new Date(1234));
-			String json = JsonMapper.SerializeF(event);
+			String json = new JsonMapper().serialize(event);
 			System.out.println(json);			
-			Event entity = (Event)JsonMapper.DeserializeF(json);
+			Event entity = (Event) new JsonMapper().deserialize(json);
 			System.out.println(entity.getCurrentPartId());
+			
+			Date d = new Date();
+			System.out.println(d);
+			System.out.println(d.getTime());
+			BettingOffer o = new BettingOffer();
+			o.setLastChangedTime(d);
+			System.out.println(o);
+			String s = new JsonMapper().serialize(o);
+			System.out.println(s);
+			o = (BettingOffer) new JsonMapper().deserialize(s);
+			System.out.println(o);
+			System.out.println(o.getLastChangedTime());
+			System.out.println(o.getLastChangedTime().getTime());
 		}
 		catch (Exception ex) {
 			ex.printStackTrace();

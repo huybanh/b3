@@ -26,27 +26,36 @@ public class B3KeyLink extends B3Key {
 
 	public B3KeyLink(Entity entity, Class<? extends Entity> clazz, String linkName) {
 		super();
-		classShortName = ModelShortName.get(entity.getClass().getName()); 
+		classShortName = EntitySpec2.getShortName(entity.getClass().getName()); 
 		id = entity.getId();
-		linkedClassShortName = ModelShortName.get(clazz.getName());
+		linkedClassShortName = EntitySpec2.getShortName(clazz.getName());
 		this.linkName = linkName;
 		linkedEntityId = null;
 	}
 
 	public B3KeyLink(Class<?> entityClazz, long entityId, Class<?> linkedClazz, String linkName) {
 		super();
-		classShortName = ModelShortName.get(entityClazz.getName()); 
+		classShortName = EntitySpec2.getShortName(entityClazz.getName()); 
 		id = entityId;
-		linkedClassShortName = ModelShortName.get(linkedClazz.getName());
+		linkedClassShortName = EntitySpec2.getShortName(linkedClazz.getName());
 		this.linkName = linkName;
 		linkedEntityId = null;
 	}
 
+	public B3KeyLink(Class<?> entityClazz, long entityId, Entity linkedEntity, String linkName) {
+		super();
+		classShortName = EntitySpec2.getShortName(entityClazz.getName()); 
+		id = entityId;
+		linkedClassShortName = EntitySpec2.getShortName(linkedEntity.getClass().getName());
+		linkedEntityId = linkedEntity.getId();
+		this.linkName = linkName;
+	}
+
 	public B3KeyLink(Entity entity, Entity linkedEntity, String linkName) {
 		super();
-		classShortName = ModelShortName.get(entity.getClass().getName()); 
+		classShortName = EntitySpec2.getShortName(entity.getClass().getName()); 
 		id = entity.getId();
-		linkedClassShortName = ModelShortName.get(linkedEntity.getClass().getName());
+		linkedClassShortName = EntitySpec2.getShortName(linkedEntity.getClass().getName());
 		this.linkName = linkName;
 		this.linkedEntityId = linkedEntity.getId();
 		//this.linkedEntityId = linkedEntityId;
@@ -57,13 +66,13 @@ public class B3KeyLink extends B3Key {
 		return true;
 	} 
 	
-	protected String getHashKey() {
+	public String getHashKeyInternal() {
 		//return classShortName + linkedClassShortName + id;
 		return classShortName + linkedClassShortName + linkName + B3Table.KEY_SEP + id;
 	}
 	
 	@Override
-	String getRangeKey() {
+	String getRangeKeyInternal() {
 		return String.valueOf(linkedEntityId); 
 	}
 	
@@ -76,8 +85,8 @@ public class B3KeyLink extends B3Key {
 			Item item = it.next();
 			//String json = item.getString(B3Table.CELL_LOCATOR_THIZ);
 			//Entity entity = JsonMapper.DeserializeF(json);
-			Long linkedId = item.getLong("range");
-			System.out.println(this.linkName + ": " + linkedId);
+			Long linkedId = item.getLong(DynamoWorker.RANGE);
+			//System.out.println(this.linkedClassShortName + ": " + linkedId);
 			list.add(linkedId);
 			if (--i <= 0) {
 				break;
