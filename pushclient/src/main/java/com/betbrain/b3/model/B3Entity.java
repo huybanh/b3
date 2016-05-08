@@ -219,6 +219,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 			boolean forMainKeyOnlyFalse = false;
 			buildDownlinks(forMainKeyOnlyFalse, masterMap, null);
 			putCurrent(masterMap, mapper);
+			masterMap.get(this.entity.getClass().getName()).put(this.entity.getId(), this.entity);
 			if (entitySpec.revisioned) {
 				putRevision(createTime, masterMap, mapper);
 			}
@@ -237,6 +238,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 			boolean forMainKeyOnlyFalse = true;
 			buildDownlinks(forMainKeyOnlyFalse, masterMap, null);
 			deleteCurrent(mapper);
+			masterMap.get(this.entity.getClass().getName()).remove(this.entity.getId());
 			
 		} else if (change instanceof EntityUpdateWrapper) {
 			
@@ -277,6 +279,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 					updateCurrent(mapper);
 				}
 			}
+			masterMap.get(this.entity.getClass().getName()).put(this.entity.getId(), this.entity);
 			
 		} else {
 			throw new RuntimeException("Unknown change-wrapper class: " + change.getClass().getName());
