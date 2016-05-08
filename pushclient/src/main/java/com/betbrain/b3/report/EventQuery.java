@@ -28,6 +28,7 @@ public class EventQuery {
 		//league
 		B3KeyEntity keyEntity = new B3KeyEntity(Event.class, eventId);
 		Event league = keyEntity.load(jsonMapper);
+		System.out.println(league);
 		
 		//matches
 		B3KeyLink keyLink = new B3KeyLink(league, Event.class, Event.PROPERTY_NAME_parentId);
@@ -35,14 +36,19 @@ public class EventQuery {
 		System.out.println(matchIds);
 		
 		for (Long oneId : matchIds) {
-			//keyEntity = new B3KeyEntity(Event.class, matchIds.get(1));
-			//Event match = keyEntity.load(jsonMapper);
-		
-			//outcomes
-			keyLink = new B3KeyLink(Event.class, oneId, Outcome.class, "eventId");
-			ArrayList<Long> outcomeIds = keyLink.listLinks();
-			System.out.println(outcomeIds);
+			keyEntity = new B3KeyEntity(Event.class, oneId);
+			Event match = keyEntity.load(jsonMapper);
+			System.out.println(match);
+			
+			keyLink = new B3KeyLink(match, Event.class, Event.PROPERTY_NAME_parentId);
+			matchIds = keyLink.listLinks();
+			System.out.println(matchIds);
 		}
+		
+		//outcomes
+		keyLink = new B3KeyLink(Event.class, /*oneId*/0, Outcome.class, "eventId");
+		ArrayList<Long> outcomeIds = keyLink.listLinks();
+		System.out.println(outcomeIds);
 		
 		//bettingoffer
 		keyLink = new B3KeyLink(Outcome.class, 0, BettingOffer.class, "outcomeId");
