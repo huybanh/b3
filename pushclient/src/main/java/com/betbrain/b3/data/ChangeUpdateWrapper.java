@@ -2,6 +2,7 @@ package com.betbrain.b3.data;
 
 import java.beans.PropertyDescriptor;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -60,7 +61,8 @@ public class ChangeUpdateWrapper extends ChangeBase {
 		this.entityId = entityId;
 	}
 	
-	public long getEntityId() {
+	@Override
+	public Long getEntityId() {
 		if (update != null) {
 			return update.getEntityId();
 		}
@@ -96,19 +98,28 @@ public class ChangeUpdateWrapper extends ChangeBase {
 		}
 		return this.stringValues;
 	}
+
+	@Override
+	public Entity lookupEntity(HashMap<String, HashMap<Long, Entity>> masterMap) {
+		return masterMap.get(entityClassName).get(getEntityId());
+	}
+	
+	@Override
+	public boolean needEntityMainIDsOnly(EntitySpec2 entitySpec) {
+		if (entitySpec.revisioned) {
+			return false;
+		} else {
+			return !entitySpec.isStructuralChange(this);
+		}
+	}
 	
 	public void applyChanges(Entity entity) {
 		for (int i = 0; i < names.size(); i++) {
-			//setProperty(entity, names.get(i), stringValues.get(i));
 			String propertyName = names.get(i);
 			PropertyDescriptor desc = BeanUtil.getPropertyDescriptor(entity.getClass(), propertyName);
 			Object objectValue;
 			String stringValue = stringValues.get(i);
-			/*if (stringValue == null) {
-				objectValue = null;
-			} else {
-				objectValue = StringUtil.parseValue(stringValue, desc.getPropertyType());
-			}*/
+
 			//hack flexjson: force nulls in list
 			if ("NULL".equals(stringValue)) {
 				objectValue = null;
@@ -118,32 +129,6 @@ public class ChangeUpdateWrapper extends ChangeBase {
 			BeanUtil.setPropertyValue(entity, propertyName, objectValue);
 		}
 	}
-	
-	/*private static void setProperty(Object bean, String propertyName, String stringValue) {
-		PropertyDescriptor desc = BeanUtil.getPropertyDescriptor(bean.getClass(), propertyName);
-		//Object objectValue = convert(stringValue, desc.getPropertyType());
-		Object objectValue = StringUtil.parseValue(stringValue, desc.getPropertyType());
-		BeanUtil.setPropertyValue(bean, propertyName, objectValue);
-	}*/
-	
-	/*static <T> T convert(String stringValue, Class<T> valueType) {
-		return StringUtil.parseValue(stringValue, valueType);
-	}*/
-
-	/*EntityUpdate makeSEObject() {
-		try {
-			@SuppressWarnings("unchecked")
-			Class<? extends Entity> clazz = (Class<? extends Entity>) Class.forName(entityClass);
-			LinkedList<Object> objectValues = new LinkedList<Object>();
-			for (String v : values) {
-				Object obj = mapper.deserializeObject(v);
-				objectValues.add(obj);
-			}
-			return new EntityUpdate(clazz, this.id, names, objectValues);
-		} catch (ClassNotFoundException e) {
-			throw new RuntimeException();
-		}
-	}*/
 
 	public static void main(String[] args) {
 		

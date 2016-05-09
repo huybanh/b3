@@ -50,7 +50,9 @@ public class ChangeDistributor {
 		try {
 			b3entity = entitySpec.b3class.newInstance();
 			b3entity.setSpec(entitySpec);
-			b3entity.applyChange(change.changeTime, change, masterMap, mapper);
+			if (b3entity.preApplyChange(change, masterMap)) {
+				b3entity.postApplyChange(change, masterMap, mapper);
+			}
 		} catch (InstantiationException e) {
 			throw new RuntimeException(e);
 		} catch (IllegalAccessException e) {

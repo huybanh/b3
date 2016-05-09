@@ -1,7 +1,9 @@
 package com.betbrain.b3.data;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 
+import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.util.beans.BeanUtil;
 
 public abstract class ChangeBase {
@@ -24,4 +26,10 @@ public abstract class ChangeBase {
 	public String toString() {
 		return BeanUtil.toString(this);
 	}
+	
+	public abstract Entity lookupEntity(HashMap<String, HashMap<Long, Entity>> masterMap);
+	
+	public abstract Long getEntityId();
+	
+	public abstract boolean needEntityMainIDsOnly(EntitySpec2 entitySpec);
 }
