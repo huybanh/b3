@@ -115,8 +115,8 @@ public class PushListener2 implements SEPCConnectorListener, EntityChangeBatchPr
 		new Thread() {
 			public void run() {
 				DynamoWorker.openLocalWriters();
-				new InitialDumpDeployer(masterMap, 0).initialPutMaster(initialThreads);
-				DynamoWorker.putAllFromLocal();
+				new InitialDumpDeployer(masterMap, 0).initialPutMaster();
+				DynamoWorker.putAllFromLocal(initialThreads);
 				DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSH_WAIT);
 			}
 		}.start();

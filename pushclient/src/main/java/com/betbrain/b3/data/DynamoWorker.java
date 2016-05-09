@@ -358,14 +358,14 @@ public class DynamoWorker {
 		}
 	}
 	
-	public static void putAllFromLocal() {
+	public static void putAllFromLocal(int initialThreads) {
 		
 		closeWriters();
 		openLocalReaders();
 		
 		final Object readersLock = new Object();
 		final LinkedList<Object> threadIds = new LinkedList<>();
-		for (int i = 0; i < 100; i++) {
+		for (int i = 0; i < initialThreads; i++) {
 			final Object tid = new Object();
 			threadIds.add(tid);
 			new Thread() {
