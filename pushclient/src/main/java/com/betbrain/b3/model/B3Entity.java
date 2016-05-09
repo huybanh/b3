@@ -196,7 +196,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		EntitySpec2 entitySpec = getSpec();
 		if (change instanceof ChangeCreateWrapper) {
 			
-			System.out.println("CHANGE-CREATE: " + change);
+			System.out.println(Thread.currentThread().getName() + "CHANGE-CREATE: " + change);
 			B3Key mainKey = createMainKey();
 			LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
 			InitialDumpDeployer.putToLookupAndLinkRecursively(
@@ -211,13 +211,13 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 			}
 		
 		} else if (change instanceof ChangeDeleteWrapper) {
-			System.out.println("CHANGE-DELETE: " + change);
+			System.out.println(Thread.currentThread().getName() + "CHANGE-DELETE: " + change);
 			deleteCurrent();
 			masterMap.get(this.entity.getClass().getName()).remove(this.entity.getId());
 			
 		} else if (change instanceof ChangeUpdateWrapper) {
 			
-			System.out.println("CHANGE-UPDATE: " + change);
+			System.out.println(Thread.currentThread().getName() + "CHANGE-UPDATE: " + change);
 			ChangeUpdateWrapper update = (ChangeUpdateWrapper) change;
 			if (entitySpec.isStructuralChange(update)) {
 

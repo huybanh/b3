@@ -50,6 +50,7 @@ public class ChangeDistributor {
 						}*/
 						change.b3entity.postApplyChange(change, cachedEntities, mapper);
 						DynamoWorker.delete(B3Table.SEPC, change.hashKey, change.rangeKey);
+						undeployedChangeMap.remove(change.entitySpec.shortName + change.getEntityId());
 					}
 				}
 			}.start();
@@ -92,6 +93,7 @@ public class ChangeDistributor {
 		if (b3entity.preApplyChange(change, cachedEntities)) {
 			undeployedChangeMap.put(change.entitySpec.shortName + change.getEntityId(), change);
 			EntityLink[] downlinkedEntities = b3entity.getDownlinkedEntities();
+			System.out.println("Downlink count: " + downlinkedEntities.length);
 			if (downlinkedEntities != null) {
 				for (EntityLink link : downlinkedEntities) {
 					if (link.linkedEntity == null) {
@@ -99,13 +101,19 @@ public class ChangeDistributor {
 					}
 					String entityShortName = link.linkedEntity.getSpec().shortName;
 					long linkId = link.linkedEntity.entity.getId();
-					ChangeBase precedorChange = undeployedChangeMap.get(entityShortName + linkId);
-					if (precedorChange != null) {
-						change.addPrecedent(precedorChange);
+					ChangeBase precedentChange = undeployedChangeMap.get(entityShortName + linkId);
+					if (precedentChange != null) {
+						change.addPrecedent(precedentChange);
 					}
 				}
 			}
+			if (change.precedents != null) {
+				System.out.println("Precedent update count: " + change.precedents.size());
+			}
 			Integer queueIndex = change.getPreferedQueueIndex();
+			if (queueIndex != null) {
+				System.out.println("Change got prefered queue: " + queueIndex);
+			}
 			if (queueIndex == null) {
 				queueIndex = this.rotatingQueueIndex;
 				this.rotatingQueueIndex++;
@@ -175,18 +183,23 @@ class ChangeQueue {
 		}
 
 		while (true) {
+			String oneUndeployedPrecedent = null;
 			boolean wait = false;
 			for (ChangeBase one : change.precedents) {
 				if (undeployedChangeMap.containsKey(one.entitySpec.shortName + one.getEntityId())) {
 					wait = true;
+					oneUndeployedPrecedent = one.entitySpec.shortName + one.getEntityId();
 					break;
 				}
 			}
 			if (!wait) {
+				System.out.println("Change has " + change.precedents.size() + " precedents, but all has been deployed.");
 				break;
 			}
 			try {
-				Thread.sleep(100);
+				System.out.println(Thread.currentThread().getName() + 
+						" sleeps now to wait for precedent updates: " + oneUndeployedPrecedent);
+				Thread.sleep(1000);
 			} catch (InterruptedException e) {
 				
 			}

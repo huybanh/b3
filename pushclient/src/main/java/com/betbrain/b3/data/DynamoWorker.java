@@ -7,8 +7,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.apache.log4j.Logger;
@@ -23,12 +21,10 @@ import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.RangeKeyCondition;
-import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.internal.IteratorSupport;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
-import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.google.gson.Gson;
@@ -235,7 +231,7 @@ public class DynamoWorker {
 		settingTable.updateItem(spec);
 	}
 	
-	//public static boolean readOnly = false;
+	//public static boolean readOnly = true;
 	public static boolean readOnly = false;
 
 	/*public static void put(B3Update update) {
@@ -545,7 +541,7 @@ public class DynamoWorker {
 		}
 
 		Table dynaTable = B3Bundle.workingBundle.getTable(b3table);
-		//System.out.println("DB-PUT " + update);
+		System.out.println(Thread.currentThread().getName() + "DB-PUT " + b3table.name + ": " + hashKey + "@" + rangeKey);
 		if (!readOnly) {
 			while (true) {
 				try {
@@ -603,7 +599,7 @@ public class DynamoWorker {
 		}
 
 		Table dynaTable = B3Bundle.workingBundle.getTable(b3table);
-		//System.out.println("DB-UPDATE " + update);
+		System.out.println(Thread.currentThread().getName() + "DB-UPDATE " + b3table.name + ": " + hashKey + "@" + rangeKey);
 		if (!readOnly) {
 			while (true) {
 				try {
@@ -657,10 +653,10 @@ public class DynamoWorker {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
 		if (rangeKey == null) {
-			//System.out.println("DB-GET " + table.getTableName() + ": " + hashKey);
+			System.out.println(Thread.currentThread().getName() + "DB-GET " + table.getTableName() + ": " + hashKey);
 			return table.getItem(HASH, hashKey);
 		} else {
-			//System.out.println("DB-GET " + table.getTableName() + ": " + hashKey + "@" + rangeKey);
+			System.out.println("DB-GET " + table.getTableName() + ": " + hashKey + "@" + rangeKey);
 			return table.getItem(HASH, hashKey, RANGE, rangeKey);
 		}
 	}
@@ -668,7 +664,7 @@ public class DynamoWorker {
 	public static void delete(B3Table b3table, String hashKey, String rangeKey) {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
-		//System.out.println("DB-DELETE " + b3table.name + " " + hashKey + "@" + rangeKey);
+		System.out.println(Thread.currentThread().getName() + "DB-DELETE " + b3table.name + " " + hashKey + "@" + rangeKey);
 		if (!readOnly) {
 			while (true) {
 				try {
@@ -691,7 +687,7 @@ public class DynamoWorker {
 		}
 	}
 	
-	public static void deleteParallel(B3Table b3table, int segment, int totalSegments) {
+	/*public static void deleteParallel(B3Table b3table, int segment, int totalSegments) {
 		
 		HashMap<String, String> nameMap = new HashMap<String, String>();
 		nameMap.put("h", "hash");
@@ -712,13 +708,8 @@ public class DynamoWorker {
             currentItem = iterator.next();
             String hashKey = currentItem.getString(HASH);
             System.out.print("Scanning " + hashKey);
-			/*if (!hashKey.startsWith(bundle.id)) {
-				return;
-			}*/
-			//System.out.println(hashKey);
-			//table.deleteItem(HASH, hashKey, RANGE, currentItem.getString(RANGE));
         }
-	}
+	}*/
 	
 	/*private static void deleteBundle(B3Table b3table, final String bundleId) {
 		final Table table = getTable(b3table);
@@ -745,7 +736,7 @@ public class DynamoWorker {
 	public static B3ItemIterator query(B3Table b3table, String hashKey, Integer maxResulteSize) {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
-		//System.out.println("QUERY " + table.getTableName() + ": hash=" + hashKey);
+		System.out.println("DB-QUERY " + table.getTableName() + ": hash=" + hashKey);
 		QuerySpec spec = new QuerySpec().withHashKey(HASH, hashKey);
 		if (maxResulteSize != null) {
 			spec = spec.withMaxResultSize(maxResulteSize);
