@@ -49,9 +49,11 @@ public class B3Outcome extends B3Entity<Outcome> {
 	}
 	
 	public void loadFull(Item item, JsonMapper mapper) {
-		deserialize(mapper, item, this, B3Table.CELL_LOCATOR_THIZ);
-		this.status = (B3OutcomeStatus) deserialize(mapper, item, new B3OutcomeStatus(), Outcome.PROPERTY_NAME_statusId);
-		this.type = (B3OutcomeType) deserialize(mapper, item, new B3OutcomeType(), Outcome.PROPERTY_NAME_typeId);
+		deserialize(mapper, item, B3Table.CELL_LOCATOR_THIZ);
+		this.status = new B3OutcomeStatus();
+		this.status.deserialize(mapper, item, Outcome.PROPERTY_NAME_statusId);
+		this.type = new B3OutcomeType();
+		this.type.deserialize(mapper, item, Outcome.PROPERTY_NAME_typeId);
 	}
 
 	@Override

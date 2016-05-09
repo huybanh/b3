@@ -151,12 +151,11 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 	}
 	
 	@SuppressWarnings("unchecked")
-	static <E extends Entity> B3Entity<E> deserialize(JsonMapper mapper, Item item, B3Entity<E> b3entity, String propertyName) {
-		String json = item.getString(propertyName);
+	void deserialize(JsonMapper mapper, Item item, String cellName) {
+		String json = item.getString(cellName);
 		if (json != null) {
-			b3entity.entity = (E) mapper.deserialize(json);
+			entity = (E) mapper.deserialize(json);
 		}
-		return b3entity;
 	}
 	
 	B3Key createMainKey() {
