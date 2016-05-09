@@ -21,43 +21,50 @@ public class EventQuery {
 		query(IDs.EVENT_PREMIERLEAGUE);
 	}
 	
-	private static void query(long eventId) {
+	private static void query(long leagueId) {
 
 		JsonMapper jsonMapper = new JsonMapper();
 		
 		//league
-		B3KeyEntity keyEntity = new B3KeyEntity(Event.class, eventId);
+		B3KeyEntity keyEntity = new B3KeyEntity(Event.class, leagueId);
 		Event league = keyEntity.load(jsonMapper);
-		System.out.println(league);
+		System.out.println("League: " + league);
 		
 		//matches
 		B3KeyLink keyLink = new B3KeyLink(league, Event.class, Event.PROPERTY_NAME_parentId);
 		ArrayList<Long> matchIds = keyLink.listLinks();
 		System.out.println(matchIds);
 		
-		for (Long oneId : matchIds) {
+		/*for (Long oneId : matchIds) {
 			keyEntity = new B3KeyEntity(Event.class, oneId);
 			Event match = keyEntity.load(jsonMapper);
 			System.out.println(match);
 			
-			keyLink = new B3KeyLink(match, Event.class, Event.PROPERTY_NAME_parentId);
+			keyLink = new B3KeyLink(match, Outcome.class, Outcome.PROPERTY_NAME_eventId);
 			matchIds = keyLink.listLinks();
 			System.out.println(matchIds);
-		}
+		}*/
+
+		//match
+		keyEntity = new B3KeyEntity(Event.class, matchIds.get(0));
+		Event match = keyEntity.load(jsonMapper);
+		System.out.println("Match: " + match);
 		
 		//outcomes
-		keyLink = new B3KeyLink(Event.class, /*oneId*/0, Outcome.class, "eventId");
+		keyLink = new B3KeyLink(match, Outcome.class, Outcome.PROPERTY_NAME_eventId);
 		ArrayList<Long> outcomeIds = keyLink.listLinks();
-		System.out.println(outcomeIds);
+		System.out.println(outcomeIds.size());
 		
 		//bettingoffer
-		keyLink = new B3KeyLink(Outcome.class, 0, BettingOffer.class, "outcomeId");
+		keyLink = new B3KeyLink(Outcome.class, outcomeIds.get(0), BettingOffer.class, BettingOffer.PROPERTY_NAME_outcomeId);
 		ArrayList<Long> offerIds = keyLink.listLinks();
-		B3KeyEntity.load(jsonMapper, BettingOffer.class, offerIds);
+		System.out.println(offerIds.size());
+		//B3KeyEntity.load(jsonMapper, BettingOffer.class, offerIds);
 		
 		//eventinfo - current status
-		keyLink = new B3KeyLink(Event.class, eventId, EventInfo.class, "eventId");
+		keyLink = new B3KeyLink(Event.class, matchIds.get(0), EventInfo.class, "eventId");
 		ArrayList<Long> infoIds = keyLink.listLinks();
-		B3KeyEntity.load(jsonMapper, EventInfo.class, infoIds);
+		//B3KeyEntity.load(jsonMapper, EventInfo.class, infoIds);
+		System.out.println(infoIds.size());
 	}
 }

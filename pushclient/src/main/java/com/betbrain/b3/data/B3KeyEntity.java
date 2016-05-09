@@ -60,18 +60,15 @@ public class B3KeyEntity extends B3Key {
 		return String.valueOf(id); 
 	}
 	
-	static final int hardLimit = 50;
+	//static final int hardLimit = 50;
 	
 	@SuppressWarnings("unchecked")
 	public <E extends Entity> ArrayList<E> listEntities(JsonMapper jsonMapper) {
 		ArrayList<E> list = new ArrayList<E>();
-		int i = hardLimit;
+		//int i = hardLimit;
 		for (int distFactor = 0; distFactor < B3Table.DIST_FACTOR; distFactor++) {
 			B3ItemIterator it = DynamoWorker.query(B3Table.Entity, classShortName + distFactor);
 			while (it.hasNext()) {
-				if (--i <= 0) {
-					break;
-				}
 				Item item = it.next();
 				String json = item.getString(B3Table.CELL_LOCATOR_THIZ);
 				Entity entity = jsonMapper.deserializeEntity(json);
