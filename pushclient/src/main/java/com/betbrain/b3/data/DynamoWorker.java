@@ -363,6 +363,7 @@ public class DynamoWorker {
 		closeWriters();
 		openLocalReaders();
 		
+		final Object readersLock = new Object();
 		final LinkedList<Object> threadIds = new LinkedList<>();
 		for (int i = 0; i < 100; i++) {
 			final Object tid = new Object();
@@ -380,7 +381,7 @@ public class DynamoWorker {
 						JsonObject putBean = null;
 						String line = null;
 						int thisReaderIndex;
-						synchronized (DynamoWorker.class) {
+						synchronized (readersLock) {
 							while (readerChecked < allReaders.length + 1) {
 								readerChecked++;
 								readerIndex++;
@@ -421,23 +422,25 @@ public class DynamoWorker {
 								}
 								return;
 							}
-						
+							
 							//readerIndex pointing to a put
 							thisReaderIndex = readerIndex;
 							putBean = pendPuts[readerIndex];
 							pendPuts[readerIndex] = null;
 							if (putBean == null) {
-								try {
-									line = reader.readLine();
-								} catch (IOException e) {
-									throw new RuntimeException(e);
-								}
+								//synchronized (reader) {
+									try {
+										line = reader.readLine();
+									} catch (IOException e) {
+										throw new RuntimeException(e);
+									}
+								//}
 								if (line == null) {
 									allReaders[readerIndex] = null;
 									continue;
 								}
 							}
-						}
+						} //end of synchronized on readersLock
 						
 						if (putBean == null) {
 							//System.out.println(line);
@@ -469,7 +472,7 @@ public class DynamoWorker {
 								range,
 								cells);
 						
-						synchronized (DynamoWorker.class) {
+						synchronized (readersLock) {
 							if (!success) {
 								pendPuts[thisReaderIndex] = putBean;
 								pendTimes[thisReaderIndex] = System.currentTimeMillis();
