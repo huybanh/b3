@@ -1,20 +1,20 @@
-package com.betbrain.b3.pushclient;
+package com.betbrain.b3.data;
 
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityCreate;
 
-public class EntityCreateWrapper extends EntityChangeBase {
+public class ChangeCreateWrapper extends ChangeBase {
 	
 	private EntityCreate create;
 	
 	private Entity entity;
 	
 	//for deserialization
-	public EntityCreateWrapper() {
+	public ChangeCreateWrapper() {
 		
 	}
 	
-	public EntityCreateWrapper(EntityCreate create) {
+	public ChangeCreateWrapper(EntityCreate create) {
 		this.create = create;
 	}
 	

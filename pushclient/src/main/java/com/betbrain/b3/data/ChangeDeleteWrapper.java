@@ -1,8 +1,8 @@
-package com.betbrain.b3.pushclient;
+package com.betbrain.b3.data;
 
 import com.betbrain.sepc.connector.sportsmodel.EntityDelete;
 
-public class EntityDeleteWrapper extends EntityChangeBase {
+public class ChangeDeleteWrapper extends ChangeBase {
 
 	private EntityDelete delete;
 	
@@ -11,11 +11,11 @@ public class EntityDeleteWrapper extends EntityChangeBase {
 	private long entityId;
 	
 	//for deserialization
-	public EntityDeleteWrapper() {
+	public ChangeDeleteWrapper() {
 		
 	}
 	
-	public EntityDeleteWrapper(EntityDelete delete) {
+	public ChangeDeleteWrapper(EntityDelete delete) {
 		this.delete = delete;
 	}
 	

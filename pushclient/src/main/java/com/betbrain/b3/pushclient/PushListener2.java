@@ -17,6 +17,10 @@ import com.betbrain.b3.data.B3CellString;
 import com.betbrain.b3.data.B3Key;
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.DynamoWorker;
+import com.betbrain.b3.data.ChangeBase;
+import com.betbrain.b3.data.ChangeCreateWrapper;
+import com.betbrain.b3.data.ChangeDeleteWrapper;
+import com.betbrain.b3.data.ChangeUpdateWrapper;
 import com.betbrain.b3.data.InitialDumpDeployer;
 import com.betbrain.sepc.connector.sdql.EntityChangeBatchProcessingMonitor;
 import com.betbrain.sepc.connector.sdql.SEPCConnector;
@@ -166,18 +170,18 @@ class BatchWorker implements Runnable {
 			int batchDigitCount = String.valueOf(batch.getEntityChanges().size()).length();
 			for (EntityChange change : batch.getEntityChanges()) {
 				//nameValuePairs.add(new String[] {String.valueOf(i++), serializeChange(change)});
-				EntityChangeBase wrapper;
+				ChangeBase wrapper;
 				if (change instanceof EntityUpdate) {
-					wrapper = new EntityUpdateWrapper((EntityUpdate) change);
-					String error = ((EntityUpdateWrapper) wrapper).validate();
+					wrapper = new ChangeUpdateWrapper((EntityUpdate) change);
+					String error = ((ChangeUpdateWrapper) wrapper).validate();
 					if (error != null) {
 						DynamoWorker.logError(error);
 						continue;
 					}
 				} else if (change instanceof EntityCreate) {
-					wrapper = new EntityCreateWrapper((EntityCreate) change);
+					wrapper = new ChangeCreateWrapper((EntityCreate) change);
 				} else if (change instanceof EntityDelete) {
-					wrapper = new EntityDeleteWrapper((EntityDelete) change);
+					wrapper = new ChangeDeleteWrapper((EntityDelete) change);
 				} else {
 					throw new RuntimeException("Unknown change class: " + change.getClass().getName());
 				}

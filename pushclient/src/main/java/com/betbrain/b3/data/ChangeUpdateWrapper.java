@@ -1,10 +1,11 @@
-package com.betbrain.b3.pushclient;
+package com.betbrain.b3.data;
 
 import java.beans.PropertyDescriptor;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityUpdate;
 import com.betbrain.sepc.connector.sportsmodel.Event;
@@ -12,7 +13,7 @@ import com.betbrain.sepc.connector.sportsmodel.EventInfo;
 import com.betbrain.sepc.connector.util.StringUtil;
 import com.betbrain.sepc.connector.util.beans.BeanUtil;
 
-public class EntityUpdateWrapper extends EntityChangeBase {
+public class ChangeUpdateWrapper extends ChangeBase {
 
 	private String entityClassName;
 	
@@ -25,14 +26,14 @@ public class EntityUpdateWrapper extends EntityChangeBase {
 	private EntityUpdate update;
 
 	//needed for deserialization
-	public EntityUpdateWrapper() {
+	public ChangeUpdateWrapper() {
 	}
 
-	public EntityUpdateWrapper(EntityUpdate update) {
+	public ChangeUpdateWrapper(EntityUpdate update) {
 		this.update = update;
 	}
 	
-	String validate() {
+	public String validate() {
 		try {
 			if (update.getPropertyNames().size() != update.getPropertyValues().size()) {
 				return "Update with different numbers of names and values";
@@ -159,7 +160,7 @@ public class EntityUpdateWrapper extends EntityChangeBase {
 		EntityUpdate update = new EntityUpdate(Event.class, 9, names, values);
 		System.out.println("Original: " + update);
 		
-		EntityUpdateWrapper wrapper = new EntityUpdateWrapper(update);
+		ChangeUpdateWrapper wrapper = new ChangeUpdateWrapper(update);
 		String s = mapper.serialize(wrapper);
 		System.out.println("serialized: " + s);
 		Object x = mapper.deserialize(s);
@@ -177,7 +178,7 @@ public class EntityUpdateWrapper extends EntityChangeBase {
 		valuesWithNulls.add("Injury");
 		EntityUpdate u = new EntityUpdate(EventInfo.class, 1L, names, valuesWithNulls);
 		System.out.println(u);
-		wrapper = new EntityUpdateWrapper(u);
+		wrapper = new ChangeUpdateWrapper(u);
 		s = new JsonMapper().serialize(wrapper);
 		System.out.println(s);
 		Object o = new JsonMapper().deserialize(s);

@@ -2,14 +2,10 @@ package com.betbrain.b3.model;
 
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 
 import com.betbrain.b3.data.InitialDumpDeployer;
 import com.betbrain.b3.data.EntitySpec2;
-import com.betbrain.b3.pushclient.EntityChangeBase;
-import com.betbrain.b3.pushclient.EntityCreateWrapper;
-import com.betbrain.b3.pushclient.EntityDeleteWrapper;
-import com.betbrain.b3.pushclient.EntityUpdateWrapper;
+import com.betbrain.b3.data.ChangeUpdateWrapper;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
@@ -22,9 +18,11 @@ import com.betbrain.b3.data.B3KeyLink;
 import com.betbrain.b3.data.B3KeyLookup;
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.DynamoWorker;
+import com.betbrain.b3.data.ChangeBase;
+import com.betbrain.b3.data.ChangeCreateWrapper;
+import com.betbrain.b3.data.ChangeDeleteWrapper;
 import com.betbrain.b3.data.EntityLink;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
-import com.betbrain.sepc.connector.sportsmodel.Source;
 import com.betbrain.sepc.connector.util.beans.BeanUtil;
 
 public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
@@ -98,13 +96,6 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 	abstract public void buildDownlinks(boolean forMainKeyOnly, 
 			HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper);
 	
-	/*@SuppressWarnings("rawtypes")
-	static <E extends B3Entity, F> E build(Long id, E e, Class<? extends Entity> clazz,
-			HashMap<String, HashMap<Long, Entity>> masterMap, B3Bundle JsonMapper mapper) {
-		
-		return build(id, e, clazz, masterMap, mapper, true);
-	}*/
-	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	static <E extends B3Entity> E build(boolean forMainKeyOnly, Long id, E e, Class<? extends Entity> clazz,
 			HashMap<String, HashMap<Long, Entity>> masterMap, 
@@ -128,6 +119,10 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 			e.buildDownlinks(forMainKeyOnly, masterMap, mapper);
 		//}
 		return e;
+	}
+	
+	public void setSpec(EntitySpec2 spec) {
+		this.entitySpec = spec;
 	}
 	
 	private static Entity lookup(Long id, Class<? extends Entity> clazz, HashMap<String, HashMap<Long, Entity>> masterMap) {
@@ -172,50 +167,13 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		throw new RuntimeException();
 	}
 	
-	public static void applyChange(String createTime, EntityChangeBase change, 
-			HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper) {
-		
-		/*if (true) {
-			System.out.println(change);
-			return;
-		}*/
-		if (Source.class.getName().equals(change.getEntityClassName())) {
-			if (change instanceof EntityUpdateWrapper) {
-				List<String> changedNames = ((EntityUpdateWrapper) change).getB3PropertyNames();
-				if (changedNames == null || 
-						(changedNames.size() == 1 && changedNames.contains(Source.PROPERTY_NAME_lastCollectedTime))) {
-					
-					//skip this trivial change
-					return;
-				}
-			}
-		}
-		
-		EntitySpec2 entitySpec = EntitySpec2.get(change.getEntityClassName());
-		if (entitySpec == null /*|| entitySpec.b3class == null*/) {
-			System.out.println("Ignoring unconfigured change handler " + change);
-			return;
-		}
-		
-		B3Entity<?> b3entity;
-		try {
-			b3entity = entitySpec.b3class.newInstance();
-			b3entity.entitySpec = entitySpec;
-			b3entity.applyChangeInternal(createTime, change, masterMap, mapper);
-		} catch (InstantiationException e) {
-			throw new RuntimeException(e);
-		} catch (IllegalAccessException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
 	@SuppressWarnings("unchecked")
-	private void applyChangeInternal(String createTime, EntityChangeBase change, 
+	public void applyChange(String createTime, ChangeBase change, 
 			HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper) {
 		
-		if (change instanceof EntityCreateWrapper) {
+		if (change instanceof ChangeCreateWrapper) {
 			System.out.println("CHANGE-CREATE: " + change);
-			this.entity = (E) ((EntityCreateWrapper) change).getEntity();
+			this.entity = (E) ((ChangeCreateWrapper) change).getEntity();
 			boolean forMainKeyOnlyFalse = false;
 			buildDownlinks(forMainKeyOnlyFalse, masterMap, null);
 			putCurrent(masterMap, mapper);
@@ -224,9 +182,9 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 				putRevision(createTime, masterMap, mapper);
 			}
 		
-		} else if (change instanceof EntityDeleteWrapper) {
+		} else if (change instanceof ChangeDeleteWrapper) {
 			System.out.println("CHANGE-DELETE: " + change);
-			EntityDeleteWrapper delete = (EntityDeleteWrapper) change;
+			ChangeDeleteWrapper delete = (ChangeDeleteWrapper) change;
 			//B3KeyEntity entityKey = new B3KeyEntity(delete.getEntityClassName(), delete.getEntityId());
 			//this.entity = (E) entityKey.load(mapper);
 			this.entity = (E) masterMap.get(delete.getEntityClassName()).get(delete.getEntityId());
@@ -235,15 +193,15 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 						delete.getEntityClassName() + "/" + delete.getEntityId());
 				return;
 			}
-			boolean forMainKeyOnlyFalse = true;
-			buildDownlinks(forMainKeyOnlyFalse, masterMap, null);
+			boolean forMainKeyOnlyTrue = true;
+			buildDownlinks(forMainKeyOnlyTrue, masterMap, null);
 			deleteCurrent(mapper);
 			masterMap.get(this.entity.getClass().getName()).remove(this.entity.getId());
 			
-		} else if (change instanceof EntityUpdateWrapper) {
+		} else if (change instanceof ChangeUpdateWrapper) {
 			
 			System.out.println("CHANGE-UPDATE: " + change);
-			EntityUpdateWrapper update = (EntityUpdateWrapper) change;
+			ChangeUpdateWrapper update = (ChangeUpdateWrapper) change;
 			//B3KeyEntity entityKey = new B3KeyEntity(update.getEntityClassName(), update.getEntityId());
 			//this.entity = entityKey.load(mapper);
 			this.entity = (E) masterMap.get(update.getEntityClassName()).get(update.getEntityId());

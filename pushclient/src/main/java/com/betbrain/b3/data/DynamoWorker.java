@@ -95,14 +95,14 @@ public class DynamoWorker {
 		settingTable = dynamoDB.getTable("setting");
 	}
 	
-	static void createTables() {
+	public static void createTables() {
 		initialize();
 		String availBundleId = findBundleIdByStatus(BUNDLE_STATUS_NOTEXIST, true);
 		B3Bundle.createTables(dynamoDB, availBundleId);
 		setBundleStatus(availBundleId, BUNDLE_STATUS_EMPTY);
 	}
 	
-	static void deleteTables() {
+	public static void deleteTables() {
 		initBundleByStatus(BUNDLE_STATUS_DELETEWAIT);
 		B3Bundle.workingBundle.deleteTables(dynamoDB);
 		setWorkingBundleStatus(BUNDLE_STATUS_NOTEXIST);

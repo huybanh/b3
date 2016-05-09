@@ -16,9 +16,10 @@ import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputExceededExce
 import com.betbrain.b3.data.B3CellString;
 import com.betbrain.b3.data.B3Key;
 import com.betbrain.b3.data.B3Table;
+import com.betbrain.b3.data.ChangeDistributor;
 import com.betbrain.b3.data.DynamoWorker;
+import com.betbrain.b3.data.ChangeBase;
 import com.betbrain.b3.data.EntitySpec2;
-import com.betbrain.b3.model.B3Entity;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 
 public class ChangeBatchDeployer {
@@ -102,13 +103,14 @@ public class ChangeBatchDeployer {
 				
 				while (it.hasNext()) {
 					Item item = it.next();
-					String createTime = item.getString(DynamoWorker.SEPC_CELLNAME_CREATETIME);
 					String changesJson = item.getString(DynamoWorker.SEPC_CELLNAME_JSON);
-					EntityChangeBase oneChange = (EntityChangeBase) mapper.deserialize(changesJson);
-					B3Entity.applyChange(createTime, (EntityChangeBase) oneChange, masterMap, mapper);
-					DynamoWorker.delete(B3Table.SEPC, hashKey, item.getString(DynamoWorker.RANGE));
+					ChangeBase oneChange = (ChangeBase) mapper.deserialize(changesJson);
+					oneChange.changeTime = item.getString(DynamoWorker.SEPC_CELLNAME_CREATETIME);
+					oneChange.hashKey = hashKey;
+					oneChange.rangeKey = item.getString(DynamoWorker.RANGE);
+					ChangeDistributor.distribute((ChangeBase) oneChange, masterMap, mapper);
 					if (deployCount == 0) {
-						Date d = new Date(Long.parseLong(createTime));
+						Date d = new Date(Long.parseLong(oneChange.changeTime));
 						DynamoWorker.updateSetting(
 								new B3CellString(DynamoWorker.BUNDLE_CELL_DEPLOYSTATUS, DynamoWorker.BUNDLE_PUSHSTATUS_ONGOING),
 								new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_ID, String.valueOf(batchId)),
@@ -245,66 +247,6 @@ public class ChangeBatchDeployer {
 		System.out.println(Thread.currentThread().getName() +
 				": Loaded " + clazz.getName() + ": " + entityMap.size());
 	}
-	
-	/*private ArrayList<B3ChangeBatch> queryForChanges() {
-		
-		LinkedList<Future<Integer>> executions = new LinkedList<Future<Integer>>(); 
-		final ArrayList<B3ChangeBatch> allBatches = new ArrayList<B3ChangeBatch>();
-		for (int dist = 0; dist < B3Table.DIST_FACTOR; dist++) {
-			
-			final int distFinal = dist;
-			Future<Integer> oneExecution = executor.submit(new Runnable() {
-				
-					public void run() {
-						ItemCollection<QueryOutcome> coll = DynamoWorker.query(
-								B3Table.SEPC, DynamoWorker.SEPC_CHANGEBATCH + distFinal, 1);
-	
-						IteratorSupport<Item, QueryOutcome> iter = coll.iterator();
-						//int changeBatchCount = 0;
-						while (iter.hasNext()) {
-							Item item = iter.next();
-							//String batchId = item.getString(DynamoWorker.RANGE);
-							//String createTime = item.getString(DynamoWorker.SEPC_CELLNAME_CREATETIME);
-							String changesJson = item.getString(DynamoWorker.SEPC_CELLNAME_CHANGES);
-							//System.out.println(changesJson);
-							@SuppressWarnings("unchecked")
-							List<Object> changes = (List<Object>) mapper.deserialize(changesJson);
-							B3ChangeBatch batch = new B3ChangeBatch(item.getLong(DynamoWorker.RANGE));
-							allBatches.add(batch);
-							for (Object obj : changes) {
-								if (obj != null) {
-									batch.changes.add((EntityChangeBase) obj);
-								} else {
-									System.out.println("NULL CHANGE: " + changesJson);
-									Thread.dumpStack();
-								}
-							}
-							//System.out.println(changes);
-							//changeBatchCount++;
-							//if (changeBatchCount % 2 == 0) {
-							//	System.out.println("Change-batch count: " + changeBatchCount);
-								//break;
-							//}
-						}
-					}
-				}, 1);
-			executions.add(oneExecution);
-		}
-		
-		for (Future<Integer> one : executions) {
-			while (true) {
-				try {
-					one.get();
-				} catch (InterruptedException e) {
-					continue;
-				} catch (ExecutionException e) {
-					continue;
-				}
-				break;
-			}
-		}
-		return allBatches;
-	}*/
 }
 
 abstract class EntityLoadingTask {
