@@ -3,6 +3,7 @@ package com.betbrain.b3.model;
 import java.util.HashMap;
 
 import com.betbrain.b3.data.B3KeyOffer;
+import com.betbrain.b3.data.EntitySpec2;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
 import com.betbrain.sepc.connector.sportsmodel.BettingOfferStatus;
@@ -23,6 +24,11 @@ public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 	public B3BettingType bettingType;
 	
 	public B3BettingOfferStatus status;
+	
+	@Override
+	public EntitySpec2 getSpec() {
+		return EntitySpec2.BettingOffer;
+	}
 
 	@Override
 	public void getDownlinkedEntitiesInternal() {

@@ -3,6 +3,7 @@ package com.betbrain.b3.model;
 import java.util.HashMap;
 
 import com.betbrain.b3.data.B3KeyEventInfo;
+import com.betbrain.b3.data.EntitySpec2;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Event;
@@ -21,6 +22,11 @@ public class B3EventInfo extends B3Entity<EventInfo> {
 	//package private
 	public B3Event event;
 	public B3EventPart eventPart;
+	
+	@Override
+	public EntitySpec2 getSpec() {
+		return EntitySpec2.EventInfo;
+	}
 
 	@Override
 	public void getDownlinkedEntitiesInternal() {

@@ -235,8 +235,8 @@ public class DynamoWorker {
 		settingTable.updateItem(spec);
 	}
 	
+	//public static boolean readOnly = false;
 	public static boolean readOnly = false;
-	//public static boolean readOnly = true;
 
 	/*public static void put(B3Update update) {
 		put(update.table, update.key.getHashKey(), update.key.getRangeKey(), update.cells);
@@ -738,11 +738,11 @@ public class DynamoWorker {
 		//table.deleteItem(HASH, hashKey);
 	}*/
 	
-	public static ItemCollection<QueryOutcome> query(B3Table b3table, String hashKey) {
+	public static B3ItemIterator query(B3Table b3table, String hashKey) {
 		return query(b3table, hashKey, null);
 	}
 	
-	public static ItemCollection<QueryOutcome> query(B3Table b3table, String hashKey, Integer maxResulteSize) {
+	public static B3ItemIterator query(B3Table b3table, String hashKey, Integer maxResulteSize) {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
 		//System.out.println("QUERY " + table.getTableName() + ": hash=" + hashKey);
@@ -750,7 +750,12 @@ public class DynamoWorker {
 		if (maxResulteSize != null) {
 			spec = spec.withMaxResultSize(maxResulteSize);
 		}
-		return table.query(spec);
+		ItemCollection<QueryOutcome> coll = table.query(spec);
+		IteratorSupport<Item, QueryOutcome> it = null;
+		if (coll != null) {
+			it = coll.iterator();
+		}
+		return new B3ItemIterator(it);
 	}
 	
 	public static ItemCollection<QueryOutcome> queryRangeBeginsWith(

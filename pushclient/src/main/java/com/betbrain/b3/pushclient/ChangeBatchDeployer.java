@@ -2,7 +2,6 @@ package com.betbrain.b3.pushclient;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -13,7 +12,7 @@ import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.internal.IteratorSupport;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputExceededException;
-import com.betbrain.b3.data.B3CellString;
+import com.betbrain.b3.data.B3ItemIterator;
 import com.betbrain.b3.data.B3Key;
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.ChangeDistributor;
@@ -31,9 +30,11 @@ public class ChangeBatchDeployer {
 	//private ExecutorService executor;
 
 	//private final ArrayList<?>[] allEntityLists = new ArrayList<?>[EntitySpec2.values().length];
-	private final HashMap<String, HashMap<Long, Entity>> masterMap = new HashMap<>();
 	
 	public static void main(String[] args) {
+		
+		int initialLoadingThreads = Integer.parseInt(args[0]);
+		int deployThreads = Integer.parseInt(args[1]);
 
 		//final int threadCount = Integer.parseInt(args[0]);
 		if (!DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_PUSH_WAIT)) {
@@ -44,30 +45,30 @@ public class ChangeBatchDeployer {
 		}
 		//DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYING); //for testing only
 
-		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSHING);
-		ChangeBatchDeployer deployer = new ChangeBatchDeployer();
-		deployer.loadEntities(Integer.parseInt(args[0]));
+		HashMap<String, HashMap<Long, Entity>> cachedEntities = loadEntityCache(initialLoadingThreads);
 		//dump masterMap
-		for (Entry<String, HashMap<Long, Entity>> entry : deployer.masterMap.entrySet()) {
+		for (Entry<String, HashMap<Long, Entity>> entry : cachedEntities.entrySet()) {
 			System.out.println(entry.getKey() + ": " + entry.getValue().size());
 		}
 		//deployer.masterMap.get(key)
-		deployer.deployChangeBatches();
+
+		ChangeDistributor changeDist = new ChangeDistributor(deployThreads, cachedEntities);
+		deployChangeBatches(changeDist);
 	}
 	
 	private ChangeBatchDeployer() {
 		//executor = Executors.newFixedThreadPool(threadCount);
 	}
 
-	private void deployChangeBatches() {
+	private static void deployChangeBatches(ChangeDistributor changeDist) {
+		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSHING);
 		JsonMapper mapper = new JsonMapper();
-		int deployCount = 0;
+		//int deployCount = 0;
 		while (true) {
+			System.out.println("Querying " + B3Table.DIST_FACTOR + " partitions for first change batch id");
 			final ArrayList<String> allRangeIds = new ArrayList<String>();
 			for (int dist = 0; dist < B3Table.DIST_FACTOR; dist++) {
-				ItemCollection<QueryOutcome> coll = DynamoWorker.query(
-						B3Table.SEPC, DynamoWorker.SEPC_CHANGEBATCH + dist, 1);
-				IteratorSupport<Item, QueryOutcome> iter = coll.iterator();
+				B3ItemIterator iter = DynamoWorker.query(B3Table.SEPC, DynamoWorker.SEPC_CHANGEBATCH + dist, 1);
 				while (iter.hasNext()) {
 					Item item = iter.next();
 					allRangeIds.add(item.getString(DynamoWorker.RANGE));
@@ -108,35 +109,25 @@ public class ChangeBatchDeployer {
 					oneChange.changeTime = item.getString(DynamoWorker.SEPC_CELLNAME_CREATETIME);
 					oneChange.hashKey = hashKey;
 					oneChange.rangeKey = item.getString(DynamoWorker.RANGE);
-					ChangeDistributor.distribute((ChangeBase) oneChange, masterMap, mapper);
-					if (deployCount == 0) {
-						Date d = new Date(Long.parseLong(oneChange.changeTime));
-						DynamoWorker.updateSetting(
-								new B3CellString(DynamoWorker.BUNDLE_CELL_DEPLOYSTATUS, DynamoWorker.BUNDLE_PUSHSTATUS_ONGOING),
-								new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_ID, String.valueOf(batchId)),
-								new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_TIMESTAMP, d.toString()));
-					}
-					deployCount++;
-					if (deployCount == 1000) {
-						deployCount = 0;
-					}
+					changeDist.distribute((ChangeBase) oneChange, mapper);
 				}
 				batchId++;
 			}
 		}
 	}
 	
-	private void loadEntities(int loadingThreadCount) {
+	private static HashMap<String, HashMap<Long, Entity>> loadEntityCache(int loadingThreadCount) {
 		
 		/*for (int i = 0; i < allEntityLists.length; i++) {
 			allEntityLists[i] = new ArrayList<>();
 		}*/
+		HashMap<String, HashMap<Long, Entity>> cachedEntities = new HashMap<>();
 		final ArrayList<EntityLoadingTask> allLoadingTasks = new ArrayList<>();
 		for (EntitySpec2 spec : EntitySpec2.values()) {
 			final EntitySpec2 specFinal = spec;
 			//final ArrayList<Entity> entityList = new ArrayList<>();
 			final HashMap<Long, Entity> entityMap = new HashMap<>();
-			masterMap.put(spec.entityClass.getName(), entityMap);
+			cachedEntities.put(spec.entityClass.getName(), entityMap);
 			System.out.println("Creating loading tasks for " + spec.entityClass.getName());
 			for (int partition = 0; partition < B3Table.DIST_FACTOR; partition++) {
 				final int partitionFinal = partition;
@@ -144,9 +135,7 @@ public class ChangeBatchDeployer {
 					
 					@Override
 					public void run(JsonMapper mapper) {
-						loadEntities(specFinal.entityClass, partitionFinal, 
-								//(ArrayList<Entity>) allEntityLists[specFinal.ordinal()], mapper);
-								entityMap, mapper);
+						loadEntities(specFinal.entityClass, partitionFinal, entityMap, mapper);
 					}
 				});
 			}
@@ -196,6 +185,7 @@ public class ChangeBatchDeployer {
 				}
 			}
 		}
+		return cachedEntities;
 	}
 	
 	private static void loadEntities(Class<?> clazz, int partition,
@@ -203,9 +193,7 @@ public class ChangeBatchDeployer {
 			HashMap<Long, Entity> entityMap, JsonMapper mapper) {
 		
 		System.out.println("Querying entity " + EntitySpec2.getShortName(clazz.getName()) + partition);
-		ItemCollection<QueryOutcome> coll = DynamoWorker.query(
-				B3Table.Entity, EntitySpec2.getShortName(clazz.getName()) + partition);
-		IteratorSupport<Item, QueryOutcome> iter = coll.iterator();
+		B3ItemIterator iter = DynamoWorker.query(B3Table.Entity, EntitySpec2.getShortName(clazz.getName()) + partition);
 		int counter = 0;
 		while (true) {
 			String json = null;

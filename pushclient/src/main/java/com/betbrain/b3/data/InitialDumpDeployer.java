@@ -368,7 +368,7 @@ public class InitialDumpDeployer {
 						
 						//put linked entities to table main, lookup, link
 						LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
-						putToLookupAndLinkRecursively(true, table, b3key, b3Cells, null, b3entity, false, masterMap, jsonMapper);
+						putToLookupAndLinkRecursively(true, table, b3key, b3Cells, null, b3entity, masterMap, jsonMapper);
 						
 						//put main entity to main table
 						//B3Update update = new B3Update(table, b3key, b3Cells.toArray(new B3CellString[b3Cells.size()]));
@@ -401,9 +401,19 @@ public class InitialDumpDeployer {
 		}
 	}
 	
+	/**
+	 * @param putToFile
+	 * @param mainTable
+	 * @param mainKey: Null if no actual puts required
+	 * @param mainCells
+	 * @param cellName
+	 * @param b3entity
+	 * @param masterMap
+	 * @param jsonMapper
+	 */
 	public static <E extends Entity>void putToLookupAndLinkRecursively(boolean putToFile,
 			B3Table mainTable, B3Key mainKey, LinkedList<B3Cell<?>> mainCells, 
-			final String cellName, B3Entity<?> b3entity, boolean noActualPuts,
+			final String cellName, B3Entity<?> b3entity,
 			HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper jsonMapper) {
 		
 		String thisCellName;
@@ -418,7 +428,7 @@ public class InitialDumpDeployer {
 		mainCells.add(jsonCell);
 		
 		//put event to lookup
-		if (!noActualPuts) {
+		if (mainKey != null) {
 			B3KeyLookup lookupKey = new B3KeyLookup(
 					b3entity.entity, mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), thisCellName);
 			//B3Update update = new B3Update(B3Table.Lookup, lookupKey);
@@ -439,7 +449,7 @@ public class InitialDumpDeployer {
 				}
 				
 				//put linked entity to table link
-				if (!noActualPuts) {
+				if (mainKey != null) {
 					B3KeyLink linkKey = new B3KeyLink(link.linkedEntityClazz, link.linkedEntityId, b3entity.entity, link.name); //reverse link direction
 					//B3Update update = new B3Update(B3Table.Link, linkKey);
 					if (putToFile) {
@@ -462,7 +472,7 @@ public class InitialDumpDeployer {
 						childCellName = cellName + B3Table.CELL_LOCATOR_SEP + link.name;
 					}
 					putToLookupAndLinkRecursively(
-							putToFile, mainTable, mainKey, mainCells, childCellName, link.linkedEntity, noActualPuts, masterMap, jsonMapper);
+							putToFile, mainTable, mainKey, mainCells, childCellName, link.linkedEntity, masterMap, jsonMapper);
 				}
 			}
 		}

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.betbrain.b3.data.B3KeyOutcome;
 import com.betbrain.b3.data.B3Table;
+import com.betbrain.b3.data.EntitySpec2;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Event;
@@ -19,6 +20,11 @@ public class B3Outcome extends B3Entity<Outcome> {
 	public B3EventPart eventPart;
 	public B3OutcomeStatus status;
 	public B3OutcomeType type;
+	
+	@Override
+	public EntitySpec2 getSpec() {
+		return EntitySpec2.Outcome;
+	}
 
 	@Override
 	public void getDownlinkedEntitiesInternal() {
