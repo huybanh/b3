@@ -185,7 +185,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 			ChangeUpdateWrapper update = (ChangeUpdateWrapper) change;
 			update.applyChanges(this.entity);
 		}
-		boolean forMainKeyOnly = change.needEntityMainIDsOnly(getSpec());
+		boolean forMainKeyOnly = change.isOnlyEntityMainIDsNeeded(getSpec());
 		buildDownlinks(forMainKeyOnly, masterMap, null);
 		return true;
 	}

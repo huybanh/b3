@@ -105,7 +105,7 @@ public class ChangeUpdateWrapper extends ChangeBase {
 	}
 	
 	@Override
-	public boolean needEntityMainIDsOnly(EntitySpec2 entitySpec) {
+	public boolean isOnlyEntityMainIDsNeeded(EntitySpec2 entitySpec) {
 		if (entitySpec.revisioned) {
 			return false;
 		} else {

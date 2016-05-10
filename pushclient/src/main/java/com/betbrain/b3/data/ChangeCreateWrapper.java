@@ -62,7 +62,7 @@ public class ChangeCreateWrapper extends ChangeBase {
 	}
 	
 	@Override
-	public boolean needEntityMainIDsOnly(EntitySpec2 entitySpec) {
+	public boolean isOnlyEntityMainIDsNeeded(EntitySpec2 entitySpec) {
 		return false;
 	}
 	

@@ -36,7 +36,7 @@ public abstract class ChangeBase {
 	
 	public abstract Long getEntityId();
 	
-	public abstract boolean needEntityMainIDsOnly(EntitySpec2 entitySpec);
+	public abstract boolean isOnlyEntityMainIDsNeeded(EntitySpec2 entitySpec);
 
 	void addPrecedent(ChangeBase precedentChange) {
 		if (precedents == null) {
