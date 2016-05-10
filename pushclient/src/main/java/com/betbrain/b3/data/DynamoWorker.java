@@ -74,6 +74,7 @@ public class DynamoWorker {
 	public static final String SEPC_INITIAL = "I";
 	public static final String SEPC_CHANGEBATCH = "B";
 	public static final String SEPC_CELLNAME_JSON = "JSON";
+	public static final String SEPC_CELLNAME_NEXTBATCH = "NB";
 	public static final String SEPC_CELLNAME_CREATETIME = "CREATE_TIME";
 	//public static final String SEPC_CELLNAME_CHANGES = "CHANGES";
 	
@@ -749,12 +750,18 @@ public class DynamoWorker {
 		return new B3ItemIterator(it);
 	}
 	
-	public static ItemCollection<QueryOutcome> queryRangeBeginsWith(
+	public static B3ItemIterator queryRangeBeginsWith(
 			B3Table b3table, String hashKey, String rangeStart) {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
 		QuerySpec spec = new QuerySpec().withHashKey(HASH, hashKey)
 				.withRangeKeyCondition(new RangeKeyCondition(RANGE).beginsWith(rangeStart));
-		return table.query(spec);
+		
+		ItemCollection<QueryOutcome> coll = table.query(spec);
+		IteratorSupport<Item, QueryOutcome> it = null;
+		if (coll != null) {
+			it = coll.iterator();
+		}
+		return new B3ItemIterator(it);
 	}
 }

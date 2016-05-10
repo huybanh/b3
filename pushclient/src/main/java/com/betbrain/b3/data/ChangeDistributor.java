@@ -3,16 +3,14 @@ package com.betbrain.b3.data;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 
 import com.betbrain.b3.model.B3Entity;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
-import com.betbrain.sepc.connector.sportsmodel.Source;
 
 public class ChangeDistributor {
 	
-	private final HashMap<String, HashMap<Long, Entity>> cachedEntities;
+	//private final HashMap<String, HashMap<Long, Entity>> cachedEntities;
 	
 	//keyed by entity short name + entity id
 	private final HashMap<String, ChangeBase> undeployedChangeMap = new HashMap<>();
@@ -25,7 +23,7 @@ public class ChangeDistributor {
 	private int deployCount;
 	
 	public ChangeDistributor(int queueCount, HashMap<String, HashMap<Long, Entity>> cachedEntityMap) {
-		this.cachedEntities = cachedEntityMap;
+		//this.cachedEntities = cachedEntityMap;
 		changeQueues = new ChangeQueue[queueCount];
 		for (int i = 0; i < queueCount; i++) {
 			changeQueues[i] = new ChangeQueue(i, undeployedChangeMap);
@@ -35,7 +33,7 @@ public class ChangeDistributor {
 			final int queueId = i;
 			new Thread() {
 				
-				JsonMapper mapper = new JsonMapper();
+				//JsonMapper mapper = new JsonMapper();
 				
 				public void run() {
 					while (true) {
@@ -48,9 +46,9 @@ public class ChangeDistributor {
 							}
 							continue;
 						}*/
-						change.b3entity.postApplyChange(change, cachedEntities, mapper);
+						//change.b3entity.postApplyChange(change, cachedEntities, mapper);
 						DynamoWorker.delete(B3Table.SEPC, change.hashKey, change.rangeKey);
-						undeployedChangeMap.remove(change.entitySpec.shortName + change.getEntityId());
+						undeployedChangeMap.remove("change.takeMapKey()");
 					}
 				}
 			}.start();
@@ -59,7 +57,8 @@ public class ChangeDistributor {
 	
 	public void distribute(ChangeBase change, JsonMapper mapper) {
 		
-		if (Source.class.getName().equals(change.getEntityClassName())) {
+		System.out.println(Thread.currentThread().getName() + ": Processing change " + change.rangeKey);
+		/*if (Source.class.getName().equals(change.getEntityClassName())) {
 			if (change instanceof ChangeUpdateWrapper) {
 				List<String> changedNames = ((ChangeUpdateWrapper) change).getB3PropertyNames();
 				if (changedNames == null || 
@@ -69,7 +68,7 @@ public class ChangeDistributor {
 					return;
 				}
 			}
-		}
+		}*/
 		
 		EntitySpec2 entitySpec = EntitySpec2.get(change.getEntityClassName());
 		if (entitySpec == null /*|| entitySpec.b3class == null*/) {
@@ -87,11 +86,11 @@ public class ChangeDistributor {
 		}
 		
 		//b3entity.setSpec(entitySpec);
-		change.entitySpec = b3entity.getSpec();
-		change.b3entity = b3entity;
+		//change.entitySpec = b3entity.getSpec();
+		//change.b3entity = b3entity;
 		
-		if (b3entity.preApplyChange(change, cachedEntities)) {
-			undeployedChangeMap.put(change.entitySpec.shortName + change.getEntityId(), change);
+		//if (b3entity.preApplyChange(change, cachedEntities)) {
+			undeployedChangeMap.put("change.takeMapKey()", change);
 			EntityLink[] downlinkedEntities = b3entity.getDownlinkedEntities();
 			System.out.println("Downlink count: " + downlinkedEntities.length);
 			if (downlinkedEntities != null) {
@@ -123,7 +122,7 @@ public class ChangeDistributor {
 			}
 			changeQueues[queueIndex].enqueue(change);
 			//b3entity.postApplyChange(change, cachedEntities, mapper);
-		}
+		//}
 		//DynamoWorker.delete(B3Table.SEPC, change.hashKey, change.rangeKey);
 		
 		if (deployCount == 0) {
@@ -169,6 +168,7 @@ class ChangeQueue {
 					break;
 				}
 
+				System.out.println(Thread.currentThread().getName() + ": no changes found, wait...");
 				try {
 					changes.wait();
 				} catch (InterruptedException e) {
@@ -183,12 +183,12 @@ class ChangeQueue {
 		}
 
 		while (true) {
-			String oneUndeployedPrecedent = null;
+			ChangeBase oneUndeployedPrecedent = null;
 			boolean wait = false;
 			for (ChangeBase one : change.precedents) {
-				if (undeployedChangeMap.containsKey(one.entitySpec.shortName + one.getEntityId())) {
+				if (undeployedChangeMap.containsKey("one.takeMapKey()")) {
 					wait = true;
-					oneUndeployedPrecedent = one.entitySpec.shortName + one.getEntityId();
+					oneUndeployedPrecedent = one;
 					break;
 				}
 			}
@@ -198,7 +198,8 @@ class ChangeQueue {
 			}
 			try {
 				System.out.println(Thread.currentThread().getName() + 
-						" sleeps now to wait for precedent updates: " + oneUndeployedPrecedent);
+						" sleeps now to wait for precedent updates: " + 
+						"oneUndeployedPrecedent.takeMapKey()" + " in queue " + oneUndeployedPrecedent.queueId);
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
 				

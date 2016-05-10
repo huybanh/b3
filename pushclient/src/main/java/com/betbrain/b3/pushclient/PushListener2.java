@@ -1,7 +1,8 @@
 package com.betbrain.b3.pushclient;
 
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -30,15 +31,16 @@ import com.betbrain.sepc.connector.sdql.SEPCPushConnector;
 public class PushListener2 implements SEPCConnectorListener, EntityChangeBatchProcessingMonitor {
 	
     private final Logger logger = Logger.getLogger(this.getClass());
-	
-	final ArrayList<EntityChangeBatch> batches = new ArrayList<EntityChangeBatch>();
+
+	final LinkedList<EntityChangeBatch> batches = new LinkedList<EntityChangeBatch>();
 	
 	private long lastBatchId;
 	
 	private static int initialThreads;
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		
+		BatchWorkerFile.init();
 		if (!DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_EMPTY)) {
 			return;
 		}
@@ -66,6 +68,11 @@ public class PushListener2 implements SEPCConnectorListener, EntityChangeBatchPr
 			//printCount = 0;
 			//logger.info("Got batch: " + changeBatch);
 		//}
+		try {
+			BatchWorkerFile.save(changeBatch);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 		synchronized (batches) {
 			batches.add(changeBatch);
 			batches.notifyAll();
@@ -127,7 +134,8 @@ class BatchWorker implements Runnable {
 	
     private final Logger logger = Logger.getLogger(this.getClass());
 	
-	final ArrayList<EntityChangeBatch> batches;
+	//final ArrayList<EntityChangeBatch> batches;
+    final LinkedList<EntityChangeBatch> batches;
 	
 	private final JsonMapper mapper = new JsonMapper();
 	
@@ -137,7 +145,7 @@ class BatchWorker implements Runnable {
 	
 	static final int BATCHID_DIGIT_COUNT = "00026473973523".length(); //sample batch id: 26473973523
 	
-	BatchWorker(ArrayList<EntityChangeBatch> batches) {
+	BatchWorker(LinkedList<EntityChangeBatch> batches) {
 		this.batches = batches;
 	}
 
@@ -148,8 +156,10 @@ class BatchWorker implements Runnable {
 		//int printCount = 0;
 		while (true) {
 			EntityChangeBatch batch;
+			long nextBatchId;
 			synchronized (batches) {
 				if (batches.isEmpty()) {
+				//if (batches.size() < 2) { //performance error: linked list
 					try {
 						batches.wait();
 					} catch (InterruptedException e) {
@@ -157,16 +167,30 @@ class BatchWorker implements Runnable {
 					}
 					continue;
 				}
-				batch = batches.remove(0);
+				batch = batches.removeFirst();
 				if (System.currentTimeMillis() - printTimestamp > 5000) {
 					printTimestamp = System.currentTimeMillis();
 					logger.info(Thread.currentThread().getName() + ": Batches in queue: " + batches.size());
+				}
+				
+				while (true) {
+					if (batches.isEmpty()) {
+						//if (batches.size() < 2) { //performance error: linked list
+						try {
+							batches.wait();
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						continue;
+					}
+					nextBatchId = batches.getFirst().getId();
+					break;
 				}
 			}
 
 			//new change list to replace EntityChange by its wrapper (we failed serialize EntityUpdate/EntityCreate)
 			//LinkedList<Object> changeList = new LinkedList<Object>();
-			int i = 0;
+			int changeIndex = 0;
 			int batchDigitCount = String.valueOf(batch.getEntityChanges().size()).length();
 			for (EntityChange change : batch.getEntityChanges()) {
 				//nameValuePairs.add(new String[] {String.valueOf(i++), serializeChange(change)});
@@ -187,19 +211,13 @@ class BatchWorker implements Runnable {
 				}
 				String hashKey = generateChangeBatchHashKey(batch.getId());
 				String rangeKey = B3Key.zeroPadding(BATCHID_DIGIT_COUNT, batch.getId()) +
-						B3Table.KEY_SEP + B3Key.zeroPadding(batchDigitCount, i);
-				i++;
+						B3Table.KEY_SEP + B3Key.zeroPadding(batchDigitCount, changeIndex);
+				changeIndex++;
 				DynamoWorker.put(true, B3Table.SEPC, hashKey, rangeKey,
+					new B3CellString(DynamoWorker.SEPC_CELLNAME_NEXTBATCH, String.valueOf(nextBatchId)),
 					new B3CellString(DynamoWorker.SEPC_CELLNAME_CREATETIME, mapper.serialize(batch.getCreateTime())),
 					new B3CellString(DynamoWorker.SEPC_CELLNAME_JSON, mapper.serialize(wrapper)));
 			}
-			
-			//put
-			/*String rangeKey = String.valueOf(batch.getId());
-			String hashKey = generateHashKey(batch.getId());
-			DynamoWorker.putSepc(hashKey, rangeKey,
-				new String[] {DynamoWorker.SEPC_CELLNAME_CREATETIME, mapper.serialize(batch.getCreateTime())},
-				new String[] {DynamoWorker.SEPC_CELLNAME_CHANGES, mapper.serialize(changeList)});*/
 			
 		}
 	}

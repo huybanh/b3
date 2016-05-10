@@ -3,7 +3,6 @@ package com.betbrain.b3.data;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-import com.betbrain.b3.model.B3Entity;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.util.beans.BeanUtil;
 
@@ -21,9 +20,9 @@ public abstract class ChangeBase {
 	
 	LinkedList<ChangeBase> precedents;
 	
-	public EntitySpec2 entitySpec;
+	//public EntitySpec2 entitySpec;
 	
-	public B3Entity<?> b3entity;
+	//public B3Entity<?> b3entity;
 
 	public abstract String getEntityClassName();
 	
@@ -51,4 +50,10 @@ public abstract class ChangeBase {
 		}
 		return precedents.getFirst().queueId;
 	}
+	
+	//avoid serialization
+	//String getMapKey() {
+	/*String takeMapKey() {
+		return b3entity.getSpec().shortName + getEntityId();
+	}*/
 }

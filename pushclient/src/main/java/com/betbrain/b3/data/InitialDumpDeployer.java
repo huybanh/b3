@@ -86,8 +86,8 @@ public class InitialDumpDeployer {
 		final int allTaskCountFinal = allTaskCount;
 		
 		final ArrayList<Object> threadIds = new ArrayList<Object>();
-		//we have 7 files, so 15 threads
-		for (int i = 0; i < 15; i++) {
+		//we have 7 files, so 10 threads
+		for (int i = 0; i < 10; i++) {
 			final Object oneThreadId = new Object();
 			threadIds.add(oneThreadId);
 			new Thread() {

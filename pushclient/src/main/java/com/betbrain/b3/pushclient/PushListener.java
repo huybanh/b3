@@ -41,7 +41,7 @@ public class PushListener implements SEPCConnectorListener, EntityChangeBatchPro
 		pushConnector.setEntityChangeBatchProcessingMonitor(listener);
 		pushConnector.start("OddsHistory");
 		for (int i = 0; i < batchThreads; i++) {
-			new Thread(new BatchWorker(listener.batches)).start();
+			//new Thread(new BatchWorker(listener.batches)).start();
 		}
 	}
 
