@@ -18,3 +18,21 @@ pushclient/initial_dump1.json
 pushclient/huyba-keypair-sing-mac.pem
 
 pushclient/initial_dump1.json.zip
+
+pushclient/initial_dump
+
+pushclient/sepc
+
+pushclient/T_betting_offer
+
+pushclient/T_entity
+
+pushclient/T_event
+
+pushclient/T_event_info
+
+pushclient/T_link
+
+pushclient/T_lookup
+
+pushclient/T_outcome

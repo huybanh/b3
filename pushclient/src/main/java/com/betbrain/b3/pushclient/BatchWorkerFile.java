@@ -4,36 +4,23 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import com.betbrain.b3.data.B3Key;
-import com.betbrain.b3.data.B3Table;
-import com.betbrain.b3.data.ChangeBase;
-import com.betbrain.b3.data.ChangeCreateWrapper;
-import com.betbrain.b3.data.ChangeDeleteWrapper;
-import com.betbrain.b3.data.ChangeUpdateWrapper;
-import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.sepc.connector.sportsmodel.EntityChange;
-import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
-import com.betbrain.sepc.connector.sportsmodel.EntityCreate;
-import com.betbrain.sepc.connector.sportsmodel.EntityDelete;
-import com.betbrain.sepc.connector.sportsmodel.EntityUpdate;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 
 class BatchWorkerFile {
 	
-	private static final JsonMapper mapper = new JsonMapper();
+	//private static final JsonMapper mapper = new JsonMapper();
 	
 	static final int BATCHID_DIGIT_COUNT = "00026473973523".length(); //sample batch id: 26473973523
 	
 	private static BufferedWriter sepcWriter;
 	
-	private static Gson gson = new Gson();
+	//private static Gson gson = new Gson();
 	
 	static void init() throws IOException {
 		sepcWriter = new BufferedWriter(new FileWriter("sepc", false));
 	}
 	
-	static void save(EntityChangeBatch batch) throws IOException {
+	/*static void save(EntityChangeBatch batch) throws IOException {
 
 		//new change list to replace EntityChange by its wrapper (we failed serialize EntityUpdate/EntityCreate)
 		int changeIndex = 0;
@@ -67,5 +54,11 @@ class BatchWorkerFile {
 			sepcWriter.write(gson.toJson(json));
 			sepcWriter.newLine();
 		}
+	}*/
+	
+	static void save(EntityChange change) throws IOException {
+
+		sepcWriter.write(change.toString());
+		sepcWriter.newLine();
 	}
 }

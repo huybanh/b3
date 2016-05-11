@@ -102,6 +102,7 @@ public class ChangeUpdateWrapper extends ChangeBase {
 	@Override
 	public Entity lookupEntity(HashMap<String, HashMap<Long, Entity>> masterMap) {
 		return masterMap.get(entityClassName).get(getEntityId());
+		//return masterMap.get(update.getClass().getName()).get(getEntityId());
 	}
 	
 	@Override
@@ -109,7 +110,7 @@ public class ChangeUpdateWrapper extends ChangeBase {
 		if (entitySpec.revisioned) {
 			return false;
 		} else {
-			return !entitySpec.isStructuralChange(this);
+			return false; //!entitySpec.isStructuralChange(this);
 		}
 	}
 	

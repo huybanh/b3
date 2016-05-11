@@ -73,11 +73,12 @@ public class InitialDumpDeployer {
 	
 	public void initialPutMaster() {
 
-		initialPutAllEntities();
-		initialPutAllEvents();
-		initialPutAllEventInfos();
-		initialPutAllOutcomes();
-		initialPutAllOffers();
+		DBTrait db = new FileWorker(new JsonMapper());
+		initialPutAllEntities(db);
+		initialPutAllEvents(db);
+		initialPutAllEventInfos(db);
+		initialPutAllOutcomes(db);
+		initialPutAllOffers(db);
 		
 		int allTaskCount = 0;
 		for (ArrayList<?> subList : allTasks) {
@@ -162,9 +163,9 @@ public class InitialDumpDeployer {
 		return;
 	}
 	
-	public void initialPutAllEvents() {
+	public void initialPutAllEvents(DBTrait db) {
 		
-		initialPutAllToMainTable(eventTasks, B3Table.Event, Event.class, new B3KeyBuilder<Event>() {
+		initialPutAllToMainTable(db, eventTasks, B3Table.Event, Event.class, new B3KeyBuilder<Event>() {
 
 			public B3Entity<Event> newB3Entity() {
 				return new B3Event();
@@ -182,9 +183,9 @@ public class InitialDumpDeployer {
 		
 	}
 	
-	public void initialPutAllEventInfos() {
+	public void initialPutAllEventInfos(DBTrait db) {
 		
-		initialPutAllToMainTable(eventInfoTasks, B3Table.EventInfo, EventInfo.class, new B3KeyBuilder<EventInfo>() {
+		initialPutAllToMainTable(db, eventInfoTasks, B3Table.EventInfo, EventInfo.class, new B3KeyBuilder<EventInfo>() {
 
 			public B3Entity<EventInfo> newB3Entity() {
 				return new B3EventInfo();
@@ -204,9 +205,9 @@ public class InitialDumpDeployer {
 		
 	}
 	
-	public void initialPutAllOutcomes() {
+	public void initialPutAllOutcomes(DBTrait db) {
 		
-		initialPutAllToMainTable(outcomeTasks, B3Table.Outcome, Outcome.class, new B3KeyBuilder<Outcome>() {
+		initialPutAllToMainTable(db, outcomeTasks, B3Table.Outcome, Outcome.class, new B3KeyBuilder<Outcome>() {
 
 			public B3Outcome newB3Entity() {
 				return new B3Outcome();
@@ -227,9 +228,9 @@ public class InitialDumpDeployer {
 		
 	}
 	
-	public void initialPutAllOffers() {
+	public void initialPutAllOffers(DBTrait db) {
 		
-		initialPutAllToMainTable(offerTasks, B3Table.BettingOffer, BettingOffer.class, new B3KeyBuilder<BettingOffer>() {
+		initialPutAllToMainTable(db, offerTasks, B3Table.BettingOffer, BettingOffer.class, new B3KeyBuilder<BettingOffer>() {
 
 			public B3BettingOffer newB3Entity() {
 				return new B3BettingOffer();
@@ -275,7 +276,7 @@ public class InitialDumpDeployer {
 		return parentList.toArray(new ArrayList[parentList.size()]);
 	}
 	
-	public void initialPutAllEntities() {
+	public void initialPutAllEntities(final DBTrait db) {
 
 		for (Entry<String, HashMap<Long, Entity>> entry : masterMap.entrySet()) {
 			Collection<Entity> entities = entry.getValue().values();
@@ -299,20 +300,8 @@ public class InitialDumpDeployer {
 						//final int total = oneSubListFinal.size();
 						//int count = 0;
 						for (Entity entity : oneSubListFinal) {
-							//processedCount++;
-							//EntitySpec2 spec = EntitySpec2.get(entity.getClass().getName());
-							//String shortName = spec.entityClassName;
-							//if (spec == null) {
-							//	continue;
-							//}
-							//count++;
-							//if (processedCount % 1000 == 0) {
-								//logger.info("Entity " + shortName+ ": deployed " + processedCount + " of " + subTotalCount);
-							//}
 							B3KeyEntity entityKey = new B3KeyEntity(entity);
-							//B3Update update = new B3Update(B3Table.Entity, entityKey, 
-							//		new B3CellString(B3Table.CELL_LOCATOR_THIZ, jsonMapper.serialize(entity)));
-							DynamoWorker.putFile(jsonMapper, B3Table.Entity, entityKey.getHashKey(), entityKey.getRangeKey(), 
+							db.put(B3Table.Entity, entityKey.getHashKey(), entityKey.getRangeKey(), 
 									new B3CellString(B3Table.CELL_LOCATOR_THIZ, jsonMapper.serialize(entity)));
 						}
 						synchronized (subProcessedCount) {
@@ -335,9 +324,9 @@ public class InitialDumpDeployer {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private <E extends Entity> void initialPutAllToMainTable(ArrayList<Runnable> runnerList, 
-			final B3Table table, /*final int start, final Integer end,*/
-			final Class<E> entityClazz, final B3KeyBuilder<E> keyBuilder) {
+	private <E extends Entity> void initialPutAllToMainTable(
+			final DBTrait db, ArrayList<Runnable> runnerList, 
+			final B3Table table, final Class<E> entityClazz, final B3KeyBuilder<E> keyBuilder) {
 
 		final int[] subProcessedCount = new int[] {0};
 		final HashMap<Long, Entity> allEntities = masterMap.get(entityClazz.getName());
@@ -368,7 +357,7 @@ public class InitialDumpDeployer {
 						
 						//put linked entities to table main, lookup, link
 						LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
-						putToLookupAndLinkRecursively(true, table, b3key, b3Cells, null, b3entity, masterMap, jsonMapper);
+						putToLookupAndLinkRecursively(db, table, b3key, b3Cells, null, b3entity, masterMap, jsonMapper);
 						
 						//put main entity to main table
 						//B3Update update = new B3Update(table, b3key, b3Cells.toArray(new B3CellString[b3Cells.size()]));
@@ -411,7 +400,7 @@ public class InitialDumpDeployer {
 	 * @param masterMap
 	 * @param jsonMapper
 	 */
-	public static <E extends Entity>void putToLookupAndLinkRecursively(boolean putToFile,
+	public static <E extends Entity>void putToLookupAndLinkRecursively(DBTrait db,
 			B3Table mainTable, B3Key mainKey, LinkedList<B3Cell<?>> mainCells, 
 			final String cellName, B3Entity<?> b3entity,
 			HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper jsonMapper) {
@@ -431,12 +420,7 @@ public class InitialDumpDeployer {
 		if (mainKey != null) {
 			B3KeyLookup lookupKey = new B3KeyLookup(
 					b3entity.entity, mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), thisCellName);
-			//B3Update update = new B3Update(B3Table.Lookup, lookupKey);
-			if (putToFile) {
-				DynamoWorker.putFile(jsonMapper, B3Table.Lookup, lookupKey.getHashKey(), lookupKey.getRangeKey());
-			} else {
-				DynamoWorker.put(true, B3Table.Lookup, lookupKey.getHashKey(), lookupKey.getRangeKey());
-			}
+			db.put(B3Table.Lookup, lookupKey.getHashKey(), lookupKey.getRangeKey());
 		}
 		
 		EntityLink[] linkedEntities = b3entity.getDownlinkedEntities();
@@ -451,12 +435,7 @@ public class InitialDumpDeployer {
 				//put linked entity to table link
 				if (mainKey != null) {
 					B3KeyLink linkKey = new B3KeyLink(link.linkedEntityClazz, link.linkedEntityId, b3entity.entity, link.name); //reverse link direction
-					//B3Update update = new B3Update(B3Table.Link, linkKey);
-					if (putToFile) {
-						DynamoWorker.putFile(jsonMapper, B3Table.Link, linkKey.getHashKey(), linkKey.getRangeKey());
-					} else {
-						DynamoWorker.put(true, B3Table.Link, linkKey.getHashKey(), linkKey.getRangeKey());
-					}
+					db.put(B3Table.Link, linkKey.getHashKey(), linkKey.getRangeKey());
 					
 					//commented out, as we can always find a link without information from lookup table
 					//also, put link to lookup: Main entity -> link location
@@ -472,7 +451,7 @@ public class InitialDumpDeployer {
 						childCellName = cellName + B3Table.CELL_LOCATOR_SEP + link.name;
 					}
 					putToLookupAndLinkRecursively(
-							putToFile, mainTable, mainKey, mainCells, childCellName, link.linkedEntity, masterMap, jsonMapper);
+							db, mainTable, mainKey, mainCells, childCellName, link.linkedEntity, masterMap, jsonMapper);
 				}
 			}
 		}

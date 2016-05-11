@@ -21,6 +21,7 @@ import com.betbrain.b3.model.B3Provider;
 import com.betbrain.b3.model.B3Source;
 import com.betbrain.b3.model.B3Sport;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
+import com.betbrain.sepc.connector.sportsmodel.EntityUpdate;
 
 public enum EntitySpec2 {
 
@@ -97,7 +98,7 @@ public enum EntitySpec2 {
 	
 	private LinkedList<String> idPropertyNames;
 	
-	public boolean isStructuralChange(ChangeUpdateWrapper update) {
+	public boolean isStructuralChange(EntityUpdate update) {
 		if (idPropertyNames == null) {
 			idPropertyNames = new LinkedList<>();
 			EntityLink[] links;
@@ -110,7 +111,7 @@ public enum EntitySpec2 {
 				idPropertyNames.add(one.getLinkName());
 			}
 		}
-		for (String changedPropertyName : update.getB3PropertyNames()) {
+		for (String changedPropertyName : update.getPropertyNames()) {
 			if (idPropertyNames.contains(changedPropertyName)) {
 				return true;
 			}

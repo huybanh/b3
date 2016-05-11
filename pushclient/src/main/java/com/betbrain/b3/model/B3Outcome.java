@@ -61,6 +61,17 @@ public class B3Outcome extends B3Entity<Outcome> {
 		this.type = new B3OutcomeType();
 		this.type.deserialize(mapper, item, Outcome.PROPERTY_NAME_typeId);
 	}
+	
+	@Override
+	String canCreateMainKey() {
+		if (entity == null) {
+			return "Null entity";
+		}
+		if (event == null) {
+			return "Missing outcome " + entity.getEventId();
+		}
+		return null;
+	}
 
 	@Override
 	B3KeyOutcome createMainKey() {

@@ -59,6 +59,17 @@ public class B3EventInfo extends B3Entity<EventInfo> {
 		this.eventPart = build(forMainKeyOnly, entity.getEventPartId(), new B3EventPart(), 
 				EventPart.class, masterMap, mapper);
 	}
+	
+	@Override
+	String canCreateMainKey() {
+		if (entity == null) {
+			return "Null entity";
+		}
+		if (event == null) {
+			return "Missing event " + entity.getEventId();
+		}
+		return null;
+	}
 
 	@Override
 	B3KeyEventInfo createMainKey() {

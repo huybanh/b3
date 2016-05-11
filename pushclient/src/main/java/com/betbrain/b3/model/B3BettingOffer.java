@@ -59,6 +59,17 @@ public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 		this.status = build(forMainKeyOnly, entity.getStatusId(), 
 				new B3BettingOfferStatus(), BettingOfferStatus.class, masterMap, mapper);
 	}
+	
+	@Override
+	String canCreateMainKey() {
+		if (entity == null) {
+			return "Null entity";
+		}
+		if (outcome == null) {
+			return "Missing outcome " + entity.getOutcomeId();
+		}
+		return null;
+	}
 
 	@Override
 	B3KeyOffer createMainKey() {

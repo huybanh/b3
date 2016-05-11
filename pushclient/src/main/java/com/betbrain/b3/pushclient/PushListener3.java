@@ -12,17 +12,10 @@ import org.apache.log4j.Logger;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityChange;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
-import com.betbrain.sepc.connector.sportsmodel.EntityCreate;
-import com.betbrain.sepc.connector.sportsmodel.EntityDelete;
-import com.betbrain.sepc.connector.sportsmodel.EntityUpdate;
 import com.betbrain.b3.data.B3CellString;
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.data.EntitySpec2;
-import com.betbrain.b3.data.ChangeBase;
-import com.betbrain.b3.data.ChangeCreateWrapper;
-import com.betbrain.b3.data.ChangeDeleteWrapper;
 import com.betbrain.b3.data.ChangeSet;
-import com.betbrain.b3.data.ChangeUpdateWrapper;
 import com.betbrain.b3.data.InitialDumpDeployer;
 import com.betbrain.b3.model.B3Entity;
 import com.betbrain.sepc.connector.sdql.EntityChangeBatchProcessingMonitor;
@@ -46,6 +39,8 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 	
 	private int pushStatusCount = 0;
 	
+	private BufferedWriter sepcWriter;
+	
 	public static void main(String[] args) throws IOException {
 		
 		int initialThreadCount = Integer.parseInt(args[0]);
@@ -62,22 +57,9 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 		pushConnector.start("OddsHistory");
 	}
 	
-	private PushListener3(int initialThreadCount) {
-		
+	private PushListener3(int initialThreadCount) throws IOException {
 		this.initialThreads = initialThreadCount;
-
-		new Thread() {
-			public void run() {
-				while (true) {
-					ChangeSet changeSetToPersist;
-					synchronized (workingChangeSet) {
-						changeSetToPersist = workingChangeSet[0];
-						workingChangeSet[0] = new ChangeSet();
-					}
-					changeSetToPersist.persist();
-				}
-			}
-		}.start();
+		sepcWriter = new BufferedWriter(new FileWriter("sepc", false));
 	}
 
 	@Override
@@ -87,11 +69,6 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 	
 	@Override
 	public void notifyEntityUpdates(EntityChangeBatch changeBatch) {
-		try {
-			BatchWorkerFile.save(changeBatch);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
 
 		if (pushStatusCount == 0) {
 			DynamoWorker.updateSetting(
@@ -104,27 +81,22 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 			pushStatusCount = 0;
 		}
 
-		System.out.println(Thread.currentThread().getName() + ": Processing change " + changeBatch.getId());
+		System.out.println(Thread.currentThread().getName() + ": Processing changebatch " + changeBatch.getId());
+		long changeTime = changeBatch.getCreateTime().getTime();
 		for (EntityChange change : changeBatch.getEntityChanges()) {
-			ChangeBase wrapper;
-			if (change instanceof EntityUpdate) {
-				wrapper = new ChangeUpdateWrapper((EntityUpdate) change);
-				String error = ((ChangeUpdateWrapper) wrapper).validate();
-				if (error != null) {
-					DynamoWorker.logError(error);
-					continue;
-				}
-			} else if (change instanceof EntityCreate) {
-				wrapper = new ChangeCreateWrapper((EntityCreate) change);
-			} else if (change instanceof EntityDelete) {
-				wrapper = new ChangeDeleteWrapper((EntityDelete) change);
-			} else {
-				throw new RuntimeException("Unknown change class: " + change.getClass().getName());
+			
+			System.out.println(Thread.currentThread().getName() + ": Processing change " + change);
+			
+			try {
+				sepcWriter.write(change.toString());
+				sepcWriter.newLine();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
 			}
-		
-			EntitySpec2 entitySpec = EntitySpec2.get(wrapper.getEntityClassName());
+			
+			EntitySpec2 entitySpec = EntitySpec2.get(change.getEntityClass().getName());
 			if (entitySpec == null) {
-				//System.out.println("Ignoring unconfigured change handler " + change);
+				System.out.println("Ignored unconfigured change handler " + change);
 				return;
 			}
 			
@@ -138,7 +110,7 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 			}
 			
 			synchronized (workingChangeSet) {
-				b3entity.applyChange(workingChangeSet[0], wrapper, masterMap, mapper);
+				b3entity.applyChange(workingChangeSet[0], change, changeTime, masterMap, mapper);
 				workingChangeSet[0].record(changeBatch.getId(), changeBatch.getCreateTime());
 			}
 		}
@@ -152,11 +124,9 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 			logger.info("Initial dump had been already deployed. Ignored a new coming dump.");
 			return;
 		}
-		logger.info("Starting to deploy initial dump...");
 		intialDumpStarted = true;
 
 		for (Entity e : entityList) {
-			//totalCount++;
 			HashMap<Long, Entity> subMap = masterMap.get(e.getClass().getName());
 			if (subMap == null) {
 				subMap = new HashMap<Long, Entity>();
@@ -168,9 +138,22 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 			logger.info(entry.getKey() + ": " + entry.getValue().size());
 		}
 		
+		//another map for initial dump
+		final HashMap<String, HashMap<Long, Entity>> immutableMasterMap = new HashMap<>();
+		for (Entity e : entityList) {
+			HashMap<Long, Entity> subMap = immutableMasterMap.get(e.getClass().getName());
+			if (subMap == null) {
+				subMap = new HashMap<Long, Entity>();
+				immutableMasterMap.put(e.getClass().getName(), subMap);
+			}
+			subMap.put(e.getId(), e);
+		}
+
+		logger.info("Starting initial deploying thread");
 		new Thread() {
 			public void run() {
 
+				logger.info("Saving initial_dump file for debugging purpose");
 				JsonMapper jsonMapper = new JsonMapper();
 				try {
 					BufferedWriter writer = new BufferedWriter(new FileWriter("initial_dump", false));
@@ -184,10 +167,21 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 				}
 				
 				DynamoWorker.openLocalWriters();
-				new InitialDumpDeployer(masterMap, 0).initialPutMaster();
+				new InitialDumpDeployer(immutableMasterMap, 0).initialPutMaster();
 				DynamoWorker.putAllFromLocal(initialThreads);
+				
+				logger.info("Start deploying changesets now");
 				//DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSH_WAIT);
 				DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSHING);
+
+				while (true) {
+					ChangeSet changeSetToPersist;
+					synchronized (workingChangeSet) {
+						changeSetToPersist = workingChangeSet[0];
+						workingChangeSet[0] = new ChangeSet();
+					}
+					changeSetToPersist.persist();
+				}
 			}
 		}.start();
 	}

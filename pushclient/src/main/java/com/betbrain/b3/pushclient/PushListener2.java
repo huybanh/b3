@@ -68,11 +68,11 @@ public class PushListener2 implements SEPCConnectorListener, EntityChangeBatchPr
 			//printCount = 0;
 			//logger.info("Got batch: " + changeBatch);
 		//}
-		try {
+		/*try {
 			BatchWorkerFile.save(changeBatch);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
-		}
+		}*/
 		synchronized (batches) {
 			batches.add(changeBatch);
 			batches.notifyAll();

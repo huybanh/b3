@@ -57,6 +57,14 @@ public class B3Event extends B3Entity<Event> {
 		this.type = build(forMainKeyOnly, entity.getTypeId(), new B3EventType(),
 				EventType.class, masterMap, mapper);
 	}
+	
+	@Override
+	String canCreateMainKey() {
+		if (entity == null) {
+			return "Null entity";
+		}
+		return null;
+	}
 
 	@Override
 	B3KeyEvent createMainKey() {

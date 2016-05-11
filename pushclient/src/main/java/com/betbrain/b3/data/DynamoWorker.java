@@ -6,7 +6,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.LinkedList;
 
 import org.apache.log4j.Logger;
@@ -26,6 +25,7 @@ import com.amazonaws.services.dynamodbv2.document.internal.IteratorSupport;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
+import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputExceededException;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -542,18 +542,19 @@ public class DynamoWorker {
 		}
 
 		Table dynaTable = B3Bundle.workingBundle.getTable(b3table);
-		System.out.println(Thread.currentThread().getName() + "DB-PUT " + b3table.name + ": " + hashKey + "@" + rangeKey);
+		System.out.println(Thread.currentThread().getName() + " DB-PUT " + b3table.name + ": " + hashKey + "@" + rangeKey);
 		if (!readOnly) {
 			while (true) {
 				try {
 					dynaTable.putItem(item);
 					break;
-				} catch (RuntimeException re) {
-					logger.info(Thread.currentThread().getName() + ": " + b3table.name + ": " + re.getMessage());
+				} catch (ProvisionedThroughputExceededException re) {
+					logger.info(Thread.currentThread().getName() + ": " + b3table.name + 
+							".PUT: ProvisionedThroughputExceededException");
 					if (!tryToDie) {
 						return false;
 					}
-					logger.info(b3table.name + ": Will retry in 100 ms");
+					logger.info(Thread.currentThread().getName() + ": " + b3table.name + ": Will retry in 100 ms");
 					try {
 						Thread.sleep(100);
 					} catch (InterruptedException e) {
@@ -564,25 +565,6 @@ public class DynamoWorker {
 		}
 		return true;
 	}
-	
-	/*public static void putSepc(String hashKey, String rangeKey, String[]... nameValuePairs ) {
-		
-		Item item = new Item().withPrimaryKey(HASH, hashKey, RANGE, rangeKey);
-		if (nameValuePairs != null) {
-			for (String[] onePair : nameValuePairs) {
-				item = item.withString(onePair[0], onePair[1]);
-			}
-		}
-
-		//System.out.println("SEPC: " + hashKey + "/" + rangeKey);
-		if (!readOnly) {
-			B3Bundle.workingBundle.sepcTable.putItem(item);
-		}
-	}*/
-
-	/*public static void update(B3Update b3update) {
-		update(b3update.table, b3update.key.getHashKey(), b3update.key.getRangeKey(), b3update.cells);
-	}*/
 	
 	public static void update(B3Table b3table, String hashKey, String rangeKey, B3Cell<?>... cells) {
 
@@ -600,16 +582,17 @@ public class DynamoWorker {
 		}
 
 		Table dynaTable = B3Bundle.workingBundle.getTable(b3table);
-		System.out.println(Thread.currentThread().getName() + "DB-UPDATE " + b3table.name + ": " + hashKey + "@" + rangeKey);
+		System.out.println(Thread.currentThread().getName() + " DB-UPDATE " + b3table.name + ": " + hashKey + "@" + rangeKey);
 		if (!readOnly) {
 			while (true) {
 				try {
 					dynaTable.updateItem(us);
 					break;
-				} catch (RuntimeException re) {
+				} catch (ProvisionedThroughputExceededException re) {
 					re.printStackTrace();
-					logger.info(re.getClass().getName() + ": " + re.getMessage());
-					logger.info(b3table.name + ": Will retry in 100 ms");
+					logger.info(Thread.currentThread().getName() + ": " + b3table.name + 
+							".UPDATE: ProvisionedThroughputExceededException");
+					logger.info(Thread.currentThread().getName() + ": " + b3table.name + ": Will retry in 100 ms");
 					try {
 						Thread.sleep(100);
 					} catch (InterruptedException e) {
@@ -628,9 +611,9 @@ public class DynamoWorker {
 				.withString("message", error);
 		settingTable.putItem(item);*/
 		
-		put(true, B3Table.Setting, BUNDLE_ERROR, B3Bundle.getWorkingBundleId() + System.currentTimeMillis(),
+		/*put(true, B3Table.Setting, BUNDLE_ERROR, B3Bundle.getWorkingBundleId() + System.currentTimeMillis(),
 				new B3CellString("time", new Date().toString()),
-				new B3CellString("message", error));
+				new B3CellString("message", error));*/
 
 		logger.error(error);
 	}
@@ -654,7 +637,7 @@ public class DynamoWorker {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
 		if (rangeKey == null) {
-			System.out.println(Thread.currentThread().getName() + "DB-GET " + table.getTableName() + ": " + hashKey);
+			System.out.println(Thread.currentThread().getName() + " DB-GET " + table.getTableName() + ": " + hashKey);
 			return table.getItem(HASH, hashKey);
 		} else {
 			System.out.println("DB-GET " + table.getTableName() + ": " + hashKey + "@" + rangeKey);
@@ -665,7 +648,7 @@ public class DynamoWorker {
 	public static void delete(B3Table b3table, String hashKey, String rangeKey) {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
-		System.out.println(Thread.currentThread().getName() + "DB-DELETE " + b3table.name + " " + hashKey + "@" + rangeKey);
+		System.out.println(Thread.currentThread().getName() + " DB-DELETE " + b3table.name + " " + hashKey + "@" + rangeKey);
 		if (!readOnly) {
 			while (true) {
 				try {
@@ -675,9 +658,10 @@ public class DynamoWorker {
 						table.deleteItem(HASH, hashKey);
 					}
 					break;
-				} catch (RuntimeException re) {
-					logger.info(re.getClass().getName() + ": " + re.getMessage());
-					logger.info(table.getTableName() + ": Will retry in 100 ms");
+				} catch (ProvisionedThroughputExceededException re) {
+					logger.info(Thread.currentThread().getName() + ": " + b3table.name + 
+							".DELETE: ProvisionedThroughputExceededException");
+					logger.info(Thread.currentThread().getName() + ": " + b3table.name + ": Will retry in 100 ms");
 					try {
 						Thread.sleep(100);
 					} catch (InterruptedException e) {

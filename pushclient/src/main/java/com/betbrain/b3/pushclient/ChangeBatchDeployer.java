@@ -16,9 +16,9 @@ import com.betbrain.b3.data.ChangeSet;
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.data.ChangeBase;
 import com.betbrain.b3.data.EntitySpec2;
-import com.betbrain.b3.model.B3Entity;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 
+@Deprecated
 public class ChangeBatchDeployer {
 	
     //private final Logger logger = Logger.getLogger(this.getClass());
@@ -129,20 +129,20 @@ public class ChangeBatchDeployer {
 			return;
 		}
 		
-		B3Entity<?> b3entity;
+		/*B3Entity<?> b3entity;
 		try {
 			b3entity = entitySpec.b3class.newInstance();
 		} catch (InstantiationException e) {
 			throw new RuntimeException(e);
 		} catch (IllegalAccessException e) {
 			throw new RuntimeException(e);
-		}
+		}*/
 		
 		//change.b3entity = b3entity;
 		
-		synchronized (workingChangeSet) {
+		/*synchronized (workingChangeSet) {
 			b3entity.applyChange(workingChangeSet[0], change, cachedEntities, mapper);
-		}
+		}*/
 	}
 	
 	private static HashMap<String, HashMap<Long, Entity>> loadEntityCache(int loadingThreadCount) {

@@ -3,7 +3,7 @@ package com.betbrain.b3.data;
 import java.util.Date;
 import java.util.HashMap;
 
-public class ChangeSet {
+public class ChangeSet implements DBTrait {
 	
 	private final HashMap<String, ChangeSetItem> changeItems = new HashMap<>();
 	
@@ -12,7 +12,19 @@ public class ChangeSet {
 	private Date lastBatchTime;
 	
 	private int changeCount;
+
+	public void record(long id, Date createTime) {
+		this.lastBatchId = id;
+		this.lastBatchTime = createTime;
+		changeCount++;
+		
+		if (changeCount % 1000 == 0) {
+			System.out.println(Thread.currentThread().getName() + ": ChangeSet status: " +
+					changeCount + " changes, consolidated size: " + changeItems.size());
+		}
+	}
 	
+	@Override
 	public void put(B3Table table, String hashKey, String rangeKey, B3Cell<?>... cells) {
 		ChangeSetItem changeItem = changeItems.get(table.name + hashKey + rangeKey);
 		if (changeItem == null) {
@@ -22,7 +34,8 @@ public class ChangeSet {
 			changeItem.consolidatePut(cells);
 		}
 	}
-
+	
+	@Override
 	public void update(B3Table table, String hashKey, String rangeKey, B3Cell<?>... cells) {
 		ChangeSetItem changeItem = changeItems.get(table.name + hashKey + rangeKey);
 		if (changeItem == null) {
@@ -33,6 +46,7 @@ public class ChangeSet {
 		}
 	}
 	
+	@Override
 	public void delete(B3Table table, String hashKey, String rangeKey) {
 		ChangeSetItem changeItem = changeItems.get(table.name + hashKey + rangeKey);
 		if (changeItem == null) {
@@ -73,15 +87,6 @@ public class ChangeSet {
 				new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_ID, lastBatchTime.toString()),
 				new B3CellString("CHANGESET_SIZE", String.valueOf(changeCount)));
 	}
-
-	public void record(ChangeBase change) {
-		
-	}
-
-	public void record(long id, Date createTime) {
-		this.lastBatchId = id;
-		this.lastBatchTime = createTime;
-	}
 }
 
 class ChangeSetItem {
@@ -114,12 +119,6 @@ class ChangeSetItem {
 	private void addCells(B3Cell<?>[] newCells) {
 		if (newCells != null) {
 			for (B3Cell<?> one : newCells) {
-				/*String value;
-				if (one instanceof B3CellString) {
-					value = ((B3CellString) one).value;
-				} else {
-					value = String.valueOf(one.value);
-				}*/
 				this.cells.put(one.columnName, one);
 			}
 		}
@@ -159,15 +158,21 @@ class ChangeSetItem {
 	
 	void persist() {
 		
-		int index = 0;
-		B3Cell<?>[] cellArray = new B3Cell<?>[cells.size()];
-		for (B3Cell<?> one : cells.values()) {
-			cellArray[index] = one;
-			index++;
-		}
-		
-		if (this.changeAction == PUT) {
-			DynamoWorker.put(true, this.table, hashKey, rangeKey, cellArray);
+		if (this.changeAction == DELETE) {
+			DynamoWorker.delete(table, hashKey, rangeKey);
+			
+		} else {
+			int index = 0;
+			B3Cell<?>[] cellArray = new B3Cell<?>[cells.size()];
+			for (B3Cell<?> one : cells.values()) {
+				cellArray[index] = one;
+				index++;
+			}
+			if (this.changeAction == PUT) {
+				DynamoWorker.put(true, this.table, hashKey, rangeKey, cellArray);
+			} else if (this.changeAction == UPDATE) {
+				DynamoWorker.update(table, hashKey, rangeKey, cellArray);
+			}
 		}
 	}
 }
