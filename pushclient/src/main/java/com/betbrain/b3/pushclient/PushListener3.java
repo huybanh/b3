@@ -73,56 +73,6 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 		return lastBatchId;
 	}
 	
-	private final JsonMapper pushingMapper = new JsonMapper();
-	
-	@Override
-	public void notifyEntityUpdates(EntityChangeBatch changeBatch) {
-
-		if (pushStatusCount == 0) {
-			DynamoWorker.updateSetting(
-					new B3CellString(DynamoWorker.BUNDLE_CELL_PUSHSTATUS, DynamoWorker.BUNDLE_PUSHSTATUS_ONGOING),
-					new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_RECEIVED_ID, String.valueOf(changeBatch.getId())),
-					new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_RECEIVED_TIMESTAMP, changeBatch.getCreateTime().toString()));
-		}
-		pushStatusCount++;
-		if (pushStatusCount == 1000) {
-			pushStatusCount = 0;
-		}
-
-		//System.out.println(Thread.currentThread().getName() + ": Processing changebatch " + changeBatch.getId());
-		long changeTime = changeBatch.getCreateTime().getTime();
-		for (EntityChange change : changeBatch.getEntityChanges()) {
-			
-			//System.out.println(Thread.currentThread().getName() + ": Processing change " + change);
-			try {
-				sepcWriter.write(change.toString());
-				sepcWriter.newLine();
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-			
-			EntitySpec2 entitySpec = EntitySpec2.get(change.getEntityClass().getName());
-			if (entitySpec == null) {
-				//System.out.println("Ignored unconfigured change handler " + change);
-				return;
-			}
-			
-			B3Entity<?> b3entity;
-			try {
-				b3entity = entitySpec.b3class.newInstance();
-			} catch (InstantiationException e) {
-				throw new RuntimeException(e);
-			} catch (IllegalAccessException e) {
-				throw new RuntimeException(e);
-			}
-			
-			synchronized (changesetWorking) {
-				b3entity.applyChange(changesetWorking[0], change, changeTime, masterMap, pushingMapper);
-				changesetWorking[0].record(changeBatch.getId(), changeBatch.getCreateTime());
-			}
-		}
-	}
-	
 	private boolean intialDumpStarted = false;
 
 	@Override
@@ -187,11 +137,61 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSHING);
 
 		for (int i = 0; i < pushThreadCount; i++) {
-			new Thread("Push-thread  + " + i) {
+			new Thread("Push-thread-" + i) {
 				public void run() {
 					persistChanges();
 				}
 			}.start();
+		}
+	}
+	
+	private final JsonMapper pushingMapper = new JsonMapper();
+	
+	@Override
+	public void notifyEntityUpdates(EntityChangeBatch changeBatch) {
+
+		if (pushStatusCount == 0) {
+			DynamoWorker.updateSetting(
+					new B3CellString(DynamoWorker.BUNDLE_CELL_PUSHSTATUS, DynamoWorker.BUNDLE_PUSHSTATUS_ONGOING),
+					new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_RECEIVED_ID, String.valueOf(changeBatch.getId())),
+					new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_RECEIVED_TIMESTAMP, changeBatch.getCreateTime().toString()));
+		}
+		pushStatusCount++;
+		if (pushStatusCount == 1000) {
+			pushStatusCount = 0;
+		}
+
+		//System.out.println(Thread.currentThread().getName() + ": Processing changebatch " + changeBatch.getId());
+		long changeTime = changeBatch.getCreateTime().getTime();
+		for (EntityChange change : changeBatch.getEntityChanges()) {
+			
+			//System.out.println(Thread.currentThread().getName() + ": Processing change " + change);
+			try {
+				sepcWriter.write(change.toString());
+				sepcWriter.newLine();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+			
+			EntitySpec2 entitySpec = EntitySpec2.get(change.getEntityClass().getName());
+			if (entitySpec == null) {
+				//System.out.println("Ignored unconfigured change handler " + change);
+				return;
+			}
+			
+			B3Entity<?> b3entity;
+			try {
+				b3entity = entitySpec.b3class.newInstance();
+			} catch (InstantiationException e) {
+				throw new RuntimeException(e);
+			} catch (IllegalAccessException e) {
+				throw new RuntimeException(e);
+			}
+			
+			synchronized (changesetWorking) {
+				b3entity.applyChange(changesetWorking[0], change, changeTime, masterMap, pushingMapper);
+				changesetWorking[0].record(changeBatch.getId(), changeBatch.getCreateTime());
+			}
 		}
 	}
 	

@@ -240,7 +240,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		//post-apply
 		if (change instanceof EntityCreate) {
 			
-			System.out.println(Thread.currentThread().getName() + " CHANGE-CREATE: " + change);
+			//System.out.println(Thread.currentThread().getName() + " CHANGE-CREATE: " + change);
 			B3Key mainKey = createMainKey();
 			LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
 			InitialDumpDeployer.putToLookupAndLinkRecursively(
@@ -250,20 +250,19 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 			
 			putCurrent(changeSet, mainKey, cellArray, entityJson);
 			masterMap.get(this.entity.getClass().getName()).put(this.entity.getId(), this.entity);
-			System.out.println("New entity created: " + this.getSpec().shortName + ": " + this.entity.getId());
+			//System.out.println("New entity created: " + this.getSpec().shortName + ": " + this.entity.getId());
 			if (entitySpec.revisioned) {
 				putRevision(changeSet, changeTime, mainKey, cellArray);
 			}
 		
 		} else if (change instanceof EntityDelete) {
-			System.out.println(Thread.currentThread().getName() + " CHANGE-DELETE: " + change);
+			//System.out.println(Thread.currentThread().getName() + " CHANGE-DELETE: " + change);
 			deleteCurrent(changeSet);
 			masterMap.get(this.entity.getClass().getName()).remove(this.entity.getId());
 			
 		} else if (change instanceof EntityUpdate) {
 			
-			System.out.println(Thread.currentThread().getName() + " CHANGE-UPDATE: " + change);
-			//ChangeUpdateWrapper update = (ChangeUpdateWrapper) change;
+			//System.out.println(Thread.currentThread().getName() + " CHANGE-UPDATE: " + change);
 			if (entitySpec.isStructuralChange(((EntityUpdate) change))) {
 
 				B3Key mainKey = createMainKey();

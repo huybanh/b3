@@ -365,7 +365,7 @@ public class DynamoWorker {
 		for (int i = 0; i < initialThreads; i++) {
 			final Object tid = new Object();
 			threadIds.add(tid);
-			new Thread() {
+			new Thread("Initial-thread-" + i) {
 				
 				//private JsonMapper mapper = new JsonMapper();
 				private Gson gson = new Gson();
