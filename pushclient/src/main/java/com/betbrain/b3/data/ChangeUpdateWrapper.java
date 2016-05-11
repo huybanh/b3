@@ -14,6 +14,7 @@ import com.betbrain.sepc.connector.sportsmodel.EventInfo;
 import com.betbrain.sepc.connector.util.StringUtil;
 import com.betbrain.sepc.connector.util.beans.BeanUtil;
 
+@Deprecated
 public class ChangeUpdateWrapper extends ChangeBase {
 
 	private String entityClassName;

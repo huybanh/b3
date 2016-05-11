@@ -28,6 +28,7 @@ import com.betbrain.sepc.connector.sdql.SEPCConnector;
 import com.betbrain.sepc.connector.sdql.SEPCConnectorListener;
 import com.betbrain.sepc.connector.sdql.SEPCPushConnector;
 
+@Deprecated
 public class PushListener2 implements SEPCConnectorListener, EntityChangeBatchProcessingMonitor {
 	
     private final Logger logger = Logger.getLogger(this.getClass());
@@ -130,6 +131,7 @@ public class PushListener2 implements SEPCConnectorListener, EntityChangeBatchPr
 	}
 }
 
+@Deprecated
 class BatchWorker implements Runnable {
 	
     private final Logger logger = Logger.getLogger(this.getClass());

@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.util.beans.BeanUtil;
 
+@Deprecated
 public abstract class ChangeBase {
 	
 	public String hashKey;

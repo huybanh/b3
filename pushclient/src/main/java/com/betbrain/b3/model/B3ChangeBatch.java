@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import com.betbrain.b3.data.ChangeBase;
 
+@Deprecated
 public class B3ChangeBatch {
 
 	public final long batchId;

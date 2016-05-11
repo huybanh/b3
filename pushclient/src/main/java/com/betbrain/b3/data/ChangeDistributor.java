@@ -8,6 +8,7 @@ import com.betbrain.b3.model.B3Entity;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 
+@Deprecated
 public class ChangeDistributor {
 	
 	//private final HashMap<String, HashMap<Long, Entity>> cachedEntities;
@@ -139,6 +140,7 @@ public class ChangeDistributor {
 	}
 }
 
+@Deprecated
 class ChangeQueue {
 	
 	final int queueId;

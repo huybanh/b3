@@ -5,6 +5,7 @@ import java.util.HashMap;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityCreate;
 
+@Deprecated
 public class ChangeCreateWrapper extends ChangeBase {
 	
 	private EntityCreate create;

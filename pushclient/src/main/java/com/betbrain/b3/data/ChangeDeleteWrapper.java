@@ -5,6 +5,7 @@ import java.util.HashMap;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityDelete;
 
+@Deprecated
 public class ChangeDeleteWrapper extends ChangeBase {
 
 	private EntityDelete delete;
