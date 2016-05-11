@@ -10,7 +10,7 @@ public class EntityQuery {
 	public static void main(String[] args) {
 		DynamoWorker.initBundleCurrent();
 		JsonMapper mapper = new JsonMapper();
-		B3KeyEntity keyEntity = new B3KeyEntity(Event.class, IDs.EVENT_PREMIERLEAGUE);
+		B3KeyEntity keyEntity = new B3KeyEntity(Event.class, 217562679L);
 		keyEntity.load(mapper);
 	}
 

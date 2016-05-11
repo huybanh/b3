@@ -12,7 +12,6 @@ import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputExceededExce
 import com.betbrain.b3.data.B3ItemIterator;
 import com.betbrain.b3.data.B3Key;
 import com.betbrain.b3.data.B3Table;
-import com.betbrain.b3.data.ChangeSet;
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.data.ChangeBase;
 import com.betbrain.b3.data.EntitySpec2;
@@ -29,7 +28,7 @@ public class ChangeBatchDeployer {
 
 	//private final ArrayList<?>[] allEntityLists = new ArrayList<?>[EntitySpec2.values().length];
 	
-	private static final ChangeSet[] workingChangeSet = new ChangeSet[] {new ChangeSet()};
+	//private static final ChangeSet[] workingChangeSet = new ChangeSet[] {new ChangeSet()};
 	
 	public static void main(String[] args) {
 		
@@ -51,7 +50,7 @@ public class ChangeBatchDeployer {
 			System.out.println(entry.getKey() + ": " + entry.getValue().size());
 		}
 		
-		new Thread() {
+		/*new Thread() {
 			public void run() {
 				while (true) {
 					ChangeSet changeSetToPersist;
@@ -62,7 +61,7 @@ public class ChangeBatchDeployer {
 					changeSetToPersist.persist();
 				}
 			}
-		}.start();
+		}.start();*/
 
 		//ChangeDistributor changeDist = new ChangeDistributor(deployThreads, cachedEntities);
 		//loadAndApplyChangeBatches(cachedEntities/*changeDist*/);

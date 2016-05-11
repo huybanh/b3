@@ -25,7 +25,7 @@ class B3Bundle {
 	Table lookupTable;
 	Table linkTable;
 	Table entityTable;
-	Table sepcTable;
+	//Table sepcTable;
 	
 	static B3Bundle workingBundle;
 	
@@ -52,7 +52,7 @@ class B3Bundle {
 		lookupTable = dynamoDB.getTable(id + "lookup");
 		linkTable = dynamoDB.getTable(id + "link");
 		entityTable = dynamoDB.getTable(id + "entity");
-		sepcTable = dynamoDB.getTable(id + "sepc");
+		//sepcTable = dynamoDB.getTable(id + "sepc");
 	}
 	
 	Table getTable(B3Table b3table) {
@@ -71,9 +71,9 @@ class B3Bundle {
 			return linkTable;
 		} else if (b3table == B3Table.Entity) {
 			return entityTable;
-		} else if (b3table == B3Table.SEPC) {
+		} /*else if (b3table == B3Table.SEPC) {
 			return sepcTable;
-		} else if (b3table == B3Table.Setting) {
+		}*/ else if (b3table == B3Table.Setting) {
 			return DynamoWorker.settingTable;
 		} else {
 			throw new RuntimeException("Unmapped table: " + b3table);
@@ -142,7 +142,7 @@ class B3Bundle {
 	void deleteTables(DynamoDB dynamoDB) {
 
 		Table[] tables = new Table[] {offerTable, eventTable, eventInfoTable, 
-				outcomeTable, lookupTable, linkTable, entityTable, sepcTable};
+				outcomeTable, lookupTable, linkTable, entityTable/*, sepcTable*/};
 		for (Table t : tables) {
 			System.out.println("Deleting table " + t.getTableName());
 			t.delete();
@@ -160,7 +160,7 @@ class B3Bundle {
 	void ceaseThroughPuts() {
 		
 		Table[] tables = new Table[] {offerTable, eventTable, eventInfoTable, 
-				outcomeTable, lookupTable, linkTable, entityTable, sepcTable};
+				outcomeTable, lookupTable, linkTable, entityTable/*, sepcTable*/};
 		for (Table t : tables) {
 			System.out.println("Ceasing throughput table " + t.getTableName());
 			ProvisionedThroughput provisionedThroughput = new ProvisionedThroughput()

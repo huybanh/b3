@@ -542,7 +542,7 @@ public class DynamoWorker {
 		}
 
 		Table dynaTable = B3Bundle.workingBundle.getTable(b3table);
-		System.out.println(Thread.currentThread().getName() + " DB-PUT " + b3table.name + ": " + hashKey + "@" + rangeKey);
+		//System.out.println(Thread.currentThread().getName() + " DB-PUT " + b3table.name + ": " + hashKey + "@" + rangeKey);
 		if (!readOnly) {
 			while (true) {
 				try {
@@ -582,7 +582,7 @@ public class DynamoWorker {
 		}
 
 		Table dynaTable = B3Bundle.workingBundle.getTable(b3table);
-		System.out.println(Thread.currentThread().getName() + " DB-UPDATE " + b3table.name + ": " + hashKey + "@" + rangeKey);
+		//System.out.println(Thread.currentThread().getName() + " DB-UPDATE " + b3table.name + ": " + hashKey + "@" + rangeKey);
 		if (!readOnly) {
 			while (true) {
 				try {
@@ -637,10 +637,10 @@ public class DynamoWorker {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
 		if (rangeKey == null) {
-			System.out.println(Thread.currentThread().getName() + " DB-GET " + table.getTableName() + ": " + hashKey);
+			//System.out.println(Thread.currentThread().getName() + " DB-GET " + table.getTableName() + ": " + hashKey);
 			return table.getItem(HASH, hashKey);
 		} else {
-			System.out.println("DB-GET " + table.getTableName() + ": " + hashKey + "@" + rangeKey);
+			//System.out.println("DB-GET " + table.getTableName() + ": " + hashKey + "@" + rangeKey);
 			return table.getItem(HASH, hashKey, RANGE, rangeKey);
 		}
 	}
@@ -648,7 +648,7 @@ public class DynamoWorker {
 	public static void delete(B3Table b3table, String hashKey, String rangeKey) {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
-		System.out.println(Thread.currentThread().getName() + " DB-DELETE " + b3table.name + " " + hashKey + "@" + rangeKey);
+		//System.out.println(Thread.currentThread().getName() + " DB-DELETE " + b3table.name + " " + hashKey + "@" + rangeKey);
 		if (!readOnly) {
 			while (true) {
 				try {
