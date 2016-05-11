@@ -73,7 +73,26 @@ public class InitialDumpDeployer {
 	
 	public void initialPutMaster() {
 
-		DBTrait db = new FileWorker(new JsonMapper());
+		//DBTrait db = new FileWorker(new JsonMapper());
+		DBTrait db = new DBTrait() {
+
+			private final JsonMapper mapper = new JsonMapper();
+			
+			@Override
+			public void put(B3Table table, String hashKey, String rangeKey, B3Cell<?>... cells) {
+				DynamoWorker.putFile(mapper, table, hashKey, rangeKey, cells);
+			}
+
+			@Override
+			public void update(B3Table table, String hashKey, String rangeKey, B3Cell<?>... cells) {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public void delete(B3Table table, String hashKey, String rangeKey) {
+				throw new UnsupportedOperationException();
+			}
+		};
 		initialPutAllEntities(db);
 		initialPutAllEvents(db);
 		initialPutAllEventInfos(db);

@@ -44,7 +44,7 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 	public static void main(String[] args) throws IOException {
 		
 		int initialThreadCount = Integer.parseInt(args[0]);
-		BatchWorkerFile.init();
+		
 		if (!DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_EMPTY)) {
 			return;
 		}
