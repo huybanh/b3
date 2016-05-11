@@ -212,7 +212,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 			this.entity = (E) masterMap.get(change.getEntityClass().getName()).get(entityId);
 
 			if (this.entity == null) {
-				DynamoWorker.logError("Got UPDATE/DELETE, but no entity found: " + 
+				DynamoWorker.logError(Thread.currentThread().getName() + ": Got UPDATE/DELETE, but no entity found: " + 
 						change.getEntityClass().getName() + "/" + entityId);
 				return;
 				//System.out.println("Err: " + change);
@@ -230,7 +230,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		buildDownlinks(onlyEntityMainIDsNeeded, masterMap, null);
 		String error = canCreateMainKey();
 		if (entitySpec.mainTable != null && error != null) {
-			DynamoWorker.logError("Got " + change + ", but " + error);
+			DynamoWorker.logError(Thread.currentThread().getName() + ": Got " + change + ", but " + error);
 			return;
 			//System.out.println("Err2: " + change);
 			//System.out.println("Err2: " + this.entity);

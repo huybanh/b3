@@ -77,7 +77,7 @@ public enum EntitySpec2 {
 	
 	private static HashMap<String, EntitySpec2> allShortNames;
 	
-	static void initialize() {
+	public static void initialize() {
 		allShortNames = new HashMap<String, EntitySpec2>();
 		for (EntitySpec2 em : EntitySpec2.values()) {
 			allShortNames.put(em.entityClass.getName(), em);

@@ -167,7 +167,7 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 			
 			//System.out.println(Thread.currentThread().getName() + ": Processing change " + change);
 			try {
-				sepcWriter.write(change.toString());
+				sepcWriter.write(changeBatch.getId() + ":" + changeBatch.getCreateTime() + ":" + change.toString());
 				sepcWriter.newLine();
 			} catch (IOException e) {
 				throw new RuntimeException(e);
@@ -176,7 +176,7 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 			EntitySpec2 entitySpec = EntitySpec2.get(change.getEntityClass().getName());
 			if (entitySpec == null) {
 				//System.out.println("Ignored unconfigured change handler " + change);
-				return;
+				continue;
 			}
 			
 			B3Entity<?> b3entity;

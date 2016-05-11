@@ -380,14 +380,15 @@ public class InitialDumpDeployer {
 						
 						//put main entity to main table
 						//B3Update update = new B3Update(table, b3key, b3Cells.toArray(new B3CellString[b3Cells.size()]));
-						DynamoWorker.putFile(jsonMapper, table, b3key.getHashKey(), b3key.getRangeKey(), 
+						db.put(table, b3key.getHashKey(), b3key.getRangeKey(), 
 								b3Cells.toArray(new B3CellString[b3Cells.size()]));
 						
 						//put main entity revision to main table
-						b3key.setRevisionId("0");
-						DynamoWorker.putFile(jsonMapper, table, b3key.getHashKey(), b3key.getRangeKey(), 
-								b3Cells.toArray(new B3CellString[b3Cells.size()]));
-						
+						if (b3entity.getSpec().revisioned) {
+							b3key.setRevisionId("0");
+							db.put(table, b3key.getHashKey(), b3key.getRangeKey(), 
+									b3Cells.toArray(new B3CellString[b3Cells.size()]));
+						}
 						//entity table
 						/*B3KeyEntity entityKey = new B3KeyEntity(entity);
 						update = new B3Update(B3Table.Entity, entityKey, 
