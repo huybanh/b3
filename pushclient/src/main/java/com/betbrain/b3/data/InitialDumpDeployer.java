@@ -106,16 +106,16 @@ public class InitialDumpDeployer {
 		final int allTaskCountFinal = allTaskCount;
 		
 		final ArrayList<Object> threadIds = new ArrayList<Object>();
-		//we have 7 files, so 10 threads
-		for (int i = 0; i < 10; i++) {
+		//we have 7 files, so 20 threads
+		for (int i = 0; i < 20; i++) {
 			final Object oneThreadId = new Object();
 			threadIds.add(oneThreadId);
-			new Thread() {
+			new Thread("LocalPut-thread-" + i) {
 				public void run() {
-					int remainPrint = 0;
+					//int remainPrint = 0;
 					do {
 						Runnable oneTask;
-						Integer remainTaskCount = null;
+						int remainTaskCount = 0;
 						synchronized (allTasks) {
 							int taskTypeCount = 0;
 							do {
@@ -136,23 +136,23 @@ public class InitialDumpDeployer {
 								}
 							} while (true);
 							oneTask = allTasks[taskTypeIndex].remove(0);
-							if (remainPrint == 0) {
-								remainTaskCount = 0;
+							//if (remainPrint == 0) {
+								//remainTaskCount = 0;
 								for (ArrayList<?> subList : allTasks) {
 									remainTaskCount += subList.size();
 								}
-							}
-							remainPrint++;
+							//}
+							/*remainPrint++;
 							if (remainPrint == 50) {
 								remainPrint = 0;
-							}
+							}*/
 							//oneTask = allTasks.remove(0);
 						}
 
-						if (remainTaskCount != null) {
+						//if (remainTaskCount != null) {
 							logger.info(Thread.currentThread().getName() +  
 									": Tasks remain: " + remainTaskCount + " of " + allTaskCountFinal);
-						}
+						//}
 						oneTask.run();
 						//totalProcessedCount += oneTask.subTotalCount;
 						//logger.info("Totally deployed " + totalProcessedCount + " of " + totalCount);
@@ -165,7 +165,6 @@ public class InitialDumpDeployer {
 		//wait for all initial deploying threads to finish
 		while (true) {
 			synchronized (allTasks) {
-				logger.info("Running initial deploying threads: " + threadIds.size());
 				if (!threadIds.isEmpty()) {
 					try {
 						allTasks.wait();

@@ -411,11 +411,11 @@ public class DynamoWorker {
 									}
 									continue;
 								}
-								System.out.println(Thread.currentThread().getName() + 
-										": No more readers, stop thread");
 								synchronized (threadIds) {
 									threadIds.remove(tid);
 									threadIds.notifyAll();
+									System.out.println(Thread.currentThread().getName() + 
+											": Thread stopped. Remaining iniial-threads: " + threadIds.size());
 								}
 								return;
 							}
@@ -425,13 +425,11 @@ public class DynamoWorker {
 							putBean = pendPuts[readerIndex];
 							pendPuts[readerIndex] = null;
 							if (putBean == null) {
-								//synchronized (reader) {
-									try {
-										line = reader.readLine();
-									} catch (IOException e) {
-										throw new RuntimeException(e);
-									}
-								//}
+								try {
+									line = reader.readLine();
+								} catch (IOException e) {
+									throw new RuntimeException(e);
+								}
 								if (line == null) {
 									allReaders[readerIndex] = null;
 									continue;
@@ -501,7 +499,7 @@ public class DynamoWorker {
 			}
 		}
 		
-		System.out.println("Finishing");
+		//System.out.println("Finishing");
 		closeReaders();
 	}
 	

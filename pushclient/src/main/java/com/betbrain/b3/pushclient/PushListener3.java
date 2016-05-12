@@ -107,7 +107,7 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 		
 		logger.info("Saving initial_dump file for debugging purpose");
 		JsonMapper jsonMapper = new JsonMapper();
-		try {
+		/*try {
 			BufferedWriter writer = new BufferedWriter(new FileWriter("initial_dump", false));
 			for (Entity e : entityList) {
 				writer.write((jsonMapper.serialize(e)));
@@ -116,7 +116,7 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 			writer.close();
 		} catch (IOException e1) {
 			throw new RuntimeException(e1);
-		}
+		}*/
 		
 		//another map for initial dump
 		final HashMap<String, HashMap<Long, Entity>> immutableMasterMap = new HashMap<>();
