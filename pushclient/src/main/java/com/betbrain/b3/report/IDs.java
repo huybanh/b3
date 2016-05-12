@@ -24,5 +24,7 @@ public class IDs {
 		System.out.println(new Integer(12346).hashCode());
 		System.out.println("12345".hashCode());
 		System.out.println("12346".hashCode());
+		System.out.println("a12345".hashCode());
+		System.out.println("a12346".hashCode());
 	}
 }

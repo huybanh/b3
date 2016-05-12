@@ -65,11 +65,11 @@ public class DynamoWorker {
 	
 	public static final String BUNDLE_CELL_PUSHSTATUS = "PUSH_STATUS";
 	public static final String BUNDLE_CELL_LASTBATCH_RECEIVED_ID = "LAST_RECEIVED_ID";
-	public static final String BUNDLE_CELL_LASTBATCH_RECEIVED_TIMESTAMP = "LAST_RECEIVED_TIMESTAMP";
+	public static final String BUNDLE_CELL_LASTBATCH_RECEIVED_TIMESTAMP = "LAST_RECEIVED_TS";
 
 	public static final String BUNDLE_CELL_DEPLOYSTATUS = "DEPLOY_STATUS";
 	public static final String BUNDLE_CELL_LASTBATCH_DEPLOYED_ID = "LAST_DEPLOYED_ID";
-	public static final String BUNDLE_CELL_LASTBATCH_DEPLOYED_TIMESTAMP = "LAST_DEPLOYED_TIMESTAMP";
+	public static final String BUNDLE_CELL_LASTBATCH_DEPLOYED_TIMESTAMP = "LAST_DEPLOYED_TS";
 	
 	public static final String SEPC_INITIAL = "I";
 	public static final String SEPC_CHANGEBATCH = "B";
