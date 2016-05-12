@@ -80,18 +80,18 @@ class B3Bundle {
 		}
 	}
 	
-	private void ceaseThroughPuts(Table table, int writeCap) {
+	private void ceaseThroughPuts(Table table, long writeCapa) {
 		
 
 		System.out.println("Ceasing throughput table " + table.getTableName());
 		ProvisionedThroughput provisionedThroughput = new ProvisionedThroughput()
 			    .withReadCapacityUnits(1L)
-			    .withWriteCapacityUnits(1L);
+			    .withWriteCapacityUnits(writeCapa);
 
 		table.updateTable(provisionedThroughput);
 	}
 	
-	public void ceaseThroughPuts() {
+	void ceaseThroughPuts() {
 		ceaseThroughPuts(offerTable, 200);
 		ceaseThroughPuts(eventTable, 1);
 		ceaseThroughPuts(eventInfoTable, 20);

@@ -212,8 +212,8 @@ public class InitialDumpDeployer {
 			public B3Key buildKey(B3Entity<EventInfo> b3entity) {
 				B3EventInfo eventInfo = (B3EventInfo) b3entity;
 				return new B3KeyEventInfo(
-						eventInfo.event.entity.getSportId(),
-						eventInfo.event.entity.getTypeId(),
+						//eventInfo.event.entity.getSportId(),
+						//eventInfo.event.entity.getTypeId(),
 						//false,
 						eventInfo.event.entity.getId(),
 						eventInfo.entity.getTypeId(),

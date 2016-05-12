@@ -18,4 +18,11 @@ public class IDs {
 	public static final long OUTCOME_DRAW = 11;
 	
 	public static final long BETTINGTYPE_1X2 = 69;
+	
+	public static void main(String[] args) {
+		System.out.println(new Integer(12345).hashCode());
+		System.out.println(new Integer(12346).hashCode());
+		System.out.println("12345".hashCode());
+		System.out.println("12346".hashCode());
+	}
 }

@@ -99,6 +99,11 @@ public class DynamoWorker {
 		setBundleStatus(availBundleId, BUNDLE_STATUS_EMPTY);
 	}
 	
+	public static void ceaseThroughPuts() {
+		initBundleByStatus(BUNDLE_STATUS_PUSHING);
+		B3Bundle.workingBundle.ceaseThroughPuts();
+	}
+	
 	public static void deleteTables() {
 		initBundleByStatus(BUNDLE_STATUS_DELETEWAIT);
 		B3Bundle.workingBundle.deleteTables(dynamoDB);

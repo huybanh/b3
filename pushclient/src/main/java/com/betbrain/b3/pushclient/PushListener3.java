@@ -1,7 +1,5 @@
 package com.betbrain.b3.pushclient;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
@@ -45,7 +43,7 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 	
 	private int pushStatusCount = 0;
 	
-	private BufferedWriter sepcWriter;
+	//private BufferedWriter sepcWriter;
 	
 	public static void main(String[] args) throws IOException {
 		
@@ -65,7 +63,7 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 	}
 	
 	private PushListener3() throws IOException {
-		sepcWriter = new BufferedWriter(new FileWriter("sepc", false));
+		//sepcWriter = new BufferedWriter(new FileWriter("sepc", false));
 	}
 
 	@Override
@@ -133,7 +131,6 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 		DynamoWorker.putAllFromLocal(initialThreadCount);
 		
 		logger.info("Start deploying changesets now");
-		//DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSH_WAIT);
 		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSHING);
 
 		for (int i = 0; i < pushThreadCount; i++) {
@@ -166,12 +163,12 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 		for (EntityChange change : changeBatch.getEntityChanges()) {
 			
 			//System.out.println(Thread.currentThread().getName() + ": Processing change " + change);
-			try {
+			/*try {
 				sepcWriter.write(changeBatch.getId() + ":" + changeBatch.getCreateTime() + ":" + change.toString());
 				sepcWriter.newLine();
 			} catch (IOException e) {
 				throw new RuntimeException(e);
-			}
+			}*/
 			
 			EntitySpec2 entitySpec = EntitySpec2.get(change.getEntityClass().getName());
 			if (entitySpec == null) {
@@ -203,23 +200,22 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 			ChangeSetItem oneChange;
 			synchronized (changesetPersitingLock) {
 				
-				if (changesetPersiting == null) {
+				if (changesetPersiting != null) {
+					oneChange = changesetPersiting.checkout();
+				} else {
+					oneChange = null;
+				}
+				
+				if (oneChange == null) {
+					
+					//change to next changeset
 					synchronized (changesetWorking) {
 						changesetWorking[0].close();
 						changesetPersiting = changesetWorking[0];
 						changesetWorking[0] = new ChangeSet();
 					}
-				}
-
-				if (persistedCount == 1000) {
-					persistedCount = 0;
-					System.out.println(Thread.currentThread().getName() + 
-							": remain updates to persist: " + changesetPersiting.countChangesBeingPersisted());
-				}
-				persistedCount++;
-				
-				oneChange = changesetPersiting.checkout();
-				if (oneChange == null) {
+					
+					//update status
 					Date lastBatchTime = changesetPersiting.getLastBatchTime();
 					if (lastBatchTime == null) {
 						//this changeset has no changes
@@ -229,12 +225,23 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 						}
 						continue;
 					}
+					
+					//update status to setting table
 					DynamoWorker.updateSetting(
 							new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_ID, String.valueOf(changesetPersiting.getLastBatchId())),
 							new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_TIMESTAMP, lastBatchTime.toString()));
 					changesetPersiting = null;
 					continue;
 				}
+				
+				//got one non-null change
+				//logging
+				if (persistedCount == 1000) {
+					persistedCount = 0;
+					System.out.println(Thread.currentThread().getName() + 
+							": remain updates to persist: " + changesetPersiting.countChangesBeingPersisted());
+				}
+				persistedCount++;
 			}
 			
 			oneChange.persist();
