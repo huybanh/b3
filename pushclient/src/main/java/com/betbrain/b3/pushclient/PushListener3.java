@@ -105,9 +105,9 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 	
 	private void processInitialDump(List<? extends Entity> entityList) {
 		
-		logger.info("Saving initial_dump file for debugging purpose");
+		/*logger.info("Saving initial_dump file for debugging purpose");
 		JsonMapper jsonMapper = new JsonMapper();
-		/*try {
+		try {
 			BufferedWriter writer = new BufferedWriter(new FileWriter("initial_dump", false));
 			for (Entity e : entityList) {
 				writer.write((jsonMapper.serialize(e)));
@@ -196,6 +196,8 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 	}
 	
 	private void persistChanges() {
+		
+		int persistedCount = 0;
 		while (true) {
 			
 			ChangeSetItem oneChange;
@@ -208,6 +210,13 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 						changesetWorking[0] = new ChangeSet();
 					}
 				}
+
+				if (persistedCount == 1000) {
+					persistedCount = 0;
+					System.out.println(Thread.currentThread().getName() + 
+							": remain updates to persist: " + changesetPersiting.countChangesBeingPersisted());
+				}
+				persistedCount++;
 				
 				oneChange = changesetPersiting.checkout();
 				if (oneChange == null) {

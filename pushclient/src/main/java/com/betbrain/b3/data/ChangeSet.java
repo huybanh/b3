@@ -51,6 +51,10 @@ public class ChangeSet implements DBTrait {
 		return changesBeingPersisted.removeFirst();
 	}
 	
+	public int countChangesBeingPersisted() {
+		return changesBeingPersisted.size();
+	}
+	
 	@Override
 	public void put(B3Table table, String hashKey, String rangeKey, B3Cell<?>... cells) {
 		ChangeSetItem changeItem = changesBeingConsolidated.get(table.name + hashKey + rangeKey);

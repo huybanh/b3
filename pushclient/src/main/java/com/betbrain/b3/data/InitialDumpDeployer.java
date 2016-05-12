@@ -436,7 +436,7 @@ public class InitialDumpDeployer {
 		mainCells.add(jsonCell);
 		
 		//put event to lookup
-		if (mainKey != null) {
+		if (mainKey != null && cellName != null) {
 			B3KeyLookup lookupKey = new B3KeyLookup(
 					b3entity.entity, mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), thisCellName);
 			db.put(B3Table.Lookup, lookupKey.getHashKey(), lookupKey.getRangeKey());
@@ -450,8 +450,6 @@ public class InitialDumpDeployer {
 				if (link.linkedEntity != null) {
 					link.linkedEntity.buildDownlinks(false, masterMap, jsonMapper);
 				}
-				
-				//put linked entity to table link
 				if (mainKey != null) {
 					B3KeyLink linkKey = new B3KeyLink(link.linkedEntityClazz, link.linkedEntityId, b3entity.entity, link.name); //reverse link direction
 					db.put(B3Table.Link, linkKey.getHashKey(), linkKey.getRangeKey());
@@ -462,6 +460,7 @@ public class InitialDumpDeployer {
 					//update = new B3Update(B3Table.Lookup, lookupKey);
 					//DynamoWorker.put(bundleId, update);
 				}
+				
 				if (link.linkedEntity != null) {
 					String childCellName;
 					if (cellName == null) {

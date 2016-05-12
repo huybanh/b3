@@ -587,7 +587,6 @@ public class DynamoWorker {
 					dynaTable.updateItem(us);
 					break;
 				} catch (ProvisionedThroughputExceededException re) {
-					re.printStackTrace();
 					logger.info(Thread.currentThread().getName() + ": " + b3table.name + 
 							".UPDATE: ProvisionedThroughputExceededException");
 					logger.info(Thread.currentThread().getName() + ": " + b3table.name + ": Will retry in 100 ms");
