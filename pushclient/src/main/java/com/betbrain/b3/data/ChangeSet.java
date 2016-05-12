@@ -39,7 +39,7 @@ public class ChangeSet implements DBTrait {
 		changesBeingPersisted = new LinkedList<ChangeSetItem>(changesBeingConsolidated.values());
 		changesBeingConsolidated = null;
 		System.out.println(Thread.currentThread().getName() + ": ChangeSet closed: " +
-				changeCount + " changes, consolidated size: " + changesBeingConsolidated.size());
+				changeCount + " changes");
 	}
 	
 	public ChangeSetItem checkout() {
