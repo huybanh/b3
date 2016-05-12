@@ -157,10 +157,10 @@ class B3Bundle {
 		}
 	}
 	
-	void ceaseThroughPuts() {
+	/*void ceaseThroughPuts() {
 		
 		Table[] tables = new Table[] {offerTable, eventTable, eventInfoTable, 
-				outcomeTable, lookupTable, linkTable, entityTable/*, sepcTable*/};
+				outcomeTable, lookupTable, linkTable, entityTable, sepcTable};
 		for (Table t : tables) {
 			System.out.println("Ceasing throughput table " + t.getTableName());
 			ProvisionedThroughput provisionedThroughput = new ProvisionedThroughput()
@@ -178,5 +178,26 @@ class B3Bundle {
 			}
 		}
 		
+	}*/
+	
+	public void ceaseThroughPuts() {
+		ceaseThroughPuts(offerTable, 200);
+		ceaseThroughPuts(eventTable, 1);
+		ceaseThroughPuts(eventInfoTable, 20);
+		ceaseThroughPuts(outcomeTable, 500);
+		ceaseThroughPuts(lookupTable, 700);
+		ceaseThroughPuts(linkTable, 700);
+		ceaseThroughPuts(entityTable, 200);
+	}
+	
+	private void ceaseThroughPuts(Table table, int writeCap) {
+		
+
+		System.out.println("Ceasing throughput table " + table.getTableName());
+		ProvisionedThroughput provisionedThroughput = new ProvisionedThroughput()
+			    .withReadCapacityUnits(1L)
+			    .withWriteCapacityUnits(1L);
+
+		table.updateTable(provisionedThroughput);
 	}
 }

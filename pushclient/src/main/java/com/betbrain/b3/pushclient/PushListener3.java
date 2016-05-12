@@ -220,11 +220,18 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 				
 				oneChange = changesetPersiting.checkout();
 				if (oneChange == null) {
-					Date d = changesetPersiting.getLastBatchTime();
-					String lastBatchTime = d == null ? "" : d.toString();
+					Date lastBatchTime = changesetPersiting.getLastBatchTime();
+					if (lastBatchTime == null) {
+						//this changeset has no changes
+						try {
+							Thread.sleep(1);
+						} catch (InterruptedException e) {
+						}
+						continue;
+					}
 					DynamoWorker.updateSetting(
 							new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_ID, String.valueOf(changesetPersiting.getLastBatchId())),
-							new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_TIMESTAMP, lastBatchTime));
+							new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_TIMESTAMP, lastBatchTime.toString()));
 					changesetPersiting = null;
 					continue;
 				}
