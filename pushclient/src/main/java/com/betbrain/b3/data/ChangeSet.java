@@ -46,8 +46,8 @@ public class ChangeSet implements DBTrait {
 	
 	public ChangeSetItem checkout() {
 		if (changesBeingPersisted.isEmpty()) {
-			System.out.println(Thread.currentThread().getName() + ": ChangeSet persisted: " +
-					changeCount + " changes");
+			//System.out.println(Thread.currentThread().getName() + ": ChangeSet persisted: " +
+			//		changeCount + " changes");
 			return null;
 		}
 		return changesBeingPersisted.removeFirst();
