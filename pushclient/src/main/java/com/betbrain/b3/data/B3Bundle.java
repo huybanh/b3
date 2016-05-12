@@ -80,6 +80,27 @@ class B3Bundle {
 		}
 	}
 	
+	private void ceaseThroughPuts(Table table, int writeCap) {
+		
+
+		System.out.println("Ceasing throughput table " + table.getTableName());
+		ProvisionedThroughput provisionedThroughput = new ProvisionedThroughput()
+			    .withReadCapacityUnits(1L)
+			    .withWriteCapacityUnits(1L);
+
+		table.updateTable(provisionedThroughput);
+	}
+	
+	public void ceaseThroughPuts() {
+		ceaseThroughPuts(offerTable, 200);
+		ceaseThroughPuts(eventTable, 1);
+		ceaseThroughPuts(eventInfoTable, 20);
+		ceaseThroughPuts(outcomeTable, 500);
+		ceaseThroughPuts(lookupTable, 700);
+		ceaseThroughPuts(linkTable, 700);
+		ceaseThroughPuts(entityTable, 200);
+	}
+	
 	static void createTables(DynamoDB dynamoDB, String id) {
 
 		Table[] tables = new Table[7];
@@ -155,49 +176,5 @@ class B3Bundle {
 				throw new RuntimeException(e);
 			}
 		}
-	}
-	
-	/*void ceaseThroughPuts() {
-		
-		Table[] tables = new Table[] {offerTable, eventTable, eventInfoTable, 
-				outcomeTable, lookupTable, linkTable, entityTable, sepcTable};
-		for (Table t : tables) {
-			System.out.println("Ceasing throughput table " + t.getTableName());
-			ProvisionedThroughput provisionedThroughput = new ProvisionedThroughput()
-				    .withReadCapacityUnits(1L)
-				    .withWriteCapacityUnits(1L);
-
-			t.updateTable(provisionedThroughput);
-		}
-		
-		for (Table t : tables) {
-			try {
-				t.waitForActive();
-			} catch (InterruptedException e) {
-				throw new RuntimeException(e);
-			}
-		}
-		
-	}*/
-	
-	public void ceaseThroughPuts() {
-		ceaseThroughPuts(offerTable, 200);
-		ceaseThroughPuts(eventTable, 1);
-		ceaseThroughPuts(eventInfoTable, 20);
-		ceaseThroughPuts(outcomeTable, 500);
-		ceaseThroughPuts(lookupTable, 700);
-		ceaseThroughPuts(linkTable, 700);
-		ceaseThroughPuts(entityTable, 200);
-	}
-	
-	private void ceaseThroughPuts(Table table, int writeCap) {
-		
-
-		System.out.println("Ceasing throughput table " + table.getTableName());
-		ProvisionedThroughput provisionedThroughput = new ProvisionedThroughput()
-			    .withReadCapacityUnits(1L)
-			    .withWriteCapacityUnits(1L);
-
-		table.updateTable(provisionedThroughput);
 	}
 }

@@ -31,10 +31,12 @@ public class EventQuery {
 		B3KeyLink keyLink = new B3KeyLink(league, Event.class, Event.PROPERTY_NAME_parentId);
 		ArrayList<Long> matchIds = keyLink.listLinks();
 		System.out.println(matchIds);
-		System.out.println("Search for matches");
 		for (long matchId : matchIds) {
+			System.out.println("*** Match " + matchId);
 			match(matchId);
 		}
+		//match(matchIds.get(0));
+		match(219804262L);
 		
 		/*for (Long oneId : matchIds) {
 			keyEntity = new B3KeyEntity(Event.class, oneId);
@@ -59,21 +61,32 @@ public class EventQuery {
 		B3KeyLink keyLink = new B3KeyLink(Event.class, matchId, Outcome.class, Outcome.PROPERTY_NAME_eventId);
 		ArrayList<Long> outcomeIds = keyLink.listLinks();
 		System.out.println("Outcome count: " + outcomeIds.size());
+		
+		offer(outcomeIds.get(0));
+		info(outcomeIds.get(0));
 	}
 	
-	@SuppressWarnings("unused")
-	private static void offer() {
+	private static void offer(long outcomeId) {
 		
 		//bettingoffer
-		/*keyLink = new B3KeyLink(Outcome.class, outcomeIds.get(0), BettingOffer.class, BettingOffer.PROPERTY_NAME_outcomeId);
+		B3KeyLink keyLink = new B3KeyLink(Outcome.class, outcomeId, BettingOffer.class, BettingOffer.PROPERTY_NAME_outcomeId);
 		ArrayList<Long> offerIds = keyLink.listLinks();
-		System.out.println(offerIds.size());
+		System.out.println("Offer count: " + offerIds.size());
 		//B3KeyEntity.load(jsonMapper, BettingOffer.class, offerIds);
 		
 		//eventinfo - current status
-		keyLink = new B3KeyLink(Event.class, matchIds.get(0), EventInfo.class, "eventId");
+		/*keyLink = new B3KeyLink(Event.class, matchIds.get(0), EventInfo.class, "eventId");
 		ArrayList<Long> infoIds = keyLink.listLinks();
 		//B3KeyEntity.load(jsonMapper, EventInfo.class, infoIds);
 		System.out.println(infoIds.size());*/
+	}
+	
+	private static void info(long matchId) {
+		
+		//eventinfo - current status
+		B3KeyLink keyLink = new B3KeyLink(Event.class, matchId, EventInfo.class, "eventId");
+		ArrayList<Long> infoIds = keyLink.listLinks();
+		//B3KeyEntity.load(jsonMapper, EventInfo.class, infoIds);
+		System.out.println("Info count: " + infoIds.size());
 	}
 }

@@ -718,7 +718,7 @@ public class DynamoWorker {
 	public static B3ItemIterator query(B3Table b3table, String hashKey, Integer maxResulteSize) {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
-		System.out.println("DB-QUERY " + table.getTableName() + ": hash=" + hashKey);
+		//System.out.println("DB-QUERY " + table.getTableName() + ": hash=" + hashKey);
 		QuerySpec spec = new QuerySpec().withHashKey(HASH, hashKey);
 		if (maxResulteSize != null) {
 			spec = spec.withMaxResultSize(maxResulteSize);
