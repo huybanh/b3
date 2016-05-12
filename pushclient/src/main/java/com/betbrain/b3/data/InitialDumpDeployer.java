@@ -348,6 +348,9 @@ public class InitialDumpDeployer {
 
 		final int[] subProcessedCount = new int[] {0};
 		final HashMap<Long, Entity> allEntities = masterMap.get(entityClazz.getName());
+		if (allEntities == null) {
+			return;
+		}
 		Collection<Entity>[] subLists = split(allEntities.values());
 		for (Collection<Entity> oneSubList : subLists) {
 			final Collection<Entity> oneSubListFinal = oneSubList;
