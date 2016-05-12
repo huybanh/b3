@@ -3,9 +3,6 @@ package com.betbrain.b3.data;
 import java.util.ArrayList;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.ItemCollection;
-import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
-import com.amazonaws.services.dynamodbv2.document.internal.IteratorSupport;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 
@@ -19,8 +16,7 @@ public abstract class B3KeyEntitySupport extends B3Key {
 	public <E extends Entity> ArrayList<E> listEntities(JsonMapper jsonMapper ) {
 		ArrayList<E> list = new ArrayList<E>();
 		int i = hardLimit;
-		ItemCollection<QueryOutcome> coll = DynamoWorker.query(B3Table.Entity, getHashKey());
-		IteratorSupport<Item, QueryOutcome> it = coll.iterator();
+		B3ItemIterator it = DynamoWorker.query(B3Table.Entity, getHashKey());
 		while (it.hasNext()) {
 			if (--i <= 0) {
 				break;

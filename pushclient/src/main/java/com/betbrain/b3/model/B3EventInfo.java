@@ -3,6 +3,7 @@ package com.betbrain.b3.model;
 import java.util.HashMap;
 
 import com.betbrain.b3.data.B3KeyEventInfo;
+import com.betbrain.b3.data.EntitySpec2;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Event;
@@ -21,6 +22,11 @@ public class B3EventInfo extends B3Entity<EventInfo> {
 	//package private
 	public B3Event event;
 	public B3EventPart eventPart;
+	
+	@Override
+	public EntitySpec2 getSpec() {
+		return EntitySpec2.EventInfo;
+	}
 
 	@Override
 	public void getDownlinkedEntitiesInternal() {
@@ -53,6 +59,17 @@ public class B3EventInfo extends B3Entity<EventInfo> {
 		this.eventPart = build(forMainKeyOnly, entity.getEventPartId(), new B3EventPart(), 
 				EventPart.class, masterMap, mapper);
 	}
+	
+	@Override
+	String canCreateMainKey() {
+		if (entity == null) {
+			return "Null entity";
+		}
+		if (event == null) {
+			return "Missing event " + entity.getEventId();
+		}
+		return null;
+	}
 
 	@Override
 	B3KeyEventInfo createMainKey() {
@@ -60,7 +77,7 @@ public class B3EventInfo extends B3Entity<EventInfo> {
 			return null;
 		}
 		EventInfo info = (EventInfo) entity;
-		return new B3KeyEventInfo(event.entity.getId(), event.entity.getTypeId(), 
+		return new B3KeyEventInfo(/*event.entity.getId(), event.entity.getTypeId(),*/ 
 				info.getEventId(), info.getTypeId(), info.getId());
 		
 	}

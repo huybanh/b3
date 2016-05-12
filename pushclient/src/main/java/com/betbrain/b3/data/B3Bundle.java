@@ -25,7 +25,7 @@ class B3Bundle {
 	Table lookupTable;
 	Table linkTable;
 	Table entityTable;
-	Table sepcTable;
+	//Table sepcTable;
 	
 	static B3Bundle workingBundle;
 	
@@ -52,7 +52,7 @@ class B3Bundle {
 		lookupTable = dynamoDB.getTable(id + "lookup");
 		linkTable = dynamoDB.getTable(id + "link");
 		entityTable = dynamoDB.getTable(id + "entity");
-		sepcTable = dynamoDB.getTable(id + "sepc");
+		//sepcTable = dynamoDB.getTable(id + "sepc");
 	}
 	
 	Table getTable(B3Table b3table) {
@@ -71,29 +71,50 @@ class B3Bundle {
 			return linkTable;
 		} else if (b3table == B3Table.Entity) {
 			return entityTable;
-		} else if (b3table == B3Table.SEPC) {
+		} /*else if (b3table == B3Table.SEPC) {
 			return sepcTable;
-		} else if (b3table == B3Table.Setting) {
+		}*/ else if (b3table == B3Table.Setting) {
 			return DynamoWorker.settingTable;
 		} else {
 			throw new RuntimeException("Unmapped table: " + b3table);
 		}
 	}
 	
+	private void ceaseThroughPuts(Table table, long writeCapa) {
+		
+
+		System.out.println("Ceasing throughput table " + table.getTableName());
+		ProvisionedThroughput provisionedThroughput = new ProvisionedThroughput()
+			    .withReadCapacityUnits(1L)
+			    .withWriteCapacityUnits(writeCapa);
+
+		table.updateTable(provisionedThroughput);
+	}
+	
+	void ceaseThroughPuts() {
+		ceaseThroughPuts(offerTable, 200);
+		ceaseThroughPuts(eventTable, 1);
+		ceaseThroughPuts(eventInfoTable, 20);
+		ceaseThroughPuts(outcomeTable, 500);
+		ceaseThroughPuts(lookupTable, 700);
+		ceaseThroughPuts(linkTable, 700);
+		ceaseThroughPuts(entityTable, 200);
+	}
+	
 	static void createTables(DynamoDB dynamoDB, String id) {
 
-		Table[] tables = new Table[8];
-		int capaHigh = 1500;
+		Table[] tables = new Table[7];
+		int capaHigh = 5000;
 		//int capaLow = 200;
 		int i = 0;
 		tables[i++] = createTable(dynamoDB, id, "offer", 1, 500, true);
 		tables[i++] = createTable(dynamoDB, id, "event", 1, 100, true);
 		tables[i++] = createTable(dynamoDB, id, "event_info", 1, 50, true);
-		tables[i++] = createTable(dynamoDB, id, "outcome", 1, capaHigh, true);
-		tables[i++] = createTable(dynamoDB, id, "lookup", 1, 2000, true);
+		tables[i++] = createTable(dynamoDB, id, "outcome", 1, 1500, true);
+		tables[i++] = createTable(dynamoDB, id, "lookup", 1, capaHigh, true);
 		tables[i++] = createTable(dynamoDB, id, "link", 1, capaHigh, true);
-		tables[i++] = createTable(dynamoDB, id, "entity", 1, capaHigh, true);
-		tables[i++] = createTable(dynamoDB, id, "sepc", 1, 400/*capaLow*/, true);
+		tables[i++] = createTable(dynamoDB, id, "entity", 1, 1500, true);
+		//tables[i++] = createTable(dynamoDB, id, "sepc", 1, 400/*capaLow*/, true);
 		for (Table t : tables) {
 			try {
 		        System.out.println("Waiting for " + t.getTableName() + " to be created...this may take a while...");
@@ -142,7 +163,7 @@ class B3Bundle {
 	void deleteTables(DynamoDB dynamoDB) {
 
 		Table[] tables = new Table[] {offerTable, eventTable, eventInfoTable, 
-				outcomeTable, lookupTable, linkTable, entityTable, sepcTable};
+				outcomeTable, lookupTable, linkTable, entityTable/*, sepcTable*/};
 		for (Table t : tables) {
 			System.out.println("Deleting table " + t.getTableName());
 			t.delete();
@@ -155,28 +176,5 @@ class B3Bundle {
 				throw new RuntimeException(e);
 			}
 		}
-	}
-	
-	void ceaseThroughPuts() {
-		
-		Table[] tables = new Table[] {offerTable, eventTable, eventInfoTable, 
-				outcomeTable, lookupTable, linkTable, entityTable, sepcTable};
-		for (Table t : tables) {
-			System.out.println("Ceasing throughput table " + t.getTableName());
-			ProvisionedThroughput provisionedThroughput = new ProvisionedThroughput()
-				    .withReadCapacityUnits(1L)
-				    .withWriteCapacityUnits(1L);
-
-			t.updateTable(provisionedThroughput);
-		}
-		
-		for (Table t : tables) {
-			try {
-				t.waitForActive();
-			} catch (InterruptedException e) {
-				throw new RuntimeException(e);
-			}
-		}
-		
 	}
 }

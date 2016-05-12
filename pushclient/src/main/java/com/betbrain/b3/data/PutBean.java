@@ -60,6 +60,6 @@ public class PutBean {
 		
 		DynamoWorker.openLocalWriters();
 		DynamoWorker.putFile(new JsonMapper(), B3Table.Entity, "x", "y", testCells);
-		DynamoWorker.putAllFromLocal();
+		DynamoWorker.putAllFromLocal(2);
 	}
 }

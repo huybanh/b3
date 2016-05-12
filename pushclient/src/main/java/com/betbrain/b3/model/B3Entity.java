@@ -6,25 +6,22 @@ import java.util.List;
 
 import com.betbrain.b3.data.InitialDumpDeployer;
 import com.betbrain.b3.data.EntitySpec2;
-import com.betbrain.b3.pushclient.EntityChangeBase;
-import com.betbrain.b3.pushclient.EntityCreateWrapper;
-import com.betbrain.b3.pushclient.EntityDeleteWrapper;
-import com.betbrain.b3.pushclient.EntityUpdateWrapper;
+import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
-import com.amazonaws.services.dynamodbv2.document.internal.IteratorSupport;
 import com.betbrain.b3.data.B3Cell;
 import com.betbrain.b3.data.B3CellString;
 import com.betbrain.b3.data.B3Key;
 import com.betbrain.b3.data.B3KeyEntity;
 import com.betbrain.b3.data.B3KeyLink;
-import com.betbrain.b3.data.B3KeyLookup;
 import com.betbrain.b3.data.B3Table;
-import com.betbrain.b3.data.DynamoWorker;
+import com.betbrain.b3.data.ChangeSet;
 import com.betbrain.b3.data.EntityLink;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
-import com.betbrain.sepc.connector.sportsmodel.Source;
+import com.betbrain.sepc.connector.sportsmodel.EntityChange;
+import com.betbrain.sepc.connector.sportsmodel.EntityCreate;
+import com.betbrain.sepc.connector.sportsmodel.EntityDelete;
+import com.betbrain.sepc.connector.sportsmodel.EntityUpdate;
 import com.betbrain.sepc.connector.util.beans.BeanUtil;
 
 public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
@@ -33,7 +30,9 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 
 	public E entity;
 	
-	private EntitySpec2 entitySpec;
+	//private EntitySpec2 entitySpec;
+	
+	private LinkedList<EntityLink> downlinks;
 	
 	protected B3Entity() {
 	}
@@ -44,7 +43,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 	
 	//abstract public K getB3KeyMain();
 	
-	private LinkedList<EntityLink> downlinks;
+	public abstract EntitySpec2 getSpec();
 	
 	private boolean workingOnLinkNamesOnly = false;
 	
@@ -98,13 +97,6 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 	abstract public void buildDownlinks(boolean forMainKeyOnly, 
 			HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper);
 	
-	/*@SuppressWarnings("rawtypes")
-	static <E extends B3Entity, F> E build(Long id, E e, Class<? extends Entity> clazz,
-			HashMap<String, HashMap<Long, Entity>> masterMap, B3Bundle JsonMapper mapper) {
-		
-		return build(id, e, clazz, masterMap, mapper, true);
-	}*/
-	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	static <E extends B3Entity> E build(boolean forMainKeyOnly, Long id, E e, Class<? extends Entity> clazz,
 			HashMap<String, HashMap<Long, Entity>> masterMap, 
@@ -129,6 +121,10 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		//}
 		return e;
 	}
+	
+	/*public void setSpec(EntitySpec2 spec) {
+		this.entitySpec = spec;
+	}*/
 	
 	private static Entity lookup(Long id, Class<? extends Entity> clazz, HashMap<String, HashMap<Long, Entity>> masterMap) {
 		HashMap<Long, Entity> subMap = masterMap.get(clazz.getName());
@@ -156,12 +152,18 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 	}
 	
 	@SuppressWarnings("unchecked")
-	static <E extends Entity> B3Entity<E> deserialize(JsonMapper mapper, Item item, B3Entity<E> b3entity, String propertyName) {
-		String json = item.getString(propertyName);
+	void deserialize(JsonMapper mapper, Item item, String cellName) {
+		String json = item.getString(cellName);
 		if (json != null) {
-			b3entity.entity = (E) mapper.deserialize(json);
+			entity = (E) mapper.deserialize(json);
 		}
-		return b3entity;
+	}
+	
+	/**
+	 * @return error message if cannot, null if ok
+	 */
+	String canCreateMainKey() {
+		return null; // yes, we can, no error returned
 	}
 	
 	B3Key createMainKey() {
@@ -172,209 +174,227 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		throw new RuntimeException();
 	}
 	
-	public static void applyChange(String createTime, EntityChangeBase change, 
-			HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper) {
-		
-		/*if (true) {
-			System.out.println(change);
-			return;
-		}*/
-		if (Source.class.getName().equals(change.getEntityClassName())) {
-			if (change instanceof EntityUpdateWrapper) {
-				List<String> changedNames = ((EntityUpdateWrapper) change).getB3PropertyNames();
-				if (changedNames == null || 
-						(changedNames.size() == 1 && changedNames.contains(Source.PROPERTY_NAME_lastCollectedTime))) {
-					
-					//skip this trivial change
-					return;
-				}
-			}
-		}
-		
-		EntitySpec2 entitySpec = EntitySpec2.get(change.getEntityClassName());
-		if (entitySpec == null /*|| entitySpec.b3class == null*/) {
-			System.out.println("Ignoring unconfigured change handler " + change);
-			return;
-		}
-		
-		B3Entity<?> b3entity;
-		try {
-			b3entity = entitySpec.b3class.newInstance();
-			b3entity.entitySpec = entitySpec;
-			b3entity.applyChangeInternal(createTime, change, masterMap, mapper);
-		} catch (InstantiationException e) {
-			throw new RuntimeException(e);
-		} catch (IllegalAccessException e) {
-			throw new RuntimeException(e);
+	private void updatePropertyValues(EntityUpdate update) {
+		List<String> names = update.getPropertyNames();
+		List<Object> values = update.getPropertyValues();
+		for (int index = 0; index < names.size(); index++) {
+			String propertyName = names.get(index);
+			Object propertyValue = values.get(index);
+			BeanUtil.setPropertyValue(entity, propertyName, propertyValue);
 		}
 	}
 	
 	@SuppressWarnings("unchecked")
-	private void applyChangeInternal(String createTime, EntityChangeBase change, 
+	public void applyChange(ChangeSet changeSet, EntityChange change, long changeTime,
 			HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper) {
-		
-		if (change instanceof EntityCreateWrapper) {
-			System.out.println("CHANGE-CREATE: " + change);
-			this.entity = (E) ((EntityCreateWrapper) change).getEntity();
-			boolean forMainKeyOnlyFalse = false;
-			buildDownlinks(forMainKeyOnlyFalse, masterMap, null);
-			putCurrent(masterMap, mapper);
-			masterMap.get(this.entity.getClass().getName()).put(this.entity.getId(), this.entity);
-			if (entitySpec.revisioned) {
-				putRevision(createTime, masterMap, mapper);
-			}
-		
-		} else if (change instanceof EntityDeleteWrapper) {
-			System.out.println("CHANGE-DELETE: " + change);
-			EntityDeleteWrapper delete = (EntityDeleteWrapper) change;
-			//B3KeyEntity entityKey = new B3KeyEntity(delete.getEntityClassName(), delete.getEntityId());
-			//this.entity = (E) entityKey.load(mapper);
-			this.entity = (E) masterMap.get(delete.getEntityClassName()).get(delete.getEntityId());
-			if (this.entity == null) {
-				DynamoWorker.logError("Got change-delete, but no entity found: " + 
-						delete.getEntityClassName() + "/" + delete.getEntityId());
-				return;
-			}
-			boolean forMainKeyOnlyFalse = true;
-			buildDownlinks(forMainKeyOnlyFalse, masterMap, null);
-			deleteCurrent(mapper);
-			masterMap.get(this.entity.getClass().getName()).remove(this.entity.getId());
-			
-		} else if (change instanceof EntityUpdateWrapper) {
-			
-			System.out.println("CHANGE-UPDATE: " + change);
-			EntityUpdateWrapper update = (EntityUpdateWrapper) change;
-			//B3KeyEntity entityKey = new B3KeyEntity(update.getEntityClassName(), update.getEntityId());
-			//this.entity = entityKey.load(mapper);
-			this.entity = (E) masterMap.get(update.getEntityClassName()).get(update.getEntityId());
-			if (this.entity == null) {
-				DynamoWorker.logError("Got change-update, but no entity found: " + 
-						update.getEntityClassName() + "/" + update.getEntityId());
-				return;
-			}
-			//System.out.println("BEFORE: " + ((BettingOffer) targetEntity).getLastChangedTime().getTime());
-			update.applyChanges(this.entity);
-			//System.out.println("AFTER: " + ((BettingOffer) targetEntity).getLastChangedTime().getTime());
-			//this.entity = (E) targetEntity;
-			
-			if (entitySpec.revisioned) {
-				boolean forMainKeyOnlyFalse = false;
-				buildDownlinks(forMainKeyOnlyFalse, masterMap, null);
-				putRevision(createTime, masterMap, mapper);
-				if (entitySpec.isStructuralChange(update)) {
-					deleteCurrent(mapper);
-					putCurrent(masterMap, mapper);
+
+		//pre-apply
+		//this.entity = (E) change.lookupEntity(masterMap);
+		EntitySpec2 entitySpec = getSpec();
+		boolean onlyEntityMainIDsNeeded;
+		if (change instanceof EntityCreate) {
+			this.entity = (E) ((EntityCreate) change).getEntity();
+			onlyEntityMainIDsNeeded = false;
+		} else {
+			long entityId;
+			if (change instanceof EntityUpdate) {
+				entityId = ((EntityUpdate) change).getEntityId();
+				if (entitySpec.revisioned) {
+					onlyEntityMainIDsNeeded = false;
 				} else {
-					updateCurrent(mapper);
+					onlyEntityMainIDsNeeded = !entitySpec.isStructuralChange(((EntityUpdate) change));
 				}
 			} else {
-				if (entitySpec.isStructuralChange(update)) {
-					boolean forMainKeyOnlyFalse = false;
-					buildDownlinks(forMainKeyOnlyFalse, masterMap, null);
-					deleteCurrent(mapper);
-					putCurrent(masterMap, mapper);
-				} else {
-					boolean forMainKeyOnlyFalse = true;
-					buildDownlinks(forMainKeyOnlyFalse, null, mapper);
-					updateCurrent(mapper);
+				//change delete
+				entityId = ((EntityDelete) change).getEntityId();
+				onlyEntityMainIDsNeeded = true;
+			}
+			HashMap<Long, Entity> subMap = masterMap.get(change.getEntityClass().getName());
+			if (subMap != null) {
+				this.entity = (E) subMap.get(entityId);
+			}
+
+			if (this.entity == null) {
+				DynamoWorker.logError(Thread.currentThread().getName() + ": Got UPDATE/DELETE, but no entity found: " + 
+						change.getEntityClass().getName() + "/" + entityId);
+				return;
+				//System.out.println("Err: " + change);
+				//System.out.println("Err: " + this.entity);
+				//throw new RuntimeException();
+			}
+		}
+		
+		if (change instanceof EntityUpdate) {
+			//EntityUpdate update = (EntityUpdate) change;
+			//update.applyChanges(this.entity);
+			updatePropertyValues((EntityUpdate) change);
+		}
+		//boolean forMainKeyOnly = change.isOnlyEntityMainIDsNeeded(getSpec());
+		buildDownlinks(onlyEntityMainIDsNeeded, masterMap, null);
+		String error = canCreateMainKey();
+		if (entitySpec.mainTable != null && error != null) {
+			DynamoWorker.logError(Thread.currentThread().getName() + ": Got " + change + ", but " + error);
+			return;
+			//System.out.println("Err2: " + change);
+			//System.out.println("Err2: " + this.entity);
+			//throw new RuntimeException();
+		}
+		
+		//post-apply
+		if (change instanceof EntityCreate) {
+			
+			//System.out.println(Thread.currentThread().getName() + " CHANGE-CREATE: " + change);
+			B3Key mainKey = createMainKey();
+			LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
+			InitialDumpDeployer.putToLookupAndLinkRecursively(
+					changeSet, entitySpec.mainTable, mainKey, b3Cells, null, this, masterMap, mapper);
+			B3CellString[] cellArray = b3Cells.toArray(new B3CellString[b3Cells.size()]);
+			String entityJson = mapper.serialize(this.entity);
+			
+			putCurrent(changeSet, mainKey, cellArray, entityJson);
+			HashMap<Long, Entity> subMap = masterMap.get(this.entity.getClass().getName());
+			if (subMap == null) {
+				subMap = new HashMap<>();
+				masterMap.put(this.entity.getClass().getName(), subMap);
+			}
+			subMap.put(this.entity.getId(), this.entity);
+			//System.out.println("New entity created: " + this.getSpec().shortName + ": " + this.entity.getId());
+			if (entitySpec.revisioned) {
+				putRevision(changeSet, changeTime, mainKey, cellArray);
+			}
+		
+		} else if (change instanceof EntityDelete) {
+			//System.out.println(Thread.currentThread().getName() + " CHANGE-DELETE: " + change);
+			deleteCurrent(changeSet);
+			HashMap<Long, Entity> subMap = masterMap.get(this.entity.getClass().getName());
+			if (subMap != null) {
+				subMap.remove(this.entity.getId());
+			}
+		} else if (change instanceof EntityUpdate) {
+			
+			//System.out.println(Thread.currentThread().getName() + " CHANGE-UPDATE: " + change);
+			if (entitySpec.isStructuralChange(((EntityUpdate) change))) {
+
+				B3Key mainKey = createMainKey();
+				LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
+				InitialDumpDeployer.putToLookupAndLinkRecursively(
+						changeSet, entitySpec.mainTable, mainKey, b3Cells, null, this, masterMap, mapper);
+				B3CellString[] cellArray = b3Cells.toArray(new B3CellString[b3Cells.size()]);
+				String entityJson = mapper.serialize(this.entity);
+
+				deleteCurrent(changeSet);
+				putCurrent(changeSet, mainKey, cellArray, entityJson);
+				
+				if (entitySpec.revisioned) {
+					putRevision(changeSet, changeTime, mainKey, cellArray);
+				}
+			} else {
+				String entityJson = mapper.serialize(this.entity);
+				updateCurrent(changeSet, entityJson);
+				if (entitySpec.revisioned) {
+
+					B3Key mainKey = createMainKey();
+					LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
+					InitialDumpDeployer.putToLookupAndLinkRecursively(
+							changeSet, entitySpec.mainTable, mainKey, b3Cells, null, this, masterMap, mapper);
+					B3CellString[] cellArray = b3Cells.toArray(new B3CellString[b3Cells.size()]);
+					putRevision(changeSet, changeTime, mainKey, cellArray);
 				}
 			}
-			masterMap.get(this.entity.getClass().getName()).put(this.entity.getId(), this.entity);
+			HashMap<Long, Entity> subMap = masterMap.get(this.entity.getClass().getName());
+			if (subMap == null) {
+				subMap = new HashMap<>();
+				masterMap.put(this.entity.getClass().getName(), subMap);
+			}
+			subMap.put(this.entity.getId(), this.entity);
 			
 		} else {
 			throw new RuntimeException("Unknown change-wrapper class: " + change.getClass().getName());
 		}
 	}
 	
-	private void updateCurrent(JsonMapper mapper) {
+	private void updateCurrent(ChangeSet changeSet, String entityJson) {
+		
 		//table entity
-		//this.entity = (E) entity;
-		String entityJson = mapper.serialize(this.entity);
+		//String entityJson = mapper.serialize(this.entity);
 		B3KeyEntity entityKey = new B3KeyEntity(entity.getClass().getName(), entity.getId());
-		//B3Update update = new B3Update(B3Table.Entity, entityKey,
-		//		new B3CellString(B3Table.CELL_LOCATOR_THIZ, entityJson));
-		DynamoWorker.update(B3Table.Entity, entityKey.getHashKey(), entityKey.getRangeKey(),
+		changeSet.update(B3Table.Entity, entityKey.getHashKey(), entityKey.getRangeKey(),
 				new B3CellString(B3Table.CELL_LOCATOR_THIZ, entityJson));
 		
 		//main table / lookup / link
+		EntitySpec2 entitySpec = getSpec();
 		if (entitySpec.mainTable == null) {
+			//enity doesn't have its own main table
 			return;
 		}
-		//buildDownlinks(true, null, mapper);
 		B3Key mainKey = createMainKey();
-		if (mainKey == null) {
-			Thread.dumpStack();
-			return;
-		}
+		//if (mainKey == null) {
+			//something went wrong
+			//throw new RuntimeException();
+		//}
 		
 		//put main entity to main table
-		//update = new B3Update(entitySpec.mainTable, mainKey, new B3CellString(B3Table.CELL_LOCATOR_THIZ, entityJson));
-		DynamoWorker.update(entitySpec.mainTable, mainKey.getHashKey(), mainKey.getRangeKey(),
+		changeSet.update(entitySpec.mainTable, mainKey.getHashKey(), mainKey.getRangeKey(),
 				new B3CellString(B3Table.CELL_LOCATOR_THIZ, entityJson));
 	}
 	
-	private void putCurrent(HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper) {
+	private void putCurrent(ChangeSet changeSet, B3Key mainKey, B3CellString[] cells, String entityJson) {
 		
 		//table entity
-		//this.entity = (E) entity;
 		B3KeyEntity entityKey = new B3KeyEntity(entity.getClass().getName(), entity.getId());
-		//B3Update put = new B3Update(B3Table.Entity, entityKey,
-		//		new B3CellString(B3Table.CELL_LOCATOR_THIZ, mapper.serialize(this.entity)));
-		DynamoWorker.put(true, B3Table.Entity, entityKey.getHashKey(), entityKey.getRangeKey(),
-						new B3CellString(B3Table.CELL_LOCATOR_THIZ, mapper.serialize(this.entity)));
+		changeSet.put(B3Table.Entity, entityKey.getHashKey(), entityKey.getRangeKey(),
+						new B3CellString(B3Table.CELL_LOCATOR_THIZ, entityJson));
 		
 		//main table / lookup / link
+		EntitySpec2 entitySpec = getSpec();
 		if (entitySpec.mainTable == null) {
+			//enity doesn't have its own main table
 			return;
 		}
-		//buildDownlinks(false, null, mapper);
-		B3Key mainKey = createMainKey();
-		if (mainKey == null) {
-			Thread.dumpStack();
-			return;
-		}
+		//B3Key mainKey = createMainKey();
+		//if (mainKey == null) {
+			//something went wrong
+		//	throw new RuntimeException();
+		//}
 		//put linked entities to table lookup, link
-		LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
-		boolean noActualPutsFalse = false;
+		/*LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
 		InitialDumpDeployer.putToLookupAndLinkRecursively(
-				false, entitySpec.mainTable, mainKey, b3Cells, null, this, noActualPutsFalse, masterMap, mapper);
+				false, entitySpec.mainTable, mainKey, b3Cells, null, this, masterMap, mapper);*/
 		
 		//put main entity to main table
-		//B3Update update = new B3Update(entitySpec.mainTable, mainKey, b3Cells.toArray(new B3CellString[b3Cells.size()]));
-		DynamoWorker.put(true, entitySpec.mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), 
-				b3Cells.toArray(new B3CellString[b3Cells.size()]));
+		changeSet.put(entitySpec.mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), cells);
+				//b3Cells.toArray(new B3CellString[b3Cells.size()]));
 	}
 	
-	private void putRevision(String createTime, HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper) {
+	private void putRevision(ChangeSet changeSet, long changeTime, B3Key mainKey, B3CellString[] cells) {
 		//main table / lookup / link
+		EntitySpec2 entitySpec = getSpec();
 		if (entitySpec.mainTable == null) {
+			//enity doesn't have its own main table
 			return;
 		}
-		//this.entity = (E) targetEntity;
-		//buildDownlinks(false, null, mapper);
-		B3Key mainKey = createMainKey();
-		if (mainKey == null) {
-			Thread.dumpStack();
-			return;
-		}
+		//B3Key mainKey = createMainKey();
+		//if (mainKey == null) {
+			//something went wrong
+			//throw new RuntimeException();
+		//}
 		//put linked entities to table lookup, link
-		LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
-		boolean noActualPutsTrue = true;
+		/*LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
 		InitialDumpDeployer.putToLookupAndLinkRecursively(false, entitySpec.mainTable, 
-				mainKey, b3Cells, null, this, noActualPutsTrue, masterMap, mapper);
+				null, //no actual puts 
+				b3Cells, null, this, masterMap, mapper);*/
 		
 		//put main entity to main table
 		String revisionId = getRevisionId();
 		if (revisionId == null) {
-			revisionId = createTime;
+			revisionId = String.valueOf(changeTime);
 		}
 		mainKey.setRevisionId(revisionId);
-		//B3Update update = new B3Update(entitySpec.mainTable, mainKey, b3Cells.toArray(new B3CellString[b3Cells.size()]));
-		DynamoWorker.put(true, entitySpec.mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), 
-				b3Cells.toArray(new B3CellString[b3Cells.size()]));
+		changeSet.put(entitySpec.mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), cells);
+				//b3Cells.toArray(new B3CellString[b3Cells.size()]));
 	}
 	
-	private void deleteCurrent(JsonMapper mapper) {
+	private void deleteCurrent(ChangeSet changeSet) {
 		if (this.entity == null) {
 			System.out.println("Ignoring entity delete: entity does not exist");
 			return;
@@ -382,22 +402,24 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		
 		//delete in table entity
 		B3Key key = new B3KeyEntity(this.entity);
-		DynamoWorker.delete(B3Table.Entity, key.getHashKey(), key.getRangeKey());
+		changeSet.delete(B3Table.Entity, key.getHashKey(), key.getRangeKey());
 		
 		//delete in main table
+		EntitySpec2 entitySpec = getSpec();
 		if (entitySpec.mainTable != null) {
 			key = createMainKey();
-			if (key == null) {
-				Thread.dumpStack();
-				return;
-			}
-			DynamoWorker.delete(entitySpec.mainTable, key.getHashKey(), key.getRangeKey());
+			//if (key == null) {
+				//something went wrong
+			//	throw new RuntimeException();
+			//}
+			changeSet.delete(entitySpec.mainTable, key.getHashKey(), key.getRangeKey());
 		}
 		
 		//delete in lookup
-		for (B3Table oneMain : B3Table.mainTables) {
-			deleteCurrentLookup(oneMain);
-		}
+		//for (B3Table oneMain : B3Table.mainTables) {
+			//deleteCurrentLookup(oneMain);
+		//}
+		changeSet.deleteCurrentLookup(entity.getClass(), entity.getId());
 		
 		//delete in link
 		EntityLink[] linkedEntities = getDownlinkedEntities();
@@ -405,128 +427,18 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 			for (EntityLink link : linkedEntities) {
 				B3KeyLink linkKey = new B3KeyLink(
 						link.linkedEntityClazz, link.linkedEntityId, entity, link.name);
-				DynamoWorker.delete(B3Table.Link, linkKey.getHashKey(), linkKey.getRangeKey());
+				changeSet.delete(B3Table.Link, linkKey.getHashKey(), linkKey.getRangeKey());
 			}
 		}
 	}
 	
-	private void deleteCurrentLookup(B3Table mainTable) {
-		B3KeyLookup lookupKey = new B3KeyLookup(entity.getClass(), entity.getId(), mainTable);
-		IteratorSupport<Item, QueryOutcome> it = DynamoWorker.query(B3Table.Lookup, lookupKey.getHashKey()).iterator();
+	/*private void deleteCurrentLookup(ChangeSet changeSet) {
+		B3KeyLookup lookupKey = new B3KeyLookup(entity.getClass(), entity.getId());
+		B3ItemIterator it = DynamoWorker.query(B3Table.Lookup, lookupKey.getHashKey());
 		while (it.hasNext()) {
 			Item item = it.next();
-			DynamoWorker.delete(B3Table.Lookup, lookupKey.getHashKey(), item.getString(DynamoWorker.RANGE));
+			changeSet.delete(B3Table.Lookup, lookupKey.getHashKey(), item.getString(DynamoWorker.RANGE));
 		}
-	}
-
-	/*@SuppressWarnings("unchecked")
-	final void applyChangeCreate(EntityCreateWrapper create, ModelShortName entitySpec, JsonMapper mapper) {
-		
-		//table entity
-		this.entity = (E) create.getEntity();
-		if (entitySpec.mainTable == null) {
-			return;
-		}
-		System.out.println("CREATE: " + create);
-		buildDownlinks(null, mapper);
-		B3Key mainKey = createMainKey();
-		if (mainKey == null) {
-			return;
-		}
-		
-		//put linked entities to table lookup, link
-		LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
-		InitialDumpDeployer.putToMainAndLookupAndLinkRecursively(entitySpec.mainTable, 
-				mainKey, b3Cells, null, this, null, mapper);
-		
-		//put main entity to main table
-		B3Update update = new B3Update(entitySpec.mainTable, mainKey, b3Cells.toArray(new B3CellString[b3Cells.size()]));
-		DynamoWorker.put(update);
-	}*/
-	
-	/*@SuppressWarnings("unchecked")
-	final void applyChangeUpdate(EntityUpdateWrapper update, ModelShortName entitySpec, JsonMapper mapper) {
-		
-		//retrieve entity
-		System.out.println("UPDATE: " + update);
-		B3KeyEntity entityKey = new B3KeyEntity(update.getEntityClassName(), update.getEntityId());
-		Entity targetEntity = entityKey.load(mapper);
-		if (targetEntity == null) {
-			System.out.println("Ignoring entity update: entity does not exist: " + 
-					update.getEntityClassName() + "@" + update.getEntityId());
-			return;
-		}
-
-		//apply changes
-		System.out.println("BEFORE: " + this.entity);
-		update.applyChanges(targetEntity);
-		System.out.println("AFTER: " + this.entity);
-		
-		this.entity = (E) targetEntity;
-		buildDownlinks(null, mapper);
-		B3Key mainKey = createMainKey();
-		if (mainKey == null) {
-			return;
-		}
-		
-		//put linked entities to table lookup, link
-		LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
-		InitialDumpDeployer.putToMainAndLookupAndLinkRecursively(entitySpec.mainTable, 
-				mainKey, b3Cells, null, this, null, mapper);
-		
-		//put main entity to main table
-		B3Update b3update = new B3Update(entitySpec.mainTable, mainKey, b3Cells.toArray(new B3CellString[b3Cells.size()]));
-		DynamoWorker.put(b3update);
-		
-		/*LinkedList<String> idPropertyNames = new LinkedList<>();
-		EntityLink[] links = new B3EventInfo().getDownlinkedEntities();
-		for (EntityLink one : links) {
-			idPropertyNames.add(one.getLinkName());
-		}
-		boolean idChanged = false;
-		for (String changedPropertyName : update.getPropertyNames()) {
-			if (idPropertyNames.contains(changedPropertyName)) {
-				idChanged = true;
-			}
-		}
-		
-		if (idChanged) {
-			applyChangeUpdateId(update, mapper);
-		} else {
-			applyChangeUpdateScalar(update, mapper);
-		}/
-		//applyChangeUpdateScalar(update, entityKey, mapper);
-	}*/
-	
-	/*void applyChangeUpdateScalar(EntityUpdateWrapper update, B3KeyEntity  entityKey, JsonMapper mapper) {
-
-		//apply changes
-		System.out.println("BEFORE: " + this.entity);
-		update.applyChanges(this.entity);
-		System.out.println("AFTER: " + this.entity);
-		
-		//update table entity
-		B3Update put = new B3Update(B3Table.Entity, entityKey,
-				new B3CellString(B3Table.CELL_LOCATOR_THIZ, mapper.serialize(this.entity)));
-		DynamoWorker.put(put);
-	}*/
-
-	/**
-	 * Tables to consider: entity, lookup, link, mains
-	 * 
-	 *   For a value property change: update table entity, mains
-	 *   For a linked ID change: update table entity, mains, link, lookup
-	 * 
-	 * @param update
-	 * @param mapper
-	 */
-	/*void applyChangeUpdateId(EntityUpdateWrapper update, JsonMapper mapper) {
-
-
-	}*/
-
-	/*final void applyChangeDelete(EntityDeleteWrapper delete, JsonMapper mapper) {
-		
 	}*/
 
 }

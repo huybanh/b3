@@ -71,13 +71,33 @@ public class InitialDumpDeployer {
 		//this.totalCount = totalCount;
 	}
 	
-	public void initialPutMaster(int threads) {
+	public void initialPutMaster() {
 
-		initialPutAllEntities();
-		initialPutAllEvents();
-		initialPutAllEventInfos();
-		initialPutAllOutcomes();
-		initialPutAllOffers();
+		//DBTrait db = new FileWorker(new JsonMapper());
+		DBTrait db = new DBTrait() {
+
+			private final JsonMapper mapper = new JsonMapper();
+			
+			@Override
+			public void put(B3Table table, String hashKey, String rangeKey, B3Cell<?>... cells) {
+				DynamoWorker.putFile(mapper, table, hashKey, rangeKey, cells);
+			}
+
+			@Override
+			public void update(B3Table table, String hashKey, String rangeKey, B3Cell<?>... cells) {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public void delete(B3Table table, String hashKey, String rangeKey) {
+				throw new UnsupportedOperationException();
+			}
+		};
+		initialPutAllEntities(db);
+		initialPutAllEvents(db);
+		initialPutAllEventInfos(db);
+		initialPutAllOutcomes(db);
+		initialPutAllOffers(db);
 		
 		int allTaskCount = 0;
 		for (ArrayList<?> subList : allTasks) {
@@ -86,15 +106,16 @@ public class InitialDumpDeployer {
 		final int allTaskCountFinal = allTaskCount;
 		
 		final ArrayList<Object> threadIds = new ArrayList<Object>();
-		for (int i = 0; i < threads; i++) {
+		//we have 7 files, so 20 threads
+		for (int i = 0; i < 20; i++) {
 			final Object oneThreadId = new Object();
 			threadIds.add(oneThreadId);
-			new Thread() {
+			new Thread("LocalPut-thread-" + i) {
 				public void run() {
-					int remainPrint = 0;
+					//int remainPrint = 0;
 					do {
 						Runnable oneTask;
-						Integer remainTaskCount = null;
+						int remainTaskCount = 0;
 						synchronized (allTasks) {
 							int taskTypeCount = 0;
 							do {
@@ -115,23 +136,23 @@ public class InitialDumpDeployer {
 								}
 							} while (true);
 							oneTask = allTasks[taskTypeIndex].remove(0);
-							if (remainPrint == 0) {
-								remainTaskCount = 0;
+							//if (remainPrint == 0) {
+								//remainTaskCount = 0;
 								for (ArrayList<?> subList : allTasks) {
 									remainTaskCount += subList.size();
 								}
-							}
-							remainPrint++;
+							//}
+							/*remainPrint++;
 							if (remainPrint == 50) {
 								remainPrint = 0;
-							}
+							}*/
 							//oneTask = allTasks.remove(0);
 						}
 
-						if (remainTaskCount != null) {
+						//if (remainTaskCount != null) {
 							logger.info(Thread.currentThread().getName() +  
 									": Tasks remain: " + remainTaskCount + " of " + allTaskCountFinal);
-						}
+						//}
 						oneTask.run();
 						//totalProcessedCount += oneTask.subTotalCount;
 						//logger.info("Totally deployed " + totalProcessedCount + " of " + totalCount);
@@ -144,7 +165,6 @@ public class InitialDumpDeployer {
 		//wait for all initial deploying threads to finish
 		while (true) {
 			synchronized (allTasks) {
-				logger.info("Running initial deploying threads: " + threadIds.size());
 				if (!threadIds.isEmpty()) {
 					try {
 						allTasks.wait();
@@ -161,9 +181,9 @@ public class InitialDumpDeployer {
 		return;
 	}
 	
-	public void initialPutAllEvents() {
+	public void initialPutAllEvents(DBTrait db) {
 		
-		initialPutAllToMainTable(eventTasks, B3Table.Event, Event.class, new B3KeyBuilder<Event>() {
+		initialPutAllToMainTable(db, eventTasks, B3Table.Event, Event.class, new B3KeyBuilder<Event>() {
 
 			public B3Entity<Event> newB3Entity() {
 				return new B3Event();
@@ -181,9 +201,9 @@ public class InitialDumpDeployer {
 		
 	}
 	
-	public void initialPutAllEventInfos() {
+	public void initialPutAllEventInfos(DBTrait db) {
 		
-		initialPutAllToMainTable(eventInfoTasks, B3Table.EventInfo, EventInfo.class, new B3KeyBuilder<EventInfo>() {
+		initialPutAllToMainTable(db, eventInfoTasks, B3Table.EventInfo, EventInfo.class, new B3KeyBuilder<EventInfo>() {
 
 			public B3Entity<EventInfo> newB3Entity() {
 				return new B3EventInfo();
@@ -192,8 +212,8 @@ public class InitialDumpDeployer {
 			public B3Key buildKey(B3Entity<EventInfo> b3entity) {
 				B3EventInfo eventInfo = (B3EventInfo) b3entity;
 				return new B3KeyEventInfo(
-						eventInfo.event.entity.getSportId(),
-						eventInfo.event.entity.getTypeId(),
+						//eventInfo.event.entity.getSportId(),
+						//eventInfo.event.entity.getTypeId(),
 						//false,
 						eventInfo.event.entity.getId(),
 						eventInfo.entity.getTypeId(),
@@ -203,9 +223,9 @@ public class InitialDumpDeployer {
 		
 	}
 	
-	public void initialPutAllOutcomes() {
+	public void initialPutAllOutcomes(DBTrait db) {
 		
-		initialPutAllToMainTable(outcomeTasks, B3Table.Outcome, Outcome.class, new B3KeyBuilder<Outcome>() {
+		initialPutAllToMainTable(db, outcomeTasks, B3Table.Outcome, Outcome.class, new B3KeyBuilder<Outcome>() {
 
 			public B3Outcome newB3Entity() {
 				return new B3Outcome();
@@ -226,9 +246,9 @@ public class InitialDumpDeployer {
 		
 	}
 	
-	public void initialPutAllOffers() {
+	public void initialPutAllOffers(DBTrait db) {
 		
-		initialPutAllToMainTable(offerTasks, B3Table.BettingOffer, BettingOffer.class, new B3KeyBuilder<BettingOffer>() {
+		initialPutAllToMainTable(db, offerTasks, B3Table.BettingOffer, BettingOffer.class, new B3KeyBuilder<BettingOffer>() {
 
 			public B3BettingOffer newB3Entity() {
 				return new B3BettingOffer();
@@ -274,7 +294,7 @@ public class InitialDumpDeployer {
 		return parentList.toArray(new ArrayList[parentList.size()]);
 	}
 	
-	public void initialPutAllEntities() {
+	public void initialPutAllEntities(final DBTrait db) {
 
 		for (Entry<String, HashMap<Long, Entity>> entry : masterMap.entrySet()) {
 			Collection<Entity> entities = entry.getValue().values();
@@ -298,20 +318,8 @@ public class InitialDumpDeployer {
 						//final int total = oneSubListFinal.size();
 						//int count = 0;
 						for (Entity entity : oneSubListFinal) {
-							//processedCount++;
-							//EntitySpec2 spec = EntitySpec2.get(entity.getClass().getName());
-							//String shortName = spec.entityClassName;
-							//if (spec == null) {
-							//	continue;
-							//}
-							//count++;
-							//if (processedCount % 1000 == 0) {
-								//logger.info("Entity " + shortName+ ": deployed " + processedCount + " of " + subTotalCount);
-							//}
 							B3KeyEntity entityKey = new B3KeyEntity(entity);
-							//B3Update update = new B3Update(B3Table.Entity, entityKey, 
-							//		new B3CellString(B3Table.CELL_LOCATOR_THIZ, jsonMapper.serialize(entity)));
-							DynamoWorker.putFile(jsonMapper, B3Table.Entity, entityKey.getHashKey(), entityKey.getRangeKey(), 
+							db.put(B3Table.Entity, entityKey.getHashKey(), entityKey.getRangeKey(), 
 									new B3CellString(B3Table.CELL_LOCATOR_THIZ, jsonMapper.serialize(entity)));
 						}
 						synchronized (subProcessedCount) {
@@ -334,12 +342,15 @@ public class InitialDumpDeployer {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private <E extends Entity> void initialPutAllToMainTable(ArrayList<Runnable> runnerList, 
-			final B3Table table, /*final int start, final Integer end,*/
-			final Class<E> entityClazz, final B3KeyBuilder<E> keyBuilder) {
+	private <E extends Entity> void initialPutAllToMainTable(
+			final DBTrait db, ArrayList<Runnable> runnerList, 
+			final B3Table table, final Class<E> entityClazz, final B3KeyBuilder<E> keyBuilder) {
 
 		final int[] subProcessedCount = new int[] {0};
 		final HashMap<Long, Entity> allEntities = masterMap.get(entityClazz.getName());
+		if (allEntities == null) {
+			return;
+		}
 		Collection<Entity>[] subLists = split(allEntities.values());
 		for (Collection<Entity> oneSubList : subLists) {
 			final Collection<Entity> oneSubListFinal = oneSubList;
@@ -367,18 +378,19 @@ public class InitialDumpDeployer {
 						
 						//put linked entities to table main, lookup, link
 						LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
-						putToLookupAndLinkRecursively(true, table, b3key, b3Cells, null, b3entity, false, masterMap, jsonMapper);
+						putToLookupAndLinkRecursively(db, table, b3key, b3Cells, null, b3entity, masterMap, jsonMapper);
 						
 						//put main entity to main table
 						//B3Update update = new B3Update(table, b3key, b3Cells.toArray(new B3CellString[b3Cells.size()]));
-						DynamoWorker.putFile(jsonMapper, table, b3key.getHashKey(), b3key.getRangeKey(), 
+						db.put(table, b3key.getHashKey(), b3key.getRangeKey(), 
 								b3Cells.toArray(new B3CellString[b3Cells.size()]));
 						
 						//put main entity revision to main table
-						b3key.setRevisionId("0");
-						DynamoWorker.putFile(jsonMapper, table, b3key.getHashKey(), b3key.getRangeKey(), 
-								b3Cells.toArray(new B3CellString[b3Cells.size()]));
-						
+						if (b3entity.getSpec().revisioned) {
+							b3key.setRevisionId("0");
+							db.put(table, b3key.getHashKey(), b3key.getRangeKey(), 
+									b3Cells.toArray(new B3CellString[b3Cells.size()]));
+						}
 						//entity table
 						/*B3KeyEntity entityKey = new B3KeyEntity(entity);
 						update = new B3Update(B3Table.Entity, entityKey, 
@@ -400,9 +412,19 @@ public class InitialDumpDeployer {
 		}
 	}
 	
-	public static <E extends Entity>void putToLookupAndLinkRecursively(boolean putToFile,
+	/**
+	 * @param putToFile
+	 * @param mainTable
+	 * @param mainKey: Null if no actual puts required
+	 * @param mainCells
+	 * @param cellName
+	 * @param b3entity
+	 * @param masterMap
+	 * @param jsonMapper
+	 */
+	public static <E extends Entity>void putToLookupAndLinkRecursively(DBTrait db,
 			B3Table mainTable, B3Key mainKey, LinkedList<B3Cell<?>> mainCells, 
-			final String cellName, B3Entity<?> b3entity, boolean noActualPuts,
+			final String cellName, B3Entity<?> b3entity,
 			HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper jsonMapper) {
 		
 		String thisCellName;
@@ -417,15 +439,10 @@ public class InitialDumpDeployer {
 		mainCells.add(jsonCell);
 		
 		//put event to lookup
-		if (!noActualPuts) {
+		if (mainKey != null && cellName != null) {
 			B3KeyLookup lookupKey = new B3KeyLookup(
 					b3entity.entity, mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), thisCellName);
-			//B3Update update = new B3Update(B3Table.Lookup, lookupKey);
-			if (putToFile) {
-				DynamoWorker.putFile(jsonMapper, B3Table.Lookup, lookupKey.getHashKey(), lookupKey.getRangeKey());
-			} else {
-				DynamoWorker.put(true, B3Table.Lookup, lookupKey.getHashKey(), lookupKey.getRangeKey());
-			}
+			db.put(B3Table.Lookup, lookupKey.getHashKey(), lookupKey.getRangeKey());
 		}
 		
 		EntityLink[] linkedEntities = b3entity.getDownlinkedEntities();
@@ -436,16 +453,9 @@ public class InitialDumpDeployer {
 				if (link.linkedEntity != null) {
 					link.linkedEntity.buildDownlinks(false, masterMap, jsonMapper);
 				}
-				
-				//put linked entity to table link
-				if (!noActualPuts) {
+				if (mainKey != null) {
 					B3KeyLink linkKey = new B3KeyLink(link.linkedEntityClazz, link.linkedEntityId, b3entity.entity, link.name); //reverse link direction
-					//B3Update update = new B3Update(B3Table.Link, linkKey);
-					if (putToFile) {
-						DynamoWorker.putFile(jsonMapper, B3Table.Link, linkKey.getHashKey(), linkKey.getRangeKey());
-					} else {
-						DynamoWorker.put(true, B3Table.Link, linkKey.getHashKey(), linkKey.getRangeKey());
-					}
+					db.put(B3Table.Link, linkKey.getHashKey(), linkKey.getRangeKey());
 					
 					//commented out, as we can always find a link without information from lookup table
 					//also, put link to lookup: Main entity -> link location
@@ -453,6 +463,7 @@ public class InitialDumpDeployer {
 					//update = new B3Update(B3Table.Lookup, lookupKey);
 					//DynamoWorker.put(bundleId, update);
 				}
+				
 				if (link.linkedEntity != null) {
 					String childCellName;
 					if (cellName == null) {
@@ -461,7 +472,7 @@ public class InitialDumpDeployer {
 						childCellName = cellName + B3Table.CELL_LOCATOR_SEP + link.name;
 					}
 					putToLookupAndLinkRecursively(
-							putToFile, mainTable, mainKey, mainCells, childCellName, link.linkedEntity, noActualPuts, masterMap, jsonMapper);
+							db, mainTable, mainKey, mainCells, childCellName, link.linkedEntity, masterMap, jsonMapper);
 				}
 			}
 		}

@@ -5,10 +5,7 @@ import java.util.LinkedList;
 import java.util.Map.Entry;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.ItemCollection;
-import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
-import com.amazonaws.services.dynamodbv2.document.internal.IteratorSupport;
-
+import com.betbrain.b3.data.B3ItemIterator;
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
@@ -34,10 +31,7 @@ public class PushDeployer {
 			final int distFinal = dist;
 			initialDumpLoadTasks.add(new Runnable() {
 				public void run() {
-					ItemCollection<QueryOutcome> coll = DynamoWorker.query(
-							B3Table.SEPC, DynamoWorker.SEPC_INITIAL + distFinal);
-
-					IteratorSupport<Item, QueryOutcome> iter = coll.iterator();
+					B3ItemIterator iter = DynamoWorker.query(B3Table.SEPC, DynamoWorker.SEPC_INITIAL + distFinal);
 					int itemCount = 0;
 					while (iter.hasNext()) {
 						Item item = iter.next();

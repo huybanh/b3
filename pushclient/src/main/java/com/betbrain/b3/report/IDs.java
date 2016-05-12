@@ -12,9 +12,17 @@ public class IDs {
 	public static final long EVENTINFOTYPE_SCORE = 1;
 	public static final long EVENTINFOTYPE_CURRENTSTATUS = 92;
 	
-	public static final long EVENT_PREMIERLEAGUE = 215458667;
+	//public static final long EVENT_PREMIERLEAGUE = 215458667;
+	public static final long EVENT_PREMIERLEAGUE = 215754838;
 	
 	public static final long OUTCOME_DRAW = 11;
 	
 	public static final long BETTINGTYPE_1X2 = 69;
+	
+	public static void main(String[] args) {
+		System.out.println(new Integer(12345).hashCode());
+		System.out.println(new Integer(12346).hashCode());
+		System.out.println("12345".hashCode());
+		System.out.println("12346".hashCode());
+	}
 }

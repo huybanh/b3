@@ -2,25 +2,22 @@ package com.betbrain.b3.pushclient;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.ItemCollection;
-import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
-import com.amazonaws.services.dynamodbv2.document.internal.IteratorSupport;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputExceededException;
-import com.betbrain.b3.data.B3CellString;
+import com.betbrain.b3.data.B3ItemIterator;
 import com.betbrain.b3.data.B3Key;
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.DynamoWorker;
+import com.betbrain.b3.data.ChangeBase;
 import com.betbrain.b3.data.EntitySpec2;
-import com.betbrain.b3.model.B3Entity;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 
+@Deprecated
 public class ChangeBatchDeployer {
 	
     //private final Logger logger = Logger.getLogger(this.getClass());
@@ -30,9 +27,13 @@ public class ChangeBatchDeployer {
 	//private ExecutorService executor;
 
 	//private final ArrayList<?>[] allEntityLists = new ArrayList<?>[EntitySpec2.values().length];
-	private final HashMap<String, HashMap<Long, Entity>> masterMap = new HashMap<>();
+	
+	//private static final ChangeSet[] workingChangeSet = new ChangeSet[] {new ChangeSet()};
 	
 	public static void main(String[] args) {
+		
+		int initialLoadingThreads = Integer.parseInt(args[0]);
+		//int deployThreads = Integer.parseInt(args[1]);
 
 		//final int threadCount = Integer.parseInt(args[0]);
 		if (!DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_PUSH_WAIT)) {
@@ -43,98 +44,118 @@ public class ChangeBatchDeployer {
 		}
 		//DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_DEPLOYING); //for testing only
 
-		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSHING);
-		ChangeBatchDeployer deployer = new ChangeBatchDeployer();
-		deployer.loadEntities(Integer.parseInt(args[0]));
+		HashMap<String, HashMap<Long, Entity>> cachedEntities = loadEntityCache(initialLoadingThreads);
 		//dump masterMap
-		for (Entry<String, HashMap<Long, Entity>> entry : deployer.masterMap.entrySet()) {
+		for (Entry<String, HashMap<Long, Entity>> entry : cachedEntities.entrySet()) {
 			System.out.println(entry.getKey() + ": " + entry.getValue().size());
 		}
-		//deployer.masterMap.get(key)
-		deployer.deployChangeBatches();
-	}
-	
-	private ChangeBatchDeployer() {
-		//executor = Executors.newFixedThreadPool(threadCount);
-	}
+		
+		/*new Thread() {
+			public void run() {
+				while (true) {
+					ChangeSet changeSetToPersist;
+					synchronized (workingChangeSet) {
+						changeSetToPersist = workingChangeSet[0];
+						workingChangeSet[0] = new ChangeSet();
+					}
+					changeSetToPersist.persist();
+				}
+			}
+		}.start();*/
 
-	private void deployChangeBatches() {
+		//ChangeDistributor changeDist = new ChangeDistributor(deployThreads, cachedEntities);
+		//loadAndApplyChangeBatches(cachedEntities/*changeDist*/);
+	//}
+
+	//private static void loadChangeBatches(HashMap<String, HashMap<Long, Entity>> cachedEntities/*ChangeDistributor changeDist*/) {
+		
+		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSHING);
 		JsonMapper mapper = new JsonMapper();
-		int deployCount = 0;
+		//int deployCount = 0;
+		System.out.println("Querying " + B3Table.DIST_FACTOR + " partitions for first change batch id");
+		final ArrayList<String> allRangeIds = new ArrayList<String>();
+		for (int dist = 0; dist < B3Table.DIST_FACTOR; dist++) {
+			B3ItemIterator iter = DynamoWorker.query(B3Table.SEPC, DynamoWorker.SEPC_CHANGEBATCH + dist, 1);
+			while (iter.hasNext()) {
+				Item item = iter.next();
+				allRangeIds.add(item.getString(DynamoWorker.RANGE));
+			}
+		}
+		Collections.sort(allRangeIds);
+		long batchId = Long.parseLong(allRangeIds.get(0).split(B3Table.KEY_SEP)[0]);
+		
 		while (true) {
-			final ArrayList<String> allRangeIds = new ArrayList<String>();
-			for (int dist = 0; dist < B3Table.DIST_FACTOR; dist++) {
-				ItemCollection<QueryOutcome> coll = DynamoWorker.query(
-						B3Table.SEPC, DynamoWorker.SEPC_CHANGEBATCH + dist, 1);
-				IteratorSupport<Item, QueryOutcome> iter = coll.iterator();
-				while (iter.hasNext()) {
-					Item item = iter.next();
-					allRangeIds.add(item.getString(DynamoWorker.RANGE));
-				}
-			}
-			Collections.sort(allRangeIds);
+			System.out.println("Loading batch " + batchId);
+			String hashKey = BatchWorker.generateChangeBatchHashKey(batchId);
+			B3ItemIterator it = DynamoWorker.queryRangeBeginsWith(
+					B3Table.SEPC, hashKey, B3Key.zeroPadding(BatchWorker.BATCHID_DIGIT_COUNT, batchId));
 			
-			//String rangeStart = allRangeIds.get(0);
-			long batchId = Long.parseLong(allRangeIds.get(0).split(B3Table.KEY_SEP)[0]);
-			System.out.println("Processing batch " + batchId);
-			int retryCount = 0;
-			while (true) {
-				String hashKey = BatchWorker.generateChangeBatchHashKey(batchId);
-				ItemCollection<QueryOutcome> coll = DynamoWorker.queryRangeBeginsWith(
-						B3Table.SEPC, hashKey, B3Key.zeroPadding(BatchWorker.BATCHID_DIGIT_COUNT, batchId));
-				IteratorSupport<Item, QueryOutcome> it = null;
-				if (coll != null) {
-					it = coll.iterator();
+			Long nextBatchId = null;
+			while (it.hasNext()) {
+				Item item = it.next();
+				String changesJson = item.getString(DynamoWorker.SEPC_CELLNAME_JSON);
+				ChangeBase oneChange = (ChangeBase) mapper.deserialize(changesJson);
+				oneChange.changeTime = item.getString(DynamoWorker.SEPC_CELLNAME_CREATETIME);
+				oneChange.hashKey = hashKey;
+				oneChange.rangeKey = item.getString(DynamoWorker.RANGE);
+				if (nextBatchId == null) {
+					nextBatchId = item.getLong(DynamoWorker.SEPC_CELLNAME_NEXTBATCH);
 				}
-
-				if (it == null) {
-					if (retryCount > 10) {
-						break;
-					}
-					/*try {
-						Thread.sleep(5);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}*/
-					retryCount++;
-					continue;
-				}
-				
-				while (it.hasNext()) {
-					Item item = it.next();
-					String createTime = item.getString(DynamoWorker.SEPC_CELLNAME_CREATETIME);
-					String changesJson = item.getString(DynamoWorker.SEPC_CELLNAME_JSON);
-					EntityChangeBase oneChange = (EntityChangeBase) mapper.deserialize(changesJson);
-					B3Entity.applyChange(createTime, (EntityChangeBase) oneChange, masterMap, mapper);
-					DynamoWorker.delete(B3Table.SEPC, hashKey, item.getString(DynamoWorker.RANGE));
-					if (deployCount == 0) {
-						Date d = new Date(Long.parseLong(createTime));
-						DynamoWorker.updateSetting(
-								new B3CellString(DynamoWorker.BUNDLE_CELL_DEPLOYSTATUS, DynamoWorker.BUNDLE_PUSHSTATUS_ONGOING),
-								new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_ID, String.valueOf(batchId)),
-								new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_TIMESTAMP, d.toString()));
-					}
-					deployCount++;
-					if (deployCount == 1000) {
-						deployCount = 0;
-					}
-				}
-				batchId++;
+				//changeDist.distribute((ChangeBase) oneChange, mapper);
+				apply(cachedEntities, (ChangeBase) oneChange, mapper);
 			}
+			
+			if (nextBatchId == null) {
+				System.out.println("Waiting for next batch...");
+				try {
+					Thread.sleep(1);
+				} catch (InterruptedException e) {
+				}
+				continue;
+			}
+			
+			batchId = nextBatchId;
+			//TODO properly handling in in-complete batch
 		}
 	}
 	
-	private void loadEntities(int loadingThreadCount) {
+	private static void apply(HashMap<String, HashMap<Long, Entity>> cachedEntities, ChangeBase change, JsonMapper mapper) {
+		
+		System.out.println(Thread.currentThread().getName() + ": Processing change " + change.rangeKey);
+		EntitySpec2 entitySpec = EntitySpec2.get(change.getEntityClassName());
+		if (entitySpec == null) {
+			//System.out.println("Ignoring unconfigured change handler " + change);
+			return;
+		}
+		
+		/*B3Entity<?> b3entity;
+		try {
+			b3entity = entitySpec.b3class.newInstance();
+		} catch (InstantiationException e) {
+			throw new RuntimeException(e);
+		} catch (IllegalAccessException e) {
+			throw new RuntimeException(e);
+		}*/
+		
+		//change.b3entity = b3entity;
+		
+		/*synchronized (workingChangeSet) {
+			b3entity.applyChange(workingChangeSet[0], change, cachedEntities, mapper);
+		}*/
+	}
+	
+	private static HashMap<String, HashMap<Long, Entity>> loadEntityCache(int loadingThreadCount) {
 		
 		/*for (int i = 0; i < allEntityLists.length; i++) {
 			allEntityLists[i] = new ArrayList<>();
 		}*/
+		HashMap<String, HashMap<Long, Entity>> cachedEntities = new HashMap<>();
 		final ArrayList<EntityLoadingTask> allLoadingTasks = new ArrayList<>();
 		for (EntitySpec2 spec : EntitySpec2.values()) {
 			final EntitySpec2 specFinal = spec;
 			//final ArrayList<Entity> entityList = new ArrayList<>();
 			final HashMap<Long, Entity> entityMap = new HashMap<>();
-			masterMap.put(spec.entityClass.getName(), entityMap);
+			cachedEntities.put(spec.entityClass.getName(), entityMap);
 			System.out.println("Creating loading tasks for " + spec.entityClass.getName());
 			for (int partition = 0; partition < B3Table.DIST_FACTOR; partition++) {
 				final int partitionFinal = partition;
@@ -142,9 +163,7 @@ public class ChangeBatchDeployer {
 					
 					@Override
 					public void run(JsonMapper mapper) {
-						loadEntities(specFinal.entityClass, partitionFinal, 
-								//(ArrayList<Entity>) allEntityLists[specFinal.ordinal()], mapper);
-								entityMap, mapper);
+						loadEntities(specFinal.entityClass, partitionFinal, entityMap, mapper);
 					}
 				});
 			}
@@ -194,6 +213,7 @@ public class ChangeBatchDeployer {
 				}
 			}
 		}
+		return cachedEntities;
 	}
 	
 	private static void loadEntities(Class<?> clazz, int partition,
@@ -201,9 +221,7 @@ public class ChangeBatchDeployer {
 			HashMap<Long, Entity> entityMap, JsonMapper mapper) {
 		
 		System.out.println("Querying entity " + EntitySpec2.getShortName(clazz.getName()) + partition);
-		ItemCollection<QueryOutcome> coll = DynamoWorker.query(
-				B3Table.Entity, EntitySpec2.getShortName(clazz.getName()) + partition);
-		IteratorSupport<Item, QueryOutcome> iter = coll.iterator();
+		B3ItemIterator iter = DynamoWorker.query(B3Table.Entity, EntitySpec2.getShortName(clazz.getName()) + partition);
 		int counter = 0;
 		while (true) {
 			String json = null;
@@ -245,66 +263,6 @@ public class ChangeBatchDeployer {
 		System.out.println(Thread.currentThread().getName() +
 				": Loaded " + clazz.getName() + ": " + entityMap.size());
 	}
-	
-	/*private ArrayList<B3ChangeBatch> queryForChanges() {
-		
-		LinkedList<Future<Integer>> executions = new LinkedList<Future<Integer>>(); 
-		final ArrayList<B3ChangeBatch> allBatches = new ArrayList<B3ChangeBatch>();
-		for (int dist = 0; dist < B3Table.DIST_FACTOR; dist++) {
-			
-			final int distFinal = dist;
-			Future<Integer> oneExecution = executor.submit(new Runnable() {
-				
-					public void run() {
-						ItemCollection<QueryOutcome> coll = DynamoWorker.query(
-								B3Table.SEPC, DynamoWorker.SEPC_CHANGEBATCH + distFinal, 1);
-	
-						IteratorSupport<Item, QueryOutcome> iter = coll.iterator();
-						//int changeBatchCount = 0;
-						while (iter.hasNext()) {
-							Item item = iter.next();
-							//String batchId = item.getString(DynamoWorker.RANGE);
-							//String createTime = item.getString(DynamoWorker.SEPC_CELLNAME_CREATETIME);
-							String changesJson = item.getString(DynamoWorker.SEPC_CELLNAME_CHANGES);
-							//System.out.println(changesJson);
-							@SuppressWarnings("unchecked")
-							List<Object> changes = (List<Object>) mapper.deserialize(changesJson);
-							B3ChangeBatch batch = new B3ChangeBatch(item.getLong(DynamoWorker.RANGE));
-							allBatches.add(batch);
-							for (Object obj : changes) {
-								if (obj != null) {
-									batch.changes.add((EntityChangeBase) obj);
-								} else {
-									System.out.println("NULL CHANGE: " + changesJson);
-									Thread.dumpStack();
-								}
-							}
-							//System.out.println(changes);
-							//changeBatchCount++;
-							//if (changeBatchCount % 2 == 0) {
-							//	System.out.println("Change-batch count: " + changeBatchCount);
-								//break;
-							//}
-						}
-					}
-				}, 1);
-			executions.add(oneExecution);
-		}
-		
-		for (Future<Integer> one : executions) {
-			while (true) {
-				try {
-					one.get();
-				} catch (InterruptedException e) {
-					continue;
-				} catch (ExecutionException e) {
-					continue;
-				}
-				break;
-			}
-		}
-		return allBatches;
-	}*/
 }
 
 abstract class EntityLoadingTask {

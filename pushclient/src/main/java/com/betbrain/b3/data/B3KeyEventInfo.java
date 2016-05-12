@@ -3,9 +3,6 @@ package com.betbrain.b3.data;
 import java.util.ArrayList;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.ItemCollection;
-import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
-import com.amazonaws.services.dynamodbv2.document.internal.IteratorSupport;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 
@@ -15,32 +12,32 @@ import com.betbrain.sepc.connector.sportsmodel.Entity;
  */
 public class B3KeyEventInfo extends B3KeyEntitySupport {
 
-	final Long sportId;
+	//private final Long sportId;
 	
-	final Long eventTypeId;
+	//private final Long eventTypeId;
 	
 	//final Boolean eventPartFlag;
 	
-	final Long eventId;
+	private final Long eventId;
 	
-	final Long eventInfoTypeId;
+	private final Long eventInfoTypeId;
 	
-	final Long eventInfoId;
+	private final Long eventInfoId;
 
-	public B3KeyEventInfo(Long sportId, Long eventTypeId, Long eventId, Long eventInfoTypeId, Long eventInfoId) {
+	public B3KeyEventInfo(/*Long sportId, Long eventTypeId,*/ Long eventId, Long eventInfoTypeId, Long eventInfoId) {
 		super();
-		this.sportId = sportId;
-		this.eventTypeId = eventTypeId;
+		//this.sportId = sportId;
+		//this.eventTypeId = eventTypeId;
 		//this.eventPartFlag = eventPart;
 		this.eventId = eventId;
 		this.eventInfoTypeId = eventInfoTypeId;
 		this.eventInfoId = eventInfoId;
 	}
 
-	public B3KeyEventInfo(Long sportId, Long eventTypeId, Long eventId) {
+	public B3KeyEventInfo(/*Long sportId, Long eventTypeId,*/ Long eventId) {
 		super();
-		this.sportId = sportId;
-		this.eventTypeId = eventTypeId;
+		//this.sportId = sportId;
+		//this.eventTypeId = eventTypeId;
 		//this.eventPartFlag = eventPart;
 		this.eventId = eventId;
 		this.eventInfoTypeId = null;
@@ -49,26 +46,19 @@ public class B3KeyEventInfo extends B3KeyEntitySupport {
 	
 	@Override
 	boolean isDetermined() {
-		return sportId != null && eventTypeId != null && eventId != null &&
+		return /*sportId != null && eventTypeId != null &&*/ eventId != null &&
 				eventInfoTypeId != null && eventInfoId != null;
 	} 
 	
 	public String getHashKeyInternal() {
-		if (sportId == null) {
+		/*if (sportId == null) {
 			return null;
 		}
 		if (eventTypeId == null) {
 			return sportId + B3Table.KEY_SEP;
 		}
-		/*if (eventPartFlag == null) {
-			return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP;
-		}
-		String eventPartMarker = eventPartFlag ? 
-				B3Table.EVENTKEY_MARKER_EVENTPART : B3Table.EVENTKEY_MARKER_EVENT;
-
-		return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventPartMarker +
-				Math.abs(eventId.hashCode() % 100);*/
-		return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventId;
+		return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventId;*/
+		return String.valueOf(eventId);
 	}
 	
 	@Override
@@ -83,8 +73,7 @@ public class B3KeyEventInfo extends B3KeyEntitySupport {
 	public <E extends Entity> ArrayList<E> listEntities(JsonMapper jsonMapper) {
 		ArrayList<E> list = new ArrayList<E>();
 		int i = hardLimit;
-		ItemCollection<QueryOutcome> coll = DynamoWorker.query(B3Table.EventInfo, getHashKey());
-		IteratorSupport<Item, QueryOutcome> it = coll.iterator();
+		B3ItemIterator it = DynamoWorker.query(B3Table.EventInfo, getHashKey());
 		while (it.hasNext()) {
 			if (--i <= 0) {
 				break;

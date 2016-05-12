@@ -85,7 +85,7 @@ public class GarbageCollector {
 				
 				public void run() {
 					System.out.println("Deleting " + table.name + " segment " + segmentFinal);
-					DynamoWorker.deleteParallel(table, segmentFinal, totalSegments);
+					//DynamoWorker.deleteParallel(table, segmentFinal, totalSegments);
 				}
 			});
         }

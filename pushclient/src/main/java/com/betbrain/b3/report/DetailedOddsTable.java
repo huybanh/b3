@@ -29,7 +29,8 @@ public class DetailedOddsTable {
 		
 		new DetailedOddsTable().run(outcomeId);
 	}
-	
+
+	@SuppressWarnings("unused")
 	public void run(long outcomeId) {
 
 		//TODO use lookup table
@@ -54,13 +55,13 @@ public class DetailedOddsTable {
 		
 		//match statuses
 		B3KeyEventInfo eventInfoKey = new B3KeyEventInfo(
-				event.getSportId(), event.getTypeId(), event.getId(), 
+				/*event.getSportId(), event.getTypeId(),*/ event.getId(), 
 				IDs.EVENTINFOTYPE_CURRENTSTATUS, null/*eventInfoId*/);
 		ArrayList<EventInfo> matchStatuses = eventInfoKey.listEntities(jsonMapper);
 		
 		//scores
 		eventInfoKey = new B3KeyEventInfo(
-				event.getSportId(), event.getTypeId(), event.getId(), 
+				/*event.getSportId(), event.getTypeId(),*/ event.getId(), 
 				IDs.EVENTINFOTYPE_SCORE, null/*eventInfoId*/);
 		ArrayList<EventInfo> matchScores = eventInfoKey.listEntities(jsonMapper);
 		

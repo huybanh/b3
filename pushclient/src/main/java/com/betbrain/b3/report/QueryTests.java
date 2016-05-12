@@ -1,11 +1,7 @@
 package com.betbrain.b3.report;
 
-import java.util.ArrayList;
-
 import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.ItemCollection;
-import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
-import com.amazonaws.services.dynamodbv2.document.internal.IteratorSupport;
+import com.betbrain.b3.data.B3ItemIterator;
 import com.betbrain.b3.data.B3KeyEntity;
 import com.betbrain.b3.data.B3KeyEventInfo;
 import com.betbrain.b3.data.B3KeyLink;
@@ -13,9 +9,7 @@ import com.betbrain.b3.data.B3KeyOffer;
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.pushclient.JsonMapper;
-import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
 import com.betbrain.sepc.connector.sportsmodel.Event;
-import com.betbrain.sepc.connector.sportsmodel.Outcome;
 import com.betbrain.sepc.connector.sportsmodel.Sport;
 
 public class QueryTests {
@@ -27,7 +21,7 @@ public class QueryTests {
 		DynamoWorker.initBundleCurrent(); 
 		
 		B3KeyLink keyLink = new B3KeyLink(Sport.class, IDs.SPORT_FOOTBALL, Event.class, Event.PROPERTY_NAME_sportId);
-		IteratorSupport<Item, QueryOutcome> it = DynamoWorker.query(B3Table.Link, keyLink.getHashKey()).iterator();
+		B3ItemIterator it = DynamoWorker.query(B3Table.Link, keyLink.getHashKey());
 		int count = 0;
 		while (it.hasNext()) {
 			Item item = it.next();
@@ -49,7 +43,7 @@ public class QueryTests {
 		
 		//offers
 		B3KeyOffer offerKey = new B3KeyOffer(e.getSportId(), e.getTypeId(), eventId);
-		IteratorSupport<Item, QueryOutcome> it = DynamoWorker.query(B3Table.BettingOffer, offerKey.getHashKey()).iterator();
+		B3ItemIterator it = DynamoWorker.query(B3Table.BettingOffer, offerKey.getHashKey());
 		/*int offerCount = 0;
 		/*while (it.hasNext()) {
 			it.next();
@@ -62,7 +56,7 @@ public class QueryTests {
 
 		//info
 		B3KeyEventInfo infoKey = new B3KeyEventInfo(e.getSportId(), e.getTypeId(), eventId);
-		it = DynamoWorker.query(B3Table.EventInfo, infoKey.getHashKey()).iterator();
+		it = DynamoWorker.query(B3Table.EventInfo, infoKey.getHashKey());
 		/*int infoCount = 0;
 		while (it.hasNext()) {
 			it.next();

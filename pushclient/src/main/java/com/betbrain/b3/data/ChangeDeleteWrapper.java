@@ -1,8 +1,12 @@
-package com.betbrain.b3.pushclient;
+package com.betbrain.b3.data;
 
+import java.util.HashMap;
+
+import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityDelete;
 
-public class EntityDeleteWrapper extends EntityChangeBase {
+@Deprecated
+public class ChangeDeleteWrapper extends ChangeBase {
 
 	private EntityDelete delete;
 	
@@ -11,11 +15,11 @@ public class EntityDeleteWrapper extends EntityChangeBase {
 	private long entityId;
 	
 	//for deserialization
-	public EntityDeleteWrapper() {
+	public ChangeDeleteWrapper() {
 		
 	}
 	
-	public EntityDeleteWrapper(EntityDelete delete) {
+	public ChangeDeleteWrapper(EntityDelete delete) {
 		this.delete = delete;
 	}
 	
@@ -36,11 +40,22 @@ public class EntityDeleteWrapper extends EntityChangeBase {
 		this.entityId = id;
 	}
 
-    public long getEntityId() {
+	@Override
+    public Long getEntityId() {
         
     	if (delete != null) {
     		return delete.getEntityId();
     	}
         return entityId;
     }
+
+	@Override
+	public Entity lookupEntity(HashMap<String, HashMap<Long, Entity>> masterMap) {
+		return masterMap.get(entityClassName).get(getEntityId());
+	}
+	
+	@Override
+	public boolean isOnlyEntityMainIDsNeeded(EntitySpec2 entitySpec) {
+		return true;
+	}
 }

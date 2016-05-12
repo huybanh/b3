@@ -5,6 +5,7 @@ import java.util.HashMap;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.betbrain.b3.data.B3KeyOutcome;
 import com.betbrain.b3.data.B3Table;
+import com.betbrain.b3.data.EntitySpec2;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Event;
@@ -19,6 +20,11 @@ public class B3Outcome extends B3Entity<Outcome> {
 	public B3EventPart eventPart;
 	public B3OutcomeStatus status;
 	public B3OutcomeType type;
+	
+	@Override
+	public EntitySpec2 getSpec() {
+		return EntitySpec2.Outcome;
+	}
 
 	@Override
 	public void getDownlinkedEntitiesInternal() {
@@ -49,9 +55,22 @@ public class B3Outcome extends B3Entity<Outcome> {
 	}
 	
 	public void loadFull(Item item, JsonMapper mapper) {
-		deserialize(mapper, item, this, B3Table.CELL_LOCATOR_THIZ);
-		this.status = (B3OutcomeStatus) deserialize(mapper, item, new B3OutcomeStatus(), Outcome.PROPERTY_NAME_statusId);
-		this.type = (B3OutcomeType) deserialize(mapper, item, new B3OutcomeType(), Outcome.PROPERTY_NAME_typeId);
+		deserialize(mapper, item, B3Table.CELL_LOCATOR_THIZ);
+		this.status = new B3OutcomeStatus();
+		this.status.deserialize(mapper, item, Outcome.PROPERTY_NAME_statusId);
+		this.type = new B3OutcomeType();
+		this.type.deserialize(mapper, item, Outcome.PROPERTY_NAME_typeId);
+	}
+	
+	@Override
+	String canCreateMainKey() {
+		if (entity == null) {
+			return "Null entity";
+		}
+		if (event == null) {
+			return "Missing outcome " + entity.getEventId();
+		}
+		return null;
 	}
 
 	@Override

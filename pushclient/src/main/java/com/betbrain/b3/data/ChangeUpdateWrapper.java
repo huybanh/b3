@@ -1,10 +1,12 @@
-package com.betbrain.b3.pushclient;
+package com.betbrain.b3.data;
 
 import java.beans.PropertyDescriptor;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityUpdate;
 import com.betbrain.sepc.connector.sportsmodel.Event;
@@ -12,7 +14,8 @@ import com.betbrain.sepc.connector.sportsmodel.EventInfo;
 import com.betbrain.sepc.connector.util.StringUtil;
 import com.betbrain.sepc.connector.util.beans.BeanUtil;
 
-public class EntityUpdateWrapper extends EntityChangeBase {
+@Deprecated
+public class ChangeUpdateWrapper extends ChangeBase {
 
 	private String entityClassName;
 	
@@ -25,14 +28,14 @@ public class EntityUpdateWrapper extends EntityChangeBase {
 	private EntityUpdate update;
 
 	//needed for deserialization
-	public EntityUpdateWrapper() {
+	public ChangeUpdateWrapper() {
 	}
 
-	public EntityUpdateWrapper(EntityUpdate update) {
+	public ChangeUpdateWrapper(EntityUpdate update) {
 		this.update = update;
 	}
 	
-	String validate() {
+	public String validate() {
 		try {
 			if (update.getPropertyNames().size() != update.getPropertyValues().size()) {
 				return "Update with different numbers of names and values";
@@ -59,7 +62,8 @@ public class EntityUpdateWrapper extends EntityChangeBase {
 		this.entityId = entityId;
 	}
 	
-	public long getEntityId() {
+	@Override
+	public Long getEntityId() {
 		if (update != null) {
 			return update.getEntityId();
 		}
@@ -95,19 +99,29 @@ public class EntityUpdateWrapper extends EntityChangeBase {
 		}
 		return this.stringValues;
 	}
+
+	@Override
+	public Entity lookupEntity(HashMap<String, HashMap<Long, Entity>> masterMap) {
+		return masterMap.get(entityClassName).get(getEntityId());
+		//return masterMap.get(update.getClass().getName()).get(getEntityId());
+	}
+	
+	@Override
+	public boolean isOnlyEntityMainIDsNeeded(EntitySpec2 entitySpec) {
+		if (entitySpec.revisioned) {
+			return false;
+		} else {
+			return false; //!entitySpec.isStructuralChange(this);
+		}
+	}
 	
 	public void applyChanges(Entity entity) {
 		for (int i = 0; i < names.size(); i++) {
-			//setProperty(entity, names.get(i), stringValues.get(i));
 			String propertyName = names.get(i);
 			PropertyDescriptor desc = BeanUtil.getPropertyDescriptor(entity.getClass(), propertyName);
 			Object objectValue;
 			String stringValue = stringValues.get(i);
-			/*if (stringValue == null) {
-				objectValue = null;
-			} else {
-				objectValue = StringUtil.parseValue(stringValue, desc.getPropertyType());
-			}*/
+
 			//hack flexjson: force nulls in list
 			if ("NULL".equals(stringValue)) {
 				objectValue = null;
@@ -117,32 +131,6 @@ public class EntityUpdateWrapper extends EntityChangeBase {
 			BeanUtil.setPropertyValue(entity, propertyName, objectValue);
 		}
 	}
-	
-	/*private static void setProperty(Object bean, String propertyName, String stringValue) {
-		PropertyDescriptor desc = BeanUtil.getPropertyDescriptor(bean.getClass(), propertyName);
-		//Object objectValue = convert(stringValue, desc.getPropertyType());
-		Object objectValue = StringUtil.parseValue(stringValue, desc.getPropertyType());
-		BeanUtil.setPropertyValue(bean, propertyName, objectValue);
-	}*/
-	
-	/*static <T> T convert(String stringValue, Class<T> valueType) {
-		return StringUtil.parseValue(stringValue, valueType);
-	}*/
-
-	/*EntityUpdate makeSEObject() {
-		try {
-			@SuppressWarnings("unchecked")
-			Class<? extends Entity> clazz = (Class<? extends Entity>) Class.forName(entityClass);
-			LinkedList<Object> objectValues = new LinkedList<Object>();
-			for (String v : values) {
-				Object obj = mapper.deserializeObject(v);
-				objectValues.add(obj);
-			}
-			return new EntityUpdate(clazz, this.id, names, objectValues);
-		} catch (ClassNotFoundException e) {
-			throw new RuntimeException();
-		}
-	}*/
 
 	public static void main(String[] args) {
 		
@@ -159,7 +147,7 @@ public class EntityUpdateWrapper extends EntityChangeBase {
 		EntityUpdate update = new EntityUpdate(Event.class, 9, names, values);
 		System.out.println("Original: " + update);
 		
-		EntityUpdateWrapper wrapper = new EntityUpdateWrapper(update);
+		ChangeUpdateWrapper wrapper = new ChangeUpdateWrapper(update);
 		String s = mapper.serialize(wrapper);
 		System.out.println("serialized: " + s);
 		Object x = mapper.deserialize(s);
@@ -177,7 +165,7 @@ public class EntityUpdateWrapper extends EntityChangeBase {
 		valuesWithNulls.add("Injury");
 		EntityUpdate u = new EntityUpdate(EventInfo.class, 1L, names, valuesWithNulls);
 		System.out.println(u);
-		wrapper = new EntityUpdateWrapper(u);
+		wrapper = new ChangeUpdateWrapper(u);
 		s = new JsonMapper().serialize(wrapper);
 		System.out.println(s);
 		Object o = new JsonMapper().deserialize(s);

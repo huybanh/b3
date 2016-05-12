@@ -5,7 +5,7 @@ import java.util.HashMap;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 
-public class B3EntityLeaf<E extends Entity> extends B3Entity<E> {
+public abstract class B3EntityLeaf<E extends Entity> extends B3Entity<E> {
 
 	@Override
 	protected void getDownlinkedEntitiesInternal() {

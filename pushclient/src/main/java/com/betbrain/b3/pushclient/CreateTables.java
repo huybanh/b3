@@ -1,4 +1,6 @@
-package com.betbrain.b3.data;
+package com.betbrain.b3.pushclient;
+
+import com.betbrain.b3.data.DynamoWorker;
 
 public class CreateTables {
 
