@@ -30,6 +30,11 @@ public class B3KeyEvent extends B3MainKey<Event> {
 	}
 	
 	@Override
+	EntitySpec2 getEntitySpec() {
+		return EntitySpec2.Event;
+	}
+	
+	@Override
 	boolean isDetermined() {
 		return sportId != null && eventTypeId != null /*&& eventPartFlag != null*/ && eventId != null;
 	} 

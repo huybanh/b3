@@ -1,11 +1,16 @@
 package com.betbrain.b3.report.oddsdetailed;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
 
 import com.betbrain.b3.data.*;
+import com.betbrain.b3.model.B3BettingOffer;
+import com.betbrain.b3.model.B3Entity;
+import com.betbrain.b3.model.B3EventInfo;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.b3.report.IDs;
-import com.betbrain.sepc.connector.sportsmodel.*;
 
 public class DetailedOddsTable {
 	
@@ -19,11 +24,11 @@ public class DetailedOddsTable {
 	private long sportId = IDs.SPORT_FOOTBALL;
 	private long eventTypeId = IDs.EVENTTYPE_GENERICMATCH;
 	
-	private ArrayList<EventInfo> statuses;
-	private ArrayList<EventInfo> scores;
-	private ArrayList<BettingOffer> offersWinner1;
-	private ArrayList<BettingOffer> offersWinner2;
-	private ArrayList<BettingOffer> offersDraw;
+	private ArrayList<RevisionedEntity<B3EventInfo>> statuses;
+	private ArrayList<RevisionedEntity<B3EventInfo>> scores;
+	private ArrayList<RevisionedEntity<B3BettingOffer>> offersWinner1;
+	private ArrayList<RevisionedEntity<B3BettingOffer>> offersWinner2;
+	private ArrayList<RevisionedEntity<B3BettingOffer>> offersDraw;
 
 	public static void main(String[] args) {
 		
@@ -36,28 +41,33 @@ public class DetailedOddsTable {
 
 	public void run() {
 		queryData();
+		
+		new DetailedOddsPart("Detailed 1x2 odds: Winner1", statuses, scores, offersWinner1);
+		new DetailedOddsPart("Detailed 1x2 odds: Winner2", statuses, scores, offersWinner2);
+		new DetailedOddsPart("Detailed 1x2 odds: Draw", statuses, scores, offersDraw);
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void queryData() {
 		
 		long startTime = System.currentTimeMillis();
 		B3KeyEventInfo statusKey = new B3KeyEventInfo(217562668L, IDs.EVENTINFOTYPE_CURRENTSTATUS, null);
-		statuses = statusKey.listEntities(true, mapper);
+		statuses = (ArrayList<RevisionedEntity<B3EventInfo>>) statusKey.listEntities(true, mapper);
 		
 		B3KeyEventInfo scoreKey = new B3KeyEventInfo(matchId, IDs.EVENTINFOTYPE_SCORE, null);
-		scores = scoreKey.listEntities(true, mapper);
+		scores = (ArrayList<RevisionedEntity<B3EventInfo>>) scoreKey.listEntities(true, mapper);
 		
 		B3KeyOffer offerKey = new B3KeyOffer(sportId, eventTypeId, matchId, 
 				IDs.OUTCOME_WINNER, outcomeIdWinner1, IDs.BETTINGTYPE_1X2, null);
-		offersWinner1 = offerKey.listEntities(true, mapper);
+		offersWinner1 = (ArrayList<RevisionedEntity<B3BettingOffer>>) offerKey.listEntities(true, mapper);
 		
 		offerKey = new B3KeyOffer(sportId, eventTypeId, matchId, 
 				IDs.OUTCOME_WINNER, outcomeIdWinner2, IDs.BETTINGTYPE_1X2, null);
-		offersWinner2 = offerKey.listEntities(true, mapper);
+		offersWinner2 = (ArrayList<RevisionedEntity<B3BettingOffer>>) offerKey.listEntities(true, mapper);
 		
 		offerKey = new B3KeyOffer(sportId, eventTypeId, matchId, 
 				IDs.OUTCOME_DRAW, outcomeIdDraw, IDs.BETTINGTYPE_1X2, null);
-		offersDraw = offerKey.listEntities(true, mapper);
+		offersDraw = (ArrayList<RevisionedEntity<B3BettingOffer>>) offerKey.listEntities(true, mapper);
 		System.out.println("Data querying time: " + (System.currentTimeMillis() - startTime));
 		
 		print("Match statuses", statuses);
@@ -65,12 +75,36 @@ public class DetailedOddsTable {
 		print("Offers: winner1", offersWinner1);
 		print("Offers: winner2", offersWinner2);
 		print("Offers: draw", offersDraw);
+		
+		//TODO remove this hack
+		Iterator<RevisionedEntity<B3EventInfo>> it = scores.iterator();
+		while (it.hasNext()) {
+			RevisionedEntity<B3EventInfo> i = it.next();
+			if (i.b3entity.entity.getEventPartId() != IDs.EVENTPART_ORDINARYTIME) {
+				it.remove();
+			}
+		}
 	}
 	
-	private static void print(String caption, ArrayList<?> data) {
+	@SuppressWarnings("unchecked")
+	private static void print(String caption, @SuppressWarnings("rawtypes") ArrayList data) {
+		Collections.sort(data, new Comparator<RevisionedEntity<?>>() {
+
+			@Override
+			public int compare(RevisionedEntity<?> o1, RevisionedEntity<?> o2) {
+				return (int) (o1.time - o2.time);
+			}
+		});
 		System.out.println(caption);
-		for (Object one : data) {
-			System.out.println(one);
+		for (Object obj : data) {
+			RevisionedEntity<?> one = (RevisionedEntity<?>) obj;
+			Object provider = null;
+			if (one.b3entity instanceof B3EventInfo) {
+				if (((B3EventInfo) one.b3entity).provider != null) {
+					provider = ((B3EventInfo) one.b3entity).provider.entity;
+				}
+			}
+			System.out.println(one.time + "-" + ((B3Entity<?>) one.b3entity).entity + " / " + provider);
 		}
 	}
 }

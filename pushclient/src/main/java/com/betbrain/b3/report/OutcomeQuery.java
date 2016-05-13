@@ -22,7 +22,8 @@ public class OutcomeQuery {
 	private static void outcome(long eventId, long outcomeTypeId) {
 		System.out.println("Offers");
 		B3KeyOutcome outcomeKey = new B3KeyOutcome(1L, 1L, eventId, IDs.EVENTPART_ORDINARYTIME, outcomeTypeId, null);
-		ArrayList<Outcome> outcomes = outcomeKey.listEntities(false, jsonMapper);
+		@SuppressWarnings("unchecked")
+		ArrayList<Outcome> outcomes = (ArrayList<Outcome>) outcomeKey.listEntities(false, jsonMapper);
 		for (Outcome one : outcomes) {
 			System.out.println(one);
 		}

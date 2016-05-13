@@ -34,11 +34,11 @@ public class B3Event extends B3Entity<Event> {
 		addDownlinkUnfollowed(Event.PROPERTY_NAME_currentPartId, EventPart.class/*, entity.getCurrentPartId()*/);
 		addDownlinkUnfollowed(Event.PROPERTY_NAME_rootPartId, EventPart.class/*, entity.getRootPartId()*/);
 		
-		addDownlink(Event.PROPERTY_NAME_sportId, sport); 
-		addDownlink(Event.PROPERTY_NAME_statusId, status);
-		addDownlink(Event.PROPERTY_NAME_templateId, template);
+		addDownlink(Event.PROPERTY_NAME_sportId, Sport.class, sport); 
+		addDownlink(Event.PROPERTY_NAME_statusId, EventStatus.class, status);
+		addDownlink(Event.PROPERTY_NAME_templateId, EventTemplate.class, template);
 		//addDownlink(Event.PROPERTY_NAME_venueId, linkedEntity), //no venue entity
-		addDownlink(Event.PROPERTY_NAME_typeId, type);
+		addDownlink(Event.PROPERTY_NAME_typeId, EventType.class, type);
 	}
 
 	@Override

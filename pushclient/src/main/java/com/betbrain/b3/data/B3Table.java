@@ -22,7 +22,7 @@ public enum B3Table {
 	public static final int DIST_FACTOR = 200;
 	
 	public static final String CELL_LOCATOR_THIZ = "THIZ";
-	static final String CELL_LOCATOR_SEP = "_";
+	public static final String CELL_LOCATOR_SEP = "_";
 	
 	public static final String KEY_SEP = "/";
 	static final String KEY_SUFFIX_REVISION = "T";
