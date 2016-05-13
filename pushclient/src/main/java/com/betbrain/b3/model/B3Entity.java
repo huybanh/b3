@@ -13,7 +13,6 @@ import com.betbrain.b3.data.B3Cell;
 import com.betbrain.b3.data.B3CellString;
 import com.betbrain.b3.data.B3Key;
 import com.betbrain.b3.data.B3KeyEntity;
-import com.betbrain.b3.data.B3KeyLink;
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.ChangeSet;
 import com.betbrain.b3.data.EntityLink;
@@ -265,7 +264,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		
 		} else if (change instanceof EntityDelete) {
 			//System.out.println(Thread.currentThread().getName() + " CHANGE-DELETE: " + change);
-			deleteCurrent(changeSet);
+			//deleteCurrent(changeSet);
 			HashMap<Long, Entity> subMap = masterMap.get(this.entity.getClass().getName());
 			if (subMap != null) {
 				subMap.remove(this.entity.getId());
@@ -282,7 +281,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 				B3CellString[] cellArray = b3Cells.toArray(new B3CellString[b3Cells.size()]);
 				String entityJson = mapper.serialize(this.entity);
 
-				deleteCurrent(changeSet);
+				//deleteCurrent(changeSet);
 				putCurrent(changeSet, mainKey, cellArray, entityJson);
 				
 				if (entitySpec.revisioned) {
@@ -370,7 +369,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		//main table / lookup / link
 		EntitySpec2 entitySpec = getSpec();
 		if (entitySpec.mainTable == null) {
-			//enity doesn't have its own main table
+			//entity doesn't have its own main table
 			return;
 		}
 		//B3Key mainKey = createMainKey();
@@ -394,7 +393,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 				//b3Cells.toArray(new B3CellString[b3Cells.size()]));
 	}
 	
-	private void deleteCurrent(ChangeSet changeSet) {
+	/*private void deleteCurrent(ChangeSet changeSet) {
 		if (this.entity == null) {
 			System.out.println("Ignoring entity delete: entity does not exist");
 			return;
@@ -408,17 +407,10 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		EntitySpec2 entitySpec = getSpec();
 		if (entitySpec.mainTable != null) {
 			key = createMainKey();
-			//if (key == null) {
-				//something went wrong
-			//	throw new RuntimeException();
-			//}
 			changeSet.delete(entitySpec.mainTable, key.getHashKey(), key.getRangeKey());
 		}
 		
 		//delete in lookup
-		//for (B3Table oneMain : B3Table.mainTables) {
-			//deleteCurrentLookup(oneMain);
-		//}
 		changeSet.deleteCurrentLookup(entity.getClass(), entity.getId());
 		
 		//delete in link
@@ -430,7 +422,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 				changeSet.delete(B3Table.Link, linkKey.getHashKey(), linkKey.getRangeKey());
 			}
 		}
-	}
+	}*/
 	
 	/*private void deleteCurrentLookup(ChangeSet changeSet) {
 		B3KeyLookup lookupKey = new B3KeyLookup(entity.getClass(), entity.getId());
