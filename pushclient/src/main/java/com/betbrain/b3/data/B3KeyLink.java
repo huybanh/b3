@@ -59,6 +59,11 @@ public class B3KeyLink extends B3Key {
 	}
 	
 	@Override
+	B3Table getTable() {
+		return B3Table.Link;
+	}
+	
+	@Override
 	boolean isDetermined() {
 		return true;
 	} 

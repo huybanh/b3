@@ -5,15 +5,15 @@ import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.*;
 
-public class EntityQuery {
+public class EntityScan {
 
 	public static void main(String[] args) {
-		DynamoWorker.initBundleCurrent();
+		
+		//DynamoWorker.initBundleCurrent();
+		DynamoWorker.initBundleByStatus("SPRINT2");
 		JsonMapper mapper = new JsonMapper();
-		//B3KeyEntity keyEntity = new B3KeyEntity(Event.class, 217562679L);
-		B3KeyEntity keyEntity = new B3KeyEntity(OutcomeType.class, 10L);
-		Entity e = keyEntity.load(mapper);
-		System.out.println(e);
+		B3KeyEntity keyEntity = new B3KeyEntity(OutcomeType.class);
+		keyEntity.listEntities(mapper);
 	}
 
 }

@@ -27,11 +27,16 @@ public class DetailedOddsTable {
 		//Y1/1/E219387861
 		//long outcomeId = 2890001650l;
 		
-		new DetailedOddsTable().run(outcomeId);
+		new DetailedOddsTable().run(217562668L, outcomeId);
 	}
 
 	@SuppressWarnings("unused")
-	public void run(long outcomeId) {
+	public void run(long eventId, long outcomeId) {
+		
+
+		DynamoWorker.initBundleByStatus("SPRINT2");
+		B3KeyEventInfo infoKey = new B3KeyEventInfo(217562668L, 1L, null);
+		ArrayList<EventInfo> scores = infoKey.listEntities(true, jsonMapper);
 
 		//TODO use lookup table
 		B3KeyEntity entityKey = new B3KeyEntity(Outcome.class, outcomeId);
@@ -57,13 +62,13 @@ public class DetailedOddsTable {
 		B3KeyEventInfo eventInfoKey = new B3KeyEventInfo(
 				/*event.getSportId(), event.getTypeId(),*/ event.getId(), 
 				IDs.EVENTINFOTYPE_CURRENTSTATUS, null/*eventInfoId*/);
-		ArrayList<EventInfo> matchStatuses = eventInfoKey.listEntities(jsonMapper);
+		ArrayList<EventInfo> matchStatuses = eventInfoKey.listEntities(true, jsonMapper);
 		
 		//scores
 		eventInfoKey = new B3KeyEventInfo(
 				/*event.getSportId(), event.getTypeId(),*/ event.getId(), 
 				IDs.EVENTINFOTYPE_SCORE, null/*eventInfoId*/);
-		ArrayList<EventInfo> matchScores = eventInfoKey.listEntities(jsonMapper);
+		ArrayList<EventInfo> matchScores = eventInfoKey.listEntities(true, jsonMapper);
 		
 		//odds
 		//B3KeyEntity b3key  = new B3KeyEntity(Outcome.class, outcomeId);

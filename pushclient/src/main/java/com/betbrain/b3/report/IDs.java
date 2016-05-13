@@ -16,6 +16,7 @@ public class IDs {
 	public static final long EVENT_PREMIERLEAGUE = 215754838;
 	
 	public static final long OUTCOME_DRAW = 11;
+	public static final long OUTCOME_WINNER = 10;
 	
 	public static final long BETTINGTYPE_1X2 = 69;
 	

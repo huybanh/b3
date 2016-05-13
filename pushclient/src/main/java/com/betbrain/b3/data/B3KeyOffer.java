@@ -1,11 +1,13 @@
 package com.betbrain.b3.data;
 
+import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
+
 /**
  * Key spec: sportId/eventTypeId/[EVENT|EVENTPART]/eventId
  *           /outcomeTypeId/outcomeId/bettingTypeId/offerId
  *
  */
-public class B3KeyOffer extends B3KeyEntitySupport {
+public class B3KeyOffer extends B3MainKey<BettingOffer> {
 
 	final Long sportId;
 	
@@ -48,6 +50,11 @@ public class B3KeyOffer extends B3KeyEntitySupport {
 		this.outcomeId = null;
 		this.bettingTypeId = null;
 		this.offerId = null;
+	}
+	
+	@Override
+	B3Table getTable() {
+		return B3Table.BettingOffer;
 	}
 	
 	@Override

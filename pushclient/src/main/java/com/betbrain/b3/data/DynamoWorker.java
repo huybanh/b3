@@ -639,10 +639,12 @@ public class DynamoWorker {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
 		if (rangeKey == null) {
-			//System.out.println(Thread.currentThread().getName() + " DB-GET " + table.getTableName() + ": " + hashKey);
+			//System.out.println(Thread.currentThread().getName() + 
+			//		" DB-GET " + table.getTableName() + ": " + hashKey);
 			return table.getItem(HASH, hashKey);
 		} else {
-			//System.out.println("DB-GET " + table.getTableName() + ": " + hashKey + "@" + rangeKey);
+			//System.out.println(Thread.currentThread().getName() + 
+			//		" DB-GET " + table.getTableName() + ": " + hashKey + "@" + rangeKey);
 			return table.getItem(HASH, hashKey, RANGE, rangeKey);
 		}
 	}
@@ -717,14 +719,18 @@ public class DynamoWorker {
 	}*/
 	
 	public static B3ItemIterator query(B3Table b3table, String hashKey) {
-		return query(b3table, hashKey, null);
+		return query(b3table, hashKey, null, null);
 	}
 	
-	public static B3ItemIterator query(B3Table b3table, String hashKey, Integer maxResulteSize) {
+	public static B3ItemIterator query(B3Table b3table, 
+			String hashKey, String rangeStart, Integer maxResulteSize) {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
-		//System.out.println("DB-QUERY " + table.getTableName() + ": hash=" + hashKey);
+		//System.out.println(Thread.currentThread().getName() + ": DB-QUERY " + table.getTableName() + ": hash=" + hashKey);
 		QuerySpec spec = new QuerySpec().withHashKey(HASH, hashKey);
+		if (rangeStart != null) {
+			spec = spec.withRangeKeyCondition(new RangeKeyCondition(RANGE).beginsWith(rangeStart));
+		}
 		if (maxResulteSize != null) {
 			spec = spec.withMaxResultSize(maxResulteSize);
 		}
@@ -736,7 +742,7 @@ public class DynamoWorker {
 		return new B3ItemIterator(it);
 	}
 	
-	public static B3ItemIterator queryRangeBeginsWith(
+	/*public static B3ItemIterator queryRangeBeginsWith(
 			B3Table b3table, String hashKey, String rangeStart) {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
@@ -749,5 +755,5 @@ public class DynamoWorker {
 			it = coll.iterator();
 		}
 		return new B3ItemIterator(it);
-	}
+	}*/
 }

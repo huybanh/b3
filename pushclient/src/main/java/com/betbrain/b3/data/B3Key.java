@@ -4,6 +4,8 @@ public abstract class B3Key {
 	
 	private String revisionId;
 	
+	abstract B3Table getTable();
+	
 	abstract boolean isDetermined();
 	
 	abstract String getRangeKeyInternal();

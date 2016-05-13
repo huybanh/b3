@@ -2,9 +2,7 @@ package com.betbrain.b3.report;
 
 import java.util.ArrayList;
 
-import com.betbrain.b3.data.B3KeyEntity;
-import com.betbrain.b3.data.B3KeyLink;
-import com.betbrain.b3.data.DynamoWorker;
+import com.betbrain.b3.data.*;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.*;
 
@@ -18,19 +16,15 @@ public class OutcomeQuery {
 		//query(219387861);
 		//query(219501132);
 		//query(IDs.EVENT_PREMIERLEAGUE);
-		match(217562668L);
+		outcome(217562668L, IDs.OUTCOME_WINNER);
 	}
 	
-	private static void match(long matchId) {
-		//match
-		B3KeyEntity keyEntity = new B3KeyEntity(Event.class, matchId);
-		Event match = keyEntity.load(jsonMapper);
-		System.out.println("Match: " + match);
-		
-		//outcomes
-		B3KeyLink keyLink = new B3KeyLink(Event.class, matchId, Outcome.class, Outcome.PROPERTY_NAME_eventId);
-		ArrayList<Long> outcomeIds = keyLink.listLinks();
-		System.out.println("Outcome count: " + outcomeIds.size());
-		
+	private static void outcome(long eventId, long outcomeTypeId) {
+		System.out.println("Offers");
+		B3KeyOutcome outcomeKey = new B3KeyOutcome(1L, 1L, eventId, IDs.EVENTPART_ORDINARYTIME, outcomeTypeId, null);
+		ArrayList<Outcome> outcomes = outcomeKey.listEntities(false, jsonMapper);
+		for (Outcome one : outcomes) {
+			System.out.println(one);
+		}
 	}
 }

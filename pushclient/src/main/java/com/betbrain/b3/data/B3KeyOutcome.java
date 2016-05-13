@@ -3,13 +3,14 @@ package com.betbrain.b3.data;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.betbrain.b3.model.B3Outcome;
 import com.betbrain.b3.pushclient.JsonMapper;
+import com.betbrain.sepc.connector.sportsmodel.Outcome;
 
 /**
  * Key spec: sportId/eventTypeId/[EVENT|EVENTPART]/eventId
  *           /outcomeTypeId/outcomeId/bettingTypeId/offerId
  *
  */
-public class B3KeyOutcome extends B3KeyEntitySupport {
+public class B3KeyOutcome extends B3MainKey<Outcome> {
 
 	final Long sportId;
 	
@@ -36,6 +37,11 @@ public class B3KeyOutcome extends B3KeyEntitySupport {
 		
 		this.outcomeTypeId = outcomeTypeId;
 		this.outcomeId = outcomeId;
+	}
+	
+	@Override
+	B3Table getTable() {
+		return B3Table.Outcome;
 	}
 	
 	@Override

@@ -315,7 +315,6 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 	private void updateCurrent(ChangeSet changeSet, String entityJson) {
 		
 		//table entity
-		//String entityJson = mapper.serialize(this.entity);
 		B3KeyEntity entityKey = new B3KeyEntity(entity.getClass().getName(), entity.getId());
 		changeSet.update(B3Table.Entity, entityKey.getHashKey(), entityKey.getRangeKey(),
 				new B3CellString(B3Table.CELL_LOCATOR_THIZ, entityJson));
@@ -327,10 +326,6 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 			return;
 		}
 		B3Key mainKey = createMainKey();
-		//if (mainKey == null) {
-			//something went wrong
-			//throw new RuntimeException();
-		//}
 		
 		//put main entity to main table
 		changeSet.update(entitySpec.mainTable, mainKey.getHashKey(), mainKey.getRangeKey(),
@@ -344,53 +339,32 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		changeSet.put(B3Table.Entity, entityKey.getHashKey(), entityKey.getRangeKey(),
 						new B3CellString(B3Table.CELL_LOCATOR_THIZ, entityJson));
 		
-		//main table / lookup / link
-		EntitySpec2 entitySpec = getSpec();
-		if (entitySpec.mainTable == null) {
-			//enity doesn't have its own main table
-			return;
-		}
-		//B3Key mainKey = createMainKey();
-		//if (mainKey == null) {
-			//something went wrong
-		//	throw new RuntimeException();
-		//}
-		//put linked entities to table lookup, link
-		/*LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
-		InitialDumpDeployer.putToLookupAndLinkRecursively(
-				false, entitySpec.mainTable, mainKey, b3Cells, null, this, masterMap, mapper);*/
-		
-		//put main entity to main table
-		changeSet.put(entitySpec.mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), cells);
-				//b3Cells.toArray(new B3CellString[b3Cells.size()]));
-	}
-	
-	private void putRevision(ChangeSet changeSet, long changeTime, B3Key mainKey, B3CellString[] cells) {
-		//main table / lookup / link
+		//main table
 		EntitySpec2 entitySpec = getSpec();
 		if (entitySpec.mainTable == null) {
 			//entity doesn't have its own main table
 			return;
 		}
-		//B3Key mainKey = createMainKey();
-		//if (mainKey == null) {
-			//something went wrong
-			//throw new RuntimeException();
-		//}
-		//put linked entities to table lookup, link
-		/*LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
-		InitialDumpDeployer.putToLookupAndLinkRecursively(false, entitySpec.mainTable, 
-				null, //no actual puts 
-				b3Cells, null, this, masterMap, mapper);*/
 		
 		//put main entity to main table
+		changeSet.put(entitySpec.mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), cells);
+	}
+	
+	private void putRevision(ChangeSet changeSet, long changeTime, B3Key mainKey, B3CellString[] cells) {
+		
+		EntitySpec2 entitySpec = getSpec();
+		if (entitySpec.mainTable == null) {
+			//entity doesn't have its own main table
+			return;
+		}
+		
+		//put revisioned entity to main table
 		String revisionId = getRevisionId();
 		if (revisionId == null) {
 			revisionId = String.valueOf(changeTime);
 		}
 		mainKey.setRevisionId(revisionId);
 		changeSet.put(entitySpec.mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), cells);
-				//b3Cells.toArray(new B3CellString[b3Cells.size()]));
 	}
 	
 	/*private void deleteCurrent(ChangeSet changeSet) {
