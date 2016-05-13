@@ -75,7 +75,7 @@ public class B3KeyLink extends B3Key {
 	
 	public ArrayList<Long> listLinks() {
 		ArrayList<Long> list = new ArrayList<Long>();
-		//System.out.println("Querying links with hash: " + getHashKey());
+		System.out.println("Querying links with hash: " + getHashKey());
 		B3ItemIterator it = DynamoWorker.query(B3Table.Link, getHashKey());
 		//int i = B3KeyEntity.hardLimit;
 		while (it.hasNext()) {

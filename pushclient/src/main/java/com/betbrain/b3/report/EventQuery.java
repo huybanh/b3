@@ -17,7 +17,8 @@ public class EventQuery {
 
 		//query(219387861);
 		//query(219501132);
-		query(IDs.EVENT_PREMIERLEAGUE);
+		//query(IDs.EVENT_PREMIERLEAGUE);
+		match(217562668L);
 	}
 	
 	private static void query(long leagueId) {
@@ -33,10 +34,9 @@ public class EventQuery {
 		System.out.println(matchIds);
 		for (long matchId : matchIds) {
 			System.out.println("*** Match " + matchId);
-			match(matchId);
+			//match(matchId);
 		}
 		//match(matchIds.get(0));
-		match(219804262L);
 		
 		/*for (Long oneId : matchIds) {
 			keyEntity = new B3KeyEntity(Event.class, oneId);
@@ -63,7 +63,7 @@ public class EventQuery {
 		System.out.println("Outcome count: " + outcomeIds.size());
 		
 		offer(outcomeIds.get(0));
-		info(outcomeIds.get(0));
+		info(matchId);
 	}
 	
 	private static void offer(long outcomeId) {

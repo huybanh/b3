@@ -250,7 +250,7 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 						}
 					}
 					statusUpdateCount++;
-					if (statusUpdateCount == 100) {
+					if (statusUpdateCount == 1) {
 						statusUpdateCount = 0;
 					}
 					continue;
