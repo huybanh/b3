@@ -18,6 +18,11 @@ public class B3KeyLookup extends B3Key {
 		this.hashKey = EntitySpec2.get(entityClazz.getName()).shortName + entityId;
 		this.rangeKey = null;
 	}
+	
+	@Override
+	B3Table getTable() {
+		return B3Table.Lookup;
+	}
 
 	@Override
 	boolean isDetermined() {

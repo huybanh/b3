@@ -13,7 +13,6 @@ import com.betbrain.b3.data.B3Cell;
 import com.betbrain.b3.data.B3CellString;
 import com.betbrain.b3.data.B3Key;
 import com.betbrain.b3.data.B3KeyEntity;
-import com.betbrain.b3.data.B3KeyLink;
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.ChangeSet;
 import com.betbrain.b3.data.EntityLink;
@@ -49,10 +48,10 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 	
 	abstract protected void getDownlinkedEntitiesInternal();
 	
-	protected final void addDownlink(String name, B3Entity<?> linkedEntity) {
+	protected final void addDownlink(String name, Class<?> linkedEntityClazz, B3Entity<?> linkedEntity) {
 		
 		if (workingOnLinkNamesOnly) {
-			downlinks.add(new EntityLink(name, null));
+			downlinks.add(new EntityLink(name, null, linkedEntityClazz));
 			return;
 		}
 		
@@ -92,6 +91,50 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		EntityLink[] links = downlinks.toArray(new EntityLink[downlinks.size()]);
 		downlinks = null;
 		return links;
+	}
+
+	public void load(Item item, JsonMapper mapper) {
+		throw new RuntimeException("Main entity must override this");
+	}
+
+	@SuppressWarnings("unchecked")
+	void load(Item item, String cellName, JsonMapper mapper) {
+
+		String actualCellName;
+		if (cellName == null) {
+			actualCellName = B3Table.CELL_LOCATOR_THIZ;
+		} else {
+			actualCellName = cellName;
+		}
+		String json = item.getString(actualCellName);
+		if (json == null) {
+			return;
+		}
+		this.entity = (E) mapper.deserialize(json);
+		
+		/*EntityLink[] links = getDownlinkedNames();
+		if (links != null) {
+			B3Entity<?> b3Link;
+			for (EntityLink link : links) {
+				if (link.linkedEntityClazz == null) {
+					//unfollowed link
+					continue;
+				}
+				EntitySpec2  spec = EntitySpec2.get(link.linkedEntityClazz.getName());
+				try {
+					b3Link =  (B3Entity<?>) spec.b3class.newInstance();
+				} catch (InstantiationException | IllegalAccessException e) {
+					throw new RuntimeException();
+				}
+				
+				if (cellName == null) {
+					actualCellName = link.name;
+				} else {
+					actualCellName = cellName + B3Table.CELL_LOCATOR_SEP + link.name;
+				}
+				b3Link.load(item, actualCellName, mapper);
+			}
+		}*/
 	}
 	
 	abstract public void buildDownlinks(boolean forMainKeyOnly, 
@@ -265,7 +308,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		
 		} else if (change instanceof EntityDelete) {
 			//System.out.println(Thread.currentThread().getName() + " CHANGE-DELETE: " + change);
-			deleteCurrent(changeSet);
+			//deleteCurrent(changeSet);
 			HashMap<Long, Entity> subMap = masterMap.get(this.entity.getClass().getName());
 			if (subMap != null) {
 				subMap.remove(this.entity.getId());
@@ -282,7 +325,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 				B3CellString[] cellArray = b3Cells.toArray(new B3CellString[b3Cells.size()]);
 				String entityJson = mapper.serialize(this.entity);
 
-				deleteCurrent(changeSet);
+				//deleteCurrent(changeSet);
 				putCurrent(changeSet, mainKey, cellArray, entityJson);
 				
 				if (entitySpec.revisioned) {
@@ -316,7 +359,6 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 	private void updateCurrent(ChangeSet changeSet, String entityJson) {
 		
 		//table entity
-		//String entityJson = mapper.serialize(this.entity);
 		B3KeyEntity entityKey = new B3KeyEntity(entity.getClass().getName(), entity.getId());
 		changeSet.update(B3Table.Entity, entityKey.getHashKey(), entityKey.getRangeKey(),
 				new B3CellString(B3Table.CELL_LOCATOR_THIZ, entityJson));
@@ -328,10 +370,6 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 			return;
 		}
 		B3Key mainKey = createMainKey();
-		//if (mainKey == null) {
-			//something went wrong
-			//throw new RuntimeException();
-		//}
 		
 		//put main entity to main table
 		changeSet.update(entitySpec.mainTable, mainKey.getHashKey(), mainKey.getRangeKey(),
@@ -345,56 +383,35 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		changeSet.put(B3Table.Entity, entityKey.getHashKey(), entityKey.getRangeKey(),
 						new B3CellString(B3Table.CELL_LOCATOR_THIZ, entityJson));
 		
-		//main table / lookup / link
+		//main table
 		EntitySpec2 entitySpec = getSpec();
 		if (entitySpec.mainTable == null) {
-			//enity doesn't have its own main table
+			//entity doesn't have its own main table
 			return;
 		}
-		//B3Key mainKey = createMainKey();
-		//if (mainKey == null) {
-			//something went wrong
-		//	throw new RuntimeException();
-		//}
-		//put linked entities to table lookup, link
-		/*LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
-		InitialDumpDeployer.putToLookupAndLinkRecursively(
-				false, entitySpec.mainTable, mainKey, b3Cells, null, this, masterMap, mapper);*/
 		
 		//put main entity to main table
 		changeSet.put(entitySpec.mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), cells);
-				//b3Cells.toArray(new B3CellString[b3Cells.size()]));
 	}
 	
 	private void putRevision(ChangeSet changeSet, long changeTime, B3Key mainKey, B3CellString[] cells) {
-		//main table / lookup / link
+		
 		EntitySpec2 entitySpec = getSpec();
 		if (entitySpec.mainTable == null) {
-			//enity doesn't have its own main table
+			//entity doesn't have its own main table
 			return;
 		}
-		//B3Key mainKey = createMainKey();
-		//if (mainKey == null) {
-			//something went wrong
-			//throw new RuntimeException();
-		//}
-		//put linked entities to table lookup, link
-		/*LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();
-		InitialDumpDeployer.putToLookupAndLinkRecursively(false, entitySpec.mainTable, 
-				null, //no actual puts 
-				b3Cells, null, this, masterMap, mapper);*/
 		
-		//put main entity to main table
+		//put revisioned entity to main table
 		String revisionId = getRevisionId();
 		if (revisionId == null) {
 			revisionId = String.valueOf(changeTime);
 		}
 		mainKey.setRevisionId(revisionId);
 		changeSet.put(entitySpec.mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), cells);
-				//b3Cells.toArray(new B3CellString[b3Cells.size()]));
 	}
 	
-	private void deleteCurrent(ChangeSet changeSet) {
+	/*private void deleteCurrent(ChangeSet changeSet) {
 		if (this.entity == null) {
 			System.out.println("Ignoring entity delete: entity does not exist");
 			return;
@@ -408,17 +425,10 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		EntitySpec2 entitySpec = getSpec();
 		if (entitySpec.mainTable != null) {
 			key = createMainKey();
-			//if (key == null) {
-				//something went wrong
-			//	throw new RuntimeException();
-			//}
 			changeSet.delete(entitySpec.mainTable, key.getHashKey(), key.getRangeKey());
 		}
 		
 		//delete in lookup
-		//for (B3Table oneMain : B3Table.mainTables) {
-			//deleteCurrentLookup(oneMain);
-		//}
 		changeSet.deleteCurrentLookup(entity.getClass(), entity.getId());
 		
 		//delete in link
@@ -430,7 +440,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 				changeSet.delete(B3Table.Link, linkKey.getHashKey(), linkKey.getRangeKey());
 			}
 		}
-	}
+	}*/
 	
 	/*private void deleteCurrentLookup(ChangeSet changeSet) {
 		B3KeyLookup lookupKey = new B3KeyLookup(entity.getClass(), entity.getId());

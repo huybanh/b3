@@ -38,14 +38,16 @@ public class ChangeSet implements DBTrait {
 	public void close() {
 		changesBeingPersisted = new LinkedList<ChangeSetItem>(changesBeingConsolidated.values());
 		changesBeingConsolidated = null;
-		System.out.println(Thread.currentThread().getName() + ": ChangeSet closed: " +
-				changeCount + " changes");
+		if (changeCount > 0) {
+			System.out.println(Thread.currentThread().getName() +
+					": ChangeSet closed: " + changeCount + " changes");
+		}
 	}
 	
 	public ChangeSetItem checkout() {
 		if (changesBeingPersisted.isEmpty()) {
-			System.out.println(Thread.currentThread().getName() + ": ChangeSet persisted: " +
-					changeCount + " changes");
+			//System.out.println(Thread.currentThread().getName() + ": ChangeSet persisted: " +
+			//		changeCount + " changes");
 			return null;
 		}
 		return changesBeingPersisted.removeFirst();

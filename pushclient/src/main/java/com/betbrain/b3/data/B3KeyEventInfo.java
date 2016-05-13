@@ -1,16 +1,12 @@
 package com.betbrain.b3.data;
 
-import java.util.ArrayList;
-
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.betbrain.b3.pushclient.JsonMapper;
-import com.betbrain.sepc.connector.sportsmodel.Entity;
+import com.betbrain.sepc.connector.sportsmodel.EventInfo;
 
 /**
  * Key spec: sportId/eventTypeId/[EVENT|EVENTPART]/eventId
  *
  */
-public class B3KeyEventInfo extends B3KeyEntitySupport {
+public class B3KeyEventInfo extends B3MainKey<EventInfo> {
 
 	//private final Long sportId;
 	
@@ -45,6 +41,16 @@ public class B3KeyEventInfo extends B3KeyEntitySupport {
 	}
 	
 	@Override
+	B3Table getTable() {
+		return B3Table.EventInfo;
+	}
+	
+	@Override
+	EntitySpec2 getEntitySpec() {
+		return EntitySpec2.EventInfo;
+	}
+	
+	@Override
 	boolean isDetermined() {
 		return /*sportId != null && eventTypeId != null &&*/ eventId != null &&
 				eventInfoTypeId != null && eventInfoId != null;
@@ -63,21 +69,19 @@ public class B3KeyEventInfo extends B3KeyEntitySupport {
 	
 	@Override
 	String getRangeKeyInternal() {
-		
+		if (eventInfoId == null) {
+			return eventInfoTypeId + B3Table.KEY_SEP;
+		}
 		return eventInfoTypeId + B3Table.KEY_SEP + eventInfoId;
 		//return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventPartMarker + eventId; 
 	}
 	
-	@Override
+	/*@Override
 	@SuppressWarnings("unchecked")
 	public <E extends Entity> ArrayList<E> listEntities(JsonMapper jsonMapper) {
 		ArrayList<E> list = new ArrayList<E>();
-		int i = hardLimit;
 		B3ItemIterator it = DynamoWorker.query(B3Table.EventInfo, getHashKey());
 		while (it.hasNext()) {
-			if (--i <= 0) {
-				break;
-			}
 			Item item = it.next();
 			String json = item.getString(B3Table.CELL_LOCATOR_THIZ);
 			Entity entity = jsonMapper.deserializeEntity(json);
@@ -85,5 +89,5 @@ public class B3KeyEventInfo extends B3KeyEntitySupport {
 			list.add((E) entity);
 		}
 		return list;
-	}
+	}*/
 }

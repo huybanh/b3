@@ -2,6 +2,7 @@ package com.betbrain.b3.model;
 
 import java.util.HashMap;
 
+import com.amazonaws.services.dynamodbv2.document.Item;
 import com.betbrain.b3.data.B3KeyOffer;
 import com.betbrain.b3.data.EntitySpec2;
 import com.betbrain.b3.pushclient.JsonMapper;
@@ -31,15 +32,22 @@ public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 	}
 
 	@Override
+	public void load(Item item, JsonMapper mapper) {
+		super.load(item, null, mapper);
+		provider = new B3Provider();
+		provider.load(item, BettingOffer.PROPERTY_NAME_providerId, mapper);
+	}
+
+	@Override
 	public void getDownlinkedEntitiesInternal() {
 		
 		//unfollowed links
 		addDownlinkUnfollowed(BettingOffer.PROPERTY_NAME_outcomeId, Outcome.class/*, entity.getOutcomeId()*/);
 		
-		addDownlink(BettingOffer.PROPERTY_NAME_providerId, provider);
-		addDownlink(BettingOffer.PROPERTY_NAME_sourceId, source);
-		addDownlink(BettingOffer.PROPERTY_NAME_bettingTypeId, bettingType);
-		addDownlink(BettingOffer.PROPERTY_NAME_statusId, status);
+		addDownlink(BettingOffer.PROPERTY_NAME_providerId, Provider.class, provider);
+		addDownlink(BettingOffer.PROPERTY_NAME_sourceId, Source.class, source);
+		addDownlink(BettingOffer.PROPERTY_NAME_bettingTypeId, BettingType.class, bettingType);
+		addDownlink(BettingOffer.PROPERTY_NAME_statusId, BettingOfferStatus.class, status);
 	}
 	
 	@Override

@@ -33,9 +33,9 @@ public class B3Outcome extends B3Entity<Outcome> {
 		addDownlinkUnfollowed(Outcome.PROPERTY_NAME_eventId, Event.class/*, entity.getEventId()*/);
 		
 		//followed
-		addDownlink(Outcome.PROPERTY_NAME_eventPartId, eventPart);
-		addDownlink(Outcome.PROPERTY_NAME_statusId, status);
-		addDownlink(Outcome.PROPERTY_NAME_typeId, type);
+		addDownlink(Outcome.PROPERTY_NAME_eventPartId, EventPart.class, eventPart);
+		addDownlink(Outcome.PROPERTY_NAME_statusId, OutcomeStatus.class, status);
+		addDownlink(Outcome.PROPERTY_NAME_typeId, OutcomeType.class, type);
 	}
 
 	@Override

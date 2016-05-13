@@ -39,9 +39,10 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 	
 	private static int pushThreadCount;
 	
-	private long lastBatchId;
+	//private long lastBatchId;
+	private EntityChangeBatch lastBatch;
 	
-	private int pushStatusCount = 0;
+	//private int pushStatusCount = 0;
 	
 	//private BufferedWriter sepcWriter;
 	
@@ -50,6 +51,7 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 		initialThreadCount = Integer.parseInt(args[0]);
 		pushThreadCount = Integer.parseInt(args[1]);
 		
+		//DynamoWorker.initBundleCurrent();
 		if (!DynamoWorker.initBundleByStatus(DynamoWorker.BUNDLE_STATUS_EMPTY)) {
 			return;
 		}
@@ -68,7 +70,10 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 
 	@Override
 	public long getLastAppliedEntityChangeBatchId() {
-		return lastBatchId;
+		if (lastBatch == null) {
+			return 0;
+		}
+		return lastBatch.getId();
 	}
 	
 	private boolean intialDumpStarted = false;
@@ -147,7 +152,7 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 	@Override
 	public void notifyEntityUpdates(EntityChangeBatch changeBatch) {
 
-		if (pushStatusCount == 0) {
+		/*if (pushStatusCount == 0) {
 			DynamoWorker.updateSetting(
 					new B3CellString(DynamoWorker.BUNDLE_CELL_PUSHSTATUS, DynamoWorker.BUNDLE_PUSHSTATUS_ONGOING),
 					new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_RECEIVED_ID, String.valueOf(changeBatch.getId())),
@@ -156,7 +161,7 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 		pushStatusCount++;
 		if (pushStatusCount == 1000) {
 			pushStatusCount = 0;
-		}
+		}*/
 
 		//System.out.println(Thread.currentThread().getName() + ": Processing changebatch " + changeBatch.getId());
 		long changeTime = changeBatch.getCreateTime().getTime();
@@ -190,7 +195,10 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 				changesetWorking[0].record(changeBatch.getId(), changeBatch.getCreateTime());
 			}
 		}
+		lastBatch = changeBatch;
 	}
+	
+	private int statusUpdateCount;
 	
 	private void persistChanges() {
 		
@@ -227,10 +235,24 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 					}
 					
 					//update status to setting table
-					DynamoWorker.updateSetting(
-							new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_ID, String.valueOf(changesetPersiting.getLastBatchId())),
-							new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_TIMESTAMP, lastBatchTime.toString()));
-					changesetPersiting = null;
+					if (statusUpdateCount == 0) {
+						if (lastBatch != null) {
+							DynamoWorker.updateSetting(
+									new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_RECEIVED_ID, String.valueOf(lastBatch.getId())),
+									new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_RECEIVED_TIMESTAMP, lastBatch.getCreateTime().toString()),
+									new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_ID, String.valueOf(changesetPersiting.getLastBatchId())),
+									new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_TIMESTAMP, lastBatchTime.toString()));
+						} else {
+							DynamoWorker.updateSetting(
+									new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_ID, String.valueOf(changesetPersiting.getLastBatchId())),
+									new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_TIMESTAMP, lastBatchTime.toString()));
+							
+						}
+					}
+					statusUpdateCount++;
+					if (statusUpdateCount == 1) {
+						statusUpdateCount = 0;
+					}
 					continue;
 				}
 				

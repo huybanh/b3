@@ -2,6 +2,7 @@ package com.betbrain.b3.model;
 
 import java.util.HashMap;
 
+import com.amazonaws.services.dynamodbv2.document.Item;
 import com.betbrain.b3.data.B3KeyEventInfo;
 import com.betbrain.b3.data.EntitySpec2;
 import com.betbrain.b3.pushclient.JsonMapper;
@@ -29,15 +30,22 @@ public class B3EventInfo extends B3Entity<EventInfo> {
 	}
 
 	@Override
+	public void load(Item item, JsonMapper mapper) {
+		super.load(item, null, mapper);
+		provider = new B3Provider();
+		provider.load(item, EventInfo.PROPERTY_NAME_providerId, mapper);
+	}
+
+	@Override
 	public void getDownlinkedEntitiesInternal() {
 		
 		//skip event/eventpart
 		addDownlinkUnfollowed(EventInfo.PROPERTY_NAME_eventId, Event.class/*, entity.getEventId()*/);
 		addDownlinkUnfollowed(EventInfo.PROPERTY_NAME_eventPartId, EventPart.class/*, entity.getEventPartId()*/);
 		
-		addDownlink(EventInfo.PROPERTY_NAME_providerId, provider);
-		addDownlink(EventInfo.PROPERTY_NAME_sourceId, source);
-		addDownlink(EventInfo.PROPERTY_NAME_typeId, type);
+		addDownlink(EventInfo.PROPERTY_NAME_providerId, Provider.class, provider);
+		addDownlink(EventInfo.PROPERTY_NAME_sourceId, Source.class, source);
+		addDownlink(EventInfo.PROPERTY_NAME_typeId, EventInfoType.class, type);
 	}
 
 	@Override
@@ -86,5 +94,4 @@ public class B3EventInfo extends B3Entity<EventInfo> {
 	String getRevisionId() {
 		return null;
 	}
-
 }

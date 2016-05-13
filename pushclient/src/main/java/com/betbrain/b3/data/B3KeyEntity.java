@@ -43,6 +43,11 @@ public class B3KeyEntity extends B3Key {
 	}
 	
 	@Override
+	B3Table getTable() {
+		return B3Table.Entity;
+	}
+	
+	@Override
 	boolean isDetermined() {
 		return classShortName != null && id != null;
 	}

@@ -1,10 +1,12 @@
 package com.betbrain.b3.data;
 
+import com.betbrain.sepc.connector.sportsmodel.Event;
+
 /**
  * Key spec: sportId/eventTypeId/[EVENT|EVENTPART]/eventId
  *
  */
-public class B3KeyEvent extends B3KeyEntitySupport {
+public class B3KeyEvent extends B3MainKey<Event> {
 
 	final Long sportId;
 	
@@ -20,6 +22,16 @@ public class B3KeyEvent extends B3KeyEntitySupport {
 		this.eventTypeId = eventTypeId;
 		//this.eventPartFlag = eventPart;
 		this.eventId = eventId;
+	}
+	
+	@Override
+	B3Table getTable() {
+		return B3Table.Event;
+	}
+	
+	@Override
+	EntitySpec2 getEntitySpec() {
+		return EntitySpec2.Event;
 	}
 	
 	@Override
