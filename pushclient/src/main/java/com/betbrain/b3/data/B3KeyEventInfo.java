@@ -40,18 +40,11 @@ public class B3KeyEventInfo extends B3MainKey<EventInfo> {
 	
 	@Override
 	boolean isDetermined() {
-		return /*sportId != null && eventTypeId != null &&*/ eventId != null &&
+		return eventId != null &&
 				eventInfoTypeId != null && eventInfoId != null;
 	} 
 	
 	public String getHashKeyInternal() {
-		/*if (sportId == null) {
-			return null;
-		}
-		if (eventTypeId == null) {
-			return sportId + B3Table.KEY_SEP;
-		}
-		return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventId;*/
 		return String.valueOf(eventId);
 	}
 	
