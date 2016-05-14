@@ -13,8 +13,6 @@ public class B3KeyOffer extends B3MainKey<BettingOffer> {
 	
 	final Long eventTypeId;
 	
-	//final Boolean eventPartFlag;
-	
 	final Long eventId;
 
 	final Long outcomeTypeId;
@@ -30,7 +28,6 @@ public class B3KeyOffer extends B3MainKey<BettingOffer> {
 
 		this.sportId = sportId;
 		this.eventTypeId = eventTypeId;
-		//this.eventPartFlag = eventPart;
 		this.eventId = eventId;
 		
 		this.outcomeTypeId = outcomeTypeId;
@@ -43,7 +40,6 @@ public class B3KeyOffer extends B3MainKey<BettingOffer> {
 
 		this.sportId = sportId;
 		this.eventTypeId = eventTypeId;
-		//this.eventPartFlag = eventPart;
 		this.eventId = eventId;
 		
 		this.outcomeTypeId = null;
@@ -70,15 +66,6 @@ public class B3KeyOffer extends B3MainKey<BettingOffer> {
 	
 	@Override
 	public String getHashKeyInternal() {
-		/*if (sportId == null) {
-			return null;
-		}
-		if (eventTypeId == null) {
-			return sportId + B3Table.KEY_SEP;
-		}
-		if (eventId == null) {
-			return sportId + B3Table.KEY_SEP + eventTypeId;
-		}*/
 		return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventId;
 	}
 	

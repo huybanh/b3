@@ -55,7 +55,6 @@ public class B3KeyLink extends B3Key {
 		linkedClassShortName = EntitySpec2.getShortName(linkedEntity.getClass().getName());
 		this.linkName = linkName;
 		this.linkedEntityId = linkedEntity.getId();
-		//this.linkedEntityId = linkedEntityId;
 	}
 	
 	@Override
@@ -69,7 +68,6 @@ public class B3KeyLink extends B3Key {
 	} 
 	
 	public String getHashKeyInternal() {
-		//return classShortName + linkedClassShortName + id;
 		return classShortName + linkedClassShortName + linkName + B3Table.KEY_SEP + id;
 	}
 	

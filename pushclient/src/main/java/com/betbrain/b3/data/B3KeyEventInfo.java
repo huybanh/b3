@@ -7,12 +7,6 @@ import com.betbrain.sepc.connector.sportsmodel.EventInfo;
  *
  */
 public class B3KeyEventInfo extends B3MainKey<EventInfo> {
-
-	//private final Long sportId;
-	
-	//private final Long eventTypeId;
-	
-	//final Boolean eventPartFlag;
 	
 	private final Long eventId;
 	
@@ -20,21 +14,15 @@ public class B3KeyEventInfo extends B3MainKey<EventInfo> {
 	
 	private final Long eventInfoId;
 
-	public B3KeyEventInfo(/*Long sportId, Long eventTypeId,*/ Long eventId, Long eventInfoTypeId, Long eventInfoId) {
+	public B3KeyEventInfo(Long eventId, Long eventInfoTypeId, Long eventInfoId) {
 		super();
-		//this.sportId = sportId;
-		//this.eventTypeId = eventTypeId;
-		//this.eventPartFlag = eventPart;
 		this.eventId = eventId;
 		this.eventInfoTypeId = eventInfoTypeId;
 		this.eventInfoId = eventInfoId;
 	}
 
-	public B3KeyEventInfo(/*Long sportId, Long eventTypeId,*/ Long eventId) {
+	public B3KeyEventInfo(Long eventId) {
 		super();
-		//this.sportId = sportId;
-		//this.eventTypeId = eventTypeId;
-		//this.eventPartFlag = eventPart;
 		this.eventId = eventId;
 		this.eventInfoTypeId = null;
 		this.eventInfoId = null;
