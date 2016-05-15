@@ -3,6 +3,7 @@ package com.betbrain.b3.report.oddsdetailed;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 
 import com.betbrain.b3.data.*;
 import com.betbrain.b3.model.*;
@@ -41,7 +42,7 @@ public class DetailedOddsTable2 {
 			System.out.println(e.entity);
 			new DetailedOddsTable2(e.entity.getId(), IDs.EVENTPART_ORDINARYTIME).run();
 		}*/
-		new DetailedOddsTable2(217633293, IDs.EVENTPART_ORDINARYTIME).run();
+		new DetailedOddsTable2(217633299, IDs.EVENTPART_ORDINARYTIME).run();
 	}
 	
 	public DetailedOddsTable2(long matchId, long eventPartId) {
@@ -67,7 +68,7 @@ public class DetailedOddsTable2 {
 		
 		long startTime = System.currentTimeMillis();
 		
-		B3KeyEventInfo statusKey = new B3KeyEventInfo(217562668L, eventPartId, IDs.EVENTINFOTYPE_CURRENTSTATUS, null);
+		B3KeyEventInfo statusKey = new B3KeyEventInfo(matchId, eventPartId, IDs.EVENTINFOTYPE_CURRENTSTATUS, null);
 		statuses = (ArrayList<RevisionedEntity<B3EventInfo>>) statusKey.listEntities(true, mapper);
 		
 		B3KeyEventInfo scoreKey = new B3KeyEventInfo(matchId, eventPartId, IDs.EVENTINFOTYPE_SCORE, null);
@@ -76,13 +77,25 @@ public class DetailedOddsTable2 {
 		
 		B3KeyOutcome outcomeKey = new B3KeyOutcome(matchId, eventPartId, IDs.OUTCOMETYPE_DRAW, null);
 		outcomesDraw = (ArrayList<B3Outcome>) outcomeKey.listEntities(false, mapper);
-		for (B3Outcome o : outcomesDraw) {
+		Iterator<B3Outcome> it = outcomesDraw.iterator();
+		while (it.hasNext()) {
+			B3Outcome o = it.next();
+			if (o.entity.getIsNegation()) {
+				it.remove();
+				continue;
+			}
 			System.out.println("Got outcome-draw: " + o.entity);
 		}
 		
 		outcomeKey = new B3KeyOutcome(matchId, eventPartId, IDs.OUTCOMETYPE_WINNER, null);
 		outcomesWinner = (ArrayList<B3Outcome>) outcomeKey.listEntities(false, mapper);
-		for (B3Outcome o : outcomesWinner) {
+		it = outcomesWinner.iterator();
+		while (it.hasNext()) {
+			B3Outcome o = it.next();
+			if (o.entity.getIsNegation()) {
+				it.remove();
+				continue;
+			}
 			System.out.println("Got outcome-winner: " + o.entity);
 		}
 		

@@ -67,16 +67,19 @@ public class B3KeyEventInfo extends B3MainKey<EventInfo> {
 	@Override
 	String getRangeKeyInternal() {
 		if (version2) {
-			if (eventPartId == null) {
+			if (eventId == null) {
 				return null;
 			}
+			if (eventPartId == null) {
+				return eventId + B3Table.KEY_SEP;
+			}
 			if (eventInfoTypeId == null) {
-				return eventPartId + B3Table.KEY_SEP;
+				return eventId + B3Table.KEY_SEP + eventPartId + B3Table.KEY_SEP;
 			}
 			if (eventInfoId == null) {
-				return eventPartId + B3Table.KEY_SEP + eventInfoTypeId + B3Table.KEY_SEP;
+				return eventId + B3Table.KEY_SEP + eventPartId + B3Table.KEY_SEP + eventInfoTypeId + B3Table.KEY_SEP;
 			}
-			return eventPartId + B3Table.KEY_SEP + eventInfoTypeId + B3Table.KEY_SEP + eventInfoId;
+			return eventId + B3Table.KEY_SEP + eventPartId + B3Table.KEY_SEP + eventInfoTypeId + B3Table.KEY_SEP + eventInfoId;
 		}
 		if (eventInfoId == null) {
 			return eventInfoTypeId + B3Table.KEY_SEP;
