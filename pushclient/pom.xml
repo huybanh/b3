@@ -5,7 +5,7 @@
 	<groupId>com.betbrain.b3</groupId>
 	<artifactId>pushclient</artifactId>
 	<version>0.0.1</version>
-	<packaging>war</packaging>
+	<packaging>jar</packaging>
 	<name>pushclient</name>
 	<url>http://maven.apache.org</url>
 
