@@ -25,6 +25,7 @@ class DetailedOddsPart {
 	//private TreeMap<Long, DetailedOddsItemOffer> odds = new TreeMap<>();
 	
 	private LinkedList<Long> timePoints = new LinkedList<>();
+	private String strDetails = "";
 
 	public DetailedOddsPart(String caption, ArrayList<RevisionedEntity<B3EventInfo>> statusList,
 			ArrayList<RevisionedEntity<B3EventInfo>> scoreList, ArrayList<RevisionedEntity<B3BettingOffer>> offerList) {
@@ -61,37 +62,60 @@ class DetailedOddsPart {
 		odds.prepare();
 		scores.prepare();
 		statuses.prepare();
-		
+		StringBuilder sb = new StringBuilder();
 		System.out.println(caption);
+		sb.append(caption + "\n");
 		System.out.print("Time | ");
+		sb.append("Time | ");
 		for (String name : odds.providerNames) {
 			System.out.print("Odds from " + name + " | ");
+			sb.append("Odds from " + name + " | ");
 		}
 		for (String name : scores.providerNames) {
 			System.out.print("Score from " + name + " | ");
+			sb.append("Score from " + name + " | ");
 		}
 		for (String name : statuses.providerNames) {
 			System.out.print("Match status from " + name + " | ");
+			sb.append("Match status from " + name + " | ");
 		}
 		System.out.println();
-		
+		sb.append("\n");
+		String partReport;
 		for (Long time : timePoints) {
 			if (time == 0) {
 				continue;
 			}
 			System.out.print(time + ": " + new Date(time) + " | ");
+			sb.append(time + ": " + new Date(time) + " | ");
+			
 			for (int i = 0; i < odds.providerNames.length; i++) {
-				System.out.print(odds.getValue(time, i++) + " | ");
+				partReport = odds.getValue(time, i++) + " | ";
+				System.out.print(partReport);
+				sb.append(partReport);
 			}
 			for (int i = 0; i < scores.providerNames.length; i++) {
-				System.out.print(scores.getValue(time, i++) + " | ");
+				partReport = scores.getValue(time, i++) + " | ";
+				System.out.print(partReport);
+				sb.append(partReport);
 			}
 			for (int i = 0; i < statuses.providerNames.length; i++) {
-				System.out.print(statuses.getValue(time, i++) + " | ");
+				partReport = statuses.getValue(time, i++) + " | ";
+				System.out.print(partReport);
+				sb.append(partReport);
 			}
 			System.out.println();
+			sb.append("\n");
 		}
-		
+		setStrDetails(sb.toString());
+	}
+
+	public String getStrDetails() {
+		return strDetails;
+	}
+
+	public void setStrDetails(String strDetails) {
+		this.strDetails = strDetails;
 	}
 
 }

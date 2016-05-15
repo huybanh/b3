@@ -34,29 +34,43 @@ public class DetailedOddsTable {
 		
 		//DynamoWorker.initBundleCurrent();
 		DynamoWorker.initBundleByStatus("SPRINT2");
-		
-		new DetailedOddsTable().run();
-		//new DetailedOddsTable().run();
+		String matchId = "217562668";
+		String reportDetails = new DetailedOddsTable(Long.parseLong(matchId)).run();
+		System.out.println(reportDetails);
 	}
 
-	public void run() {
+	//Running with default matchid
+	public DetailedOddsTable()
+	{
+	}
+
+	public DetailedOddsTable(long matchId)
+	{
+		this.matchId = matchId;
+	}
+	public String run() {
+		StringBuilder sBuilder = new StringBuilder();
 		queryData();
-		
-		new DetailedOddsPart("Detailed 1x2 odds: Winner1", statuses, scores, offersWinner1);
-		new DetailedOddsPart("Detailed 1x2 odds: Winner2", statuses, scores, offersWinner2);
-		new DetailedOddsPart("Detailed 1x2 odds: Draw", statuses, scores, offersDraw);
+		sBuilder.append((new DetailedOddsPart("Detailed 1x2 odds: Winner1", statuses, scores, offersWinner1).getStrDetails()));		
+		sBuilder.append((new DetailedOddsPart("Detailed 1x2 odds: Winner2", statuses, scores, offersWinner2).getStrDetails()));
+		sBuilder.append((new DetailedOddsPart("Detailed 1x2 odds: Draw", statuses, scores, offersDraw).getStrDetails()));
+		return sBuilder.toString();
 	}
 	
 	@SuppressWarnings("unchecked")
 	private void queryData() {
 		
 		long startTime = System.currentTimeMillis();
-		B3KeyEventInfo statusKey = new B3KeyEventInfo(217562668L, IDs.EVENTINFOTYPE_CURRENTSTATUS, null);
+		//Get All EventInfo from match to get status and score
+		B3KeyEventInfo statusKey = new B3KeyEventInfo(matchId, IDs.EVENTINFOTYPE_CURRENTSTATUS, null);
 		statuses = (ArrayList<RevisionedEntity<B3EventInfo>>) statusKey.listEntities(true, mapper);
 		
 		B3KeyEventInfo scoreKey = new B3KeyEventInfo(matchId, IDs.EVENTINFOTYPE_SCORE, null);
 		scores = (ArrayList<RevisionedEntity<B3EventInfo>>) scoreKey.listEntities(true, mapper);
 		
+		//Get all outcome from current match
+		
+		//Get all betting offer with all outcome id
 		B3KeyOffer offerKey = new B3KeyOffer(sportId, eventTypeId, matchId, 
 				IDs.OUTCOME_WINNER, outcomeIdWinner1, IDs.BETTINGTYPE_1X2, null);
 		offersWinner1 = (ArrayList<RevisionedEntity<B3BettingOffer>>) offerKey.listEntities(true, mapper);

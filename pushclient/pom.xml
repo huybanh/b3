@@ -4,9 +4,8 @@
 
 	<groupId>com.betbrain.b3</groupId>
 	<artifactId>pushclient</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<packaging>jar</packaging>
-
+	<version>0.0.1</version>
+	<packaging>war</packaging>
 	<name>pushclient</name>
 	<url>http://maven.apache.org</url>
 
@@ -25,7 +24,7 @@
 	          <target>1.7</target>
 	        </configuration>
 	      </plugin>
-	    </plugins>
+	     </plugins>
 	  </build>
 
 	<dependencies>
@@ -73,6 +72,13 @@
 			<artifactId>gson</artifactId>
 			<version>2.6.2</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-server</artifactId>
+			<version>1.8</version>
+		</dependency>
+		
 		
 	</dependencies>
 </project>
