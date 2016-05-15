@@ -13,6 +13,10 @@ import com.betbrain.b3.data.RevisionedEntity;
 import com.betbrain.b3.model.B3BettingOffer;
 import com.betbrain.b3.model.B3Entity;
 import com.betbrain.b3.model.B3EventInfo;
+import com.betbrain.b3.model.DetailsOddEntity;
+import com.betbrain.b3.model.ItemProvider;
+import com.sun.jersey.core.impl.provider.entity.StringProvider;
+import com.betbrain.b3.model.DetailsOddPartEntity;;
 
 class DetailedOddsPart {
 	
@@ -26,6 +30,7 @@ class DetailedOddsPart {
 	
 	private LinkedList<Long> timePoints = new LinkedList<>();
 	private String strDetails = "";
+	private DetailsOddPartEntity oddsPart;
 
 	public DetailedOddsPart(String caption, ArrayList<RevisionedEntity<B3EventInfo>> statusList,
 			ArrayList<RevisionedEntity<B3EventInfo>> scoreList, ArrayList<RevisionedEntity<B3BettingOffer>> offerList) {
@@ -33,6 +38,9 @@ class DetailedOddsPart {
 		/*this.statuses = statuses;
 		this.scores = scores;
 		this.offers = offers;*/
+		setOddsPart(new DetailsOddPartEntity(caption));
+		//Create an rowData for Odds part
+		ArrayList<HashMap<String, ArrayList<ItemProvider>>> rowData = new ArrayList<>();
 		
 		HashSet<Long> timeset = new HashSet<>();
 		DetailedOddsColumnSet statuses = new DetailedOddsColumnSet();
@@ -86,28 +94,36 @@ class DetailedOddsPart {
 			if (time == 0) {
 				continue;
 			}
+			HashMap<String, ArrayList<ItemProvider>> row = new HashMap<>();
+			ArrayList<ItemProvider> lstProvider = new ArrayList<>();
 			System.out.print(time + ": " + new Date(time) + " | ");
 			sb.append(time + ": " + new Date(time) + " | ");
 			
 			for (int i = 0; i < odds.providerNames.length; i++) {
-				partReport = odds.getValue(time, i++) + " | ";
+				partReport = odds.getValue(time, i) + " | ";
 				System.out.print(partReport);
 				sb.append(partReport);
+				lstProvider.add(new ItemProvider(odds.providerNames[i], partReport));
 			}
 			for (int i = 0; i < scores.providerNames.length; i++) {
-				partReport = scores.getValue(time, i++) + " | ";
+				partReport = scores.getValue(time, i) + " | ";
 				System.out.print(partReport);
 				sb.append(partReport);
+				lstProvider.add(new ItemProvider(odds.providerNames[i], partReport));
 			}
 			for (int i = 0; i < statuses.providerNames.length; i++) {
-				partReport = statuses.getValue(time, i++) + " | ";
+				partReport = statuses.getValue(time, i) + " | ";
 				System.out.print(partReport);
 				sb.append(partReport);
+				lstProvider.add(new ItemProvider(odds.providerNames[i], partReport));
 			}
 			System.out.println();
 			sb.append("\n");
+			row.put(new Date(time).toString(), lstProvider);
+			rowData.add(row);
 		}
 		setStrDetails(sb.toString());
+		oddsPart.setRowData(rowData);
 	}
 
 	public String getStrDetails() {
@@ -116,6 +132,14 @@ class DetailedOddsPart {
 
 	public void setStrDetails(String strDetails) {
 		this.strDetails = strDetails;
+	}
+
+	public DetailsOddPartEntity getOddsPart() {
+		return oddsPart;
+	}
+
+	public void setOddsPart(DetailsOddPartEntity oddsPart) {
+		this.oddsPart = oddsPart;
 	}
 
 }

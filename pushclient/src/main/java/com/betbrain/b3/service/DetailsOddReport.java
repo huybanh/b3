@@ -8,8 +8,8 @@ import javax.ws.rs.core.Response;
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.report.oddsdetailed.DetailedOddsTable;
  
-@Path("/rtr")
-public class RealTimeReport {
+@Path("/DetailsOddReport")
+public class DetailsOddReport {
  
 	@GET
 	@Path("/{matchid}")

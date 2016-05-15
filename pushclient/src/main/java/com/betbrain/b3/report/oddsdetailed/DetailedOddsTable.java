@@ -12,6 +12,10 @@ import com.betbrain.b3.model.B3EventInfo;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.b3.report.IDs;
 
+import flexjson.JSONSerializer;
+
+import com.betbrain.b3.model.DetailsOddEntity;
+
 public class DetailedOddsTable {
 	
 	private JsonMapper mapper = new JsonMapper();
@@ -49,12 +53,13 @@ public class DetailedOddsTable {
 		this.matchId = matchId;
 	}
 	public String run() {
-		StringBuilder sBuilder = new StringBuilder();
 		queryData();
-		sBuilder.append((new DetailedOddsPart("Detailed 1x2 odds: Winner1", statuses, scores, offersWinner1).getStrDetails()));		
-		sBuilder.append((new DetailedOddsPart("Detailed 1x2 odds: Winner2", statuses, scores, offersWinner2).getStrDetails()));
-		sBuilder.append((new DetailedOddsPart("Detailed 1x2 odds: Draw", statuses, scores, offersDraw).getStrDetails()));
-		return sBuilder.toString();
+		DetailsOddEntity entity = new DetailsOddEntity();
+		entity.getDataReport().add(new DetailedOddsPart("Detailed 1x2 odds: Winner1", statuses, scores, offersWinner1).getOddsPart());		
+		entity.getDataReport().add(new DetailedOddsPart("Detailed 1x2 odds: Winner2", statuses, scores, offersWinner2).getOddsPart());
+		entity.getDataReport().add(new DetailedOddsPart("Detailed 1x2 odds: Draw", statuses, scores, offersDraw).getOddsPart());
+		JSONSerializer flexSer = new JSONSerializer();
+		return flexSer.exclude("*.class").deepSerialize(entity);
 	}
 	
 	@SuppressWarnings("unchecked")

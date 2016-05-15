@@ -1,10 +1,21 @@
 package com.betbrain.b3.pushclient;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.joda.time.DateTime;
 
 import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Event;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.google.gson.JsonDeserializationContext;
+import com.betbrain.b3.model.DetailsOddEntity;
+import com.betbrain.b3.model.DetailsOddPartEntity;
+import com.betbrain.b3.model.ItemProvider;
+
 import flexjson.JSONDeserializer;
 import flexjson.JSONSerializer;
 
@@ -97,6 +108,34 @@ public class JsonMapper {
 			System.out.println(o);
 			System.out.println(o.getLastChangedTime());
 			System.out.println(o.getLastChangedTime().getTime());
+			
+			DetailsOddPartEntity myentity = new DetailsOddPartEntity("Winner 1");
+			JSONSerializer tmp = new JSONSerializer();
+			
+			HashMap<String, ArrayList<ItemProvider>> data1 = new HashMap<String, ArrayList<ItemProvider>>();
+			HashMap<String, ArrayList<ItemProvider>> data2 = new HashMap<String, ArrayList<ItemProvider>>();
+			ArrayList<ItemProvider> lst1 = new ArrayList<ItemProvider>();
+			lst1.add(new ItemProvider("7.5", "Bet365"));
+			lst1.add(new ItemProvider("0-0", "Bet365 Mobile"));
+			lst1.add(new ItemProvider("In Progress", "Bet 365 Mobile"));
+			data1.put(DateTime.now().toString(), lst1);
+
+			ArrayList<ItemProvider> lst2 = new ArrayList<ItemProvider>();
+			lst2.add(new ItemProvider("8.5", "Bet365"));
+			lst2.add(new ItemProvider("1-0", "Bet365 Mobile"));
+			lst2.add(new ItemProvider("In Progress", "Bet 365 Mobile"));
+			data2.put(DateTime.now().toString(), lst2);
+
+			myentity.getRowData().add(data1);
+			myentity.getRowData().add(data2);
+			
+			DetailsOddEntity odds = new DetailsOddEntity();
+			odds.getDataReport().add(myentity);
+			
+			//ExcludeTransformer excludeTransformer = new ExcludeTransformer();
+			String str = tmp.exclude("*.class").deepSerialize(odds);
+			System.out.println(str);
+			//System.out.println(tmp.include("RowData").serialize(myentity));
 		}
 		catch (Exception ex) {
 			ex.printStackTrace();
