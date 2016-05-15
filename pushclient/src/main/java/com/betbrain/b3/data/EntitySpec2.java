@@ -119,4 +119,11 @@ public enum EntitySpec2 {
 		return false;
 	}
 
+	B3Entity<?> newB3Entity() {
+		try {
+			return b3class.newInstance();
+		} catch (InstantiationException | IllegalAccessException e) {
+			throw new RuntimeException(e);
+		}
+	}
 }

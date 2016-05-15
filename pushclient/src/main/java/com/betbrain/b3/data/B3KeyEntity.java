@@ -54,6 +54,9 @@ public class B3KeyEntity extends B3Key {
 		if (id == null) {
 			return classShortName;
 		}
+		if (version2) {
+			return classShortName + Math.abs(id % B3Table.DIST_FACTOR);
+		}
 		return classShortName + Math.abs(((Long) id).hashCode() % B3Table.DIST_FACTOR);
 	}
 	

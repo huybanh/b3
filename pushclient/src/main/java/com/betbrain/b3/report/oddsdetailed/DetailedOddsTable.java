@@ -51,22 +51,22 @@ public class DetailedOddsTable {
 	private void queryData() {
 		
 		long startTime = System.currentTimeMillis();
-		B3KeyEventInfo statusKey = new B3KeyEventInfo(217562668L, IDs.EVENTINFOTYPE_CURRENTSTATUS, null);
+		B3KeyEventInfo statusKey = new B3KeyEventInfo(217562668L, IDs.EVENTPART_ORDINARYTIME, IDs.EVENTINFOTYPE_CURRENTSTATUS, null);
 		statuses = (ArrayList<RevisionedEntity<B3EventInfo>>) statusKey.listEntities(true, mapper);
 		
-		B3KeyEventInfo scoreKey = new B3KeyEventInfo(matchId, IDs.EVENTINFOTYPE_SCORE, null);
+		B3KeyEventInfo scoreKey = new B3KeyEventInfo(matchId, IDs.EVENTPART_ORDINARYTIME, IDs.EVENTINFOTYPE_SCORE, null);
 		scores = (ArrayList<RevisionedEntity<B3EventInfo>>) scoreKey.listEntities(true, mapper);
 		
 		B3KeyOffer offerKey = new B3KeyOffer(sportId, eventTypeId, matchId, 
-				IDs.OUTCOME_WINNER, outcomeIdWinner1, IDs.BETTINGTYPE_1X2, null);
+				IDs.OUTCOMETYPE_WINNER, outcomeIdWinner1, IDs.BETTINGTYPE_1X2, null);
 		offersWinner1 = (ArrayList<RevisionedEntity<B3BettingOffer>>) offerKey.listEntities(true, mapper);
 		
 		offerKey = new B3KeyOffer(sportId, eventTypeId, matchId, 
-				IDs.OUTCOME_WINNER, outcomeIdWinner2, IDs.BETTINGTYPE_1X2, null);
+				IDs.OUTCOMETYPE_WINNER, outcomeIdWinner2, IDs.BETTINGTYPE_1X2, null);
 		offersWinner2 = (ArrayList<RevisionedEntity<B3BettingOffer>>) offerKey.listEntities(true, mapper);
 		
 		offerKey = new B3KeyOffer(sportId, eventTypeId, matchId, 
-				IDs.OUTCOME_DRAW, outcomeIdDraw, IDs.BETTINGTYPE_1X2, null);
+				IDs.OUTCOMETYPE_DRAW, outcomeIdDraw, IDs.BETTINGTYPE_1X2, null);
 		offersDraw = (ArrayList<RevisionedEntity<B3BettingOffer>>) offerKey.listEntities(true, mapper);
 		System.out.println("Data querying time: " + (System.currentTimeMillis() - startTime));
 		

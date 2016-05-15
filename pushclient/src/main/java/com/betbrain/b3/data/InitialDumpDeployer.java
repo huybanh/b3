@@ -9,17 +9,10 @@ import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 
-import com.betbrain.b3.model.B3BettingOffer;
 import com.betbrain.b3.model.B3Entity;
-import com.betbrain.b3.model.B3Event;
-import com.betbrain.b3.model.B3EventInfo;
-import com.betbrain.b3.model.B3Outcome;
 import com.betbrain.b3.pushclient.JsonMapper;
-import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Event;
-import com.betbrain.sepc.connector.sportsmodel.EventInfo;
-import com.betbrain.sepc.connector.sportsmodel.Outcome;
 
 public class InitialDumpDeployer {
 	
@@ -94,10 +87,10 @@ public class InitialDumpDeployer {
 			}
 		};
 		initialPutAllEntities(db);
-		initialPutAllEvents(db);
-		initialPutAllEventInfos(db);
-		initialPutAllOutcomes(db);
-		initialPutAllOffers(db);
+		initialPutAllToMainTable(db, eventTasks, EntitySpec2.Event);
+		initialPutAllToMainTable(db, offerTasks, EntitySpec2.BettingOffer);
+		initialPutAllToMainTable(db, outcomeTasks, EntitySpec2.Outcome);
+		initialPutAllToMainTable(db, eventInfoTasks, EntitySpec2.EventInfo);
 		
 		int allTaskCount = 0;
 		for (ArrayList<?> subList : allTasks) {
@@ -181,7 +174,7 @@ public class InitialDumpDeployer {
 		return;
 	}
 	
-	public void initialPutAllEvents(DBTrait db) {
+	/*public void initialPutAllEvents(DBTrait db) {
 		
 		initialPutAllToMainTable(db, eventTasks, B3Table.Event, Event.class, new B3KeyBuilder<Event>() {
 
@@ -268,7 +261,7 @@ public class InitialDumpDeployer {
 			}
 		});
 		
-	}
+	}*/
 	
 	@SuppressWarnings("unchecked")
 	private static <E> Collection<E>[] split(Collection<E> coll) {
@@ -336,22 +329,23 @@ public class InitialDumpDeployer {
 	
 	//private LinkedList<String> loggedMissingSpecs = new LinkedList<String>();
 
-	private interface B3KeyBuilder<E extends Entity> {
+	/*private interface B3KeyBuilder<E extends Entity> {
 		B3Entity<E> newB3Entity();
 		B3Key buildKey(B3Entity<E> b3entity);
-	}
+	}*/
 	
 	@SuppressWarnings("unchecked")
 	private <E extends Entity> void initialPutAllToMainTable(
-			final DBTrait db, ArrayList<Runnable> runnerList, 
-			final B3Table table, final Class<E> entityClazz, final B3KeyBuilder<E> keyBuilder) {
+			final DBTrait db, ArrayList<Runnable> runnerList,  final EntitySpec2 spec
+			/*final B3Table table, final Class<E> entityClazz, final B3KeyBuilder<E> keyBuilder*/) {
 
 		final int[] subProcessedCount = new int[] {0};
-		final HashMap<Long, Entity> allEntities = masterMap.get(entityClazz.getName());
+		final HashMap<Long, Entity> allEntities = masterMap.get(spec.entityClass.getName());
 		if (allEntities == null) {
 			return;
 		}
 		Collection<Entity>[] subLists = split(allEntities.values());
+		final B3Table table = spec.mainTable;
 		for (Collection<Entity> oneSubList : subLists) {
 			final Collection<Entity> oneSubListFinal = oneSubList;
 			Runnable oneTask = new Runnable() {
@@ -371,10 +365,11 @@ public class InitialDumpDeployer {
 						if (end != null && start + count > end) {
 							break;
 						}*/
-						B3Entity<E> b3entity = keyBuilder.newB3Entity();
+						//B3Entity<E> b3entity = keyBuilder.newB3Entity();
+						B3Entity<E> b3entity = (B3Entity<E>) spec.newB3Entity();
 						b3entity.entity = (E) entity;
 						b3entity.buildDownlinks(false, masterMap, null);
-						B3Key b3key = keyBuilder.buildKey(b3entity);
+						B3Key b3key = b3entity.createMainKey();
 						
 						//put linked entities to table main, lookup, link
 						LinkedList<B3Cell<?>> b3Cells = new LinkedList<B3Cell<?>>();

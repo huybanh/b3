@@ -67,11 +67,12 @@ public class B3Event extends B3Entity<Event> {
 	}
 
 	@Override
-	B3KeyEvent createMainKey() {
+	public B3KeyEvent createMainKey() {
 		if (entity == null) {
 			return null;
 		}
-		return new B3KeyEvent(entity.getSportId(), entity.getTypeId(), entity.getId());
+		//return new B3KeyEvent(entity.getSportId(), entity.getTypeId(), entity.getId());
+		return new B3KeyEvent(entity.getId(), entity.getStartTime());
 		
 	}
 

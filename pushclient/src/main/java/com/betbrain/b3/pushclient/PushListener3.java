@@ -133,6 +133,7 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 		}
 		DynamoWorker.openLocalWriters();
 		new InitialDumpDeployer(immutableMasterMap, 0).initialPutMaster();
+		logger.info("Start deploying initial dump");
 		DynamoWorker.putAllFromLocal(initialThreadCount);
 		
 		logger.info("Start deploying changesets now");

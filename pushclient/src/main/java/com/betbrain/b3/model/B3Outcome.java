@@ -74,11 +74,11 @@ public class B3Outcome extends B3Entity<Outcome> {
 	}
 
 	@Override
-	B3KeyOutcome createMainKey() {
+	public B3KeyOutcome createMainKey() {
 		if (entity == null || event == null) {
 			return null;
 		}
-		return new B3KeyOutcome(event.entity.getSportId(), event.entity.getTypeId(), event.entity.getId(),
+		return new B3KeyOutcome(event.entity.getId(),
 				entity.getEventPartId(), entity.getTypeId(), entity.getId());
 		
 	}

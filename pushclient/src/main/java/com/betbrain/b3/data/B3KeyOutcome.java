@@ -12,18 +12,30 @@ import com.betbrain.sepc.connector.sportsmodel.Outcome;
  */
 public class B3KeyOutcome extends B3MainKey<Outcome> {
 
-	final Long sportId;
+	private final Long sportId;
 	
-	final Long eventTypeId;
+	private final Long eventTypeId;
 	
-	final Long eventId;
+	private final Long eventId;
 	
-	final Long eventPartId;
+	private final Long eventPartId;
 
-	final Long outcomeTypeId;
+	private final Long outcomeTypeId;
 	
-	final Long outcomeId;
+	private final Long outcomeId;
 
+	public B3KeyOutcome(Long eventId, Long eventPartId, Long outcomeTypeId, Long outcomeId) {
+
+		this.sportId = null;
+		this.eventTypeId = null;
+		this.eventId = eventId;
+		this.eventPartId = eventPartId;
+		
+		this.outcomeTypeId = outcomeTypeId;
+		this.outcomeId = outcomeId;
+	}
+
+	@Deprecated
 	public B3KeyOutcome(Long sportId, Long eventTypeId, Long eventId, Long eventPartId,
 			Long outcomeTypeId, Long outcomeId) {
 
@@ -48,12 +60,15 @@ public class B3KeyOutcome extends B3MainKey<Outcome> {
 	
 	@Override
 	boolean isDetermined() {
-		return sportId != null && eventTypeId != null && eventPartId != null & eventId != null &&
+		return /*sportId != null && eventTypeId != null &&*/ eventPartId != null & eventId != null &&
 				outcomeTypeId != null && outcomeId != null;
 	}
 	
 	@Override
 	String getHashKeyInternal() {
+		if (version2) {
+			return Math.abs(eventId % B3Table.DIST_FACTOR) + "";
+		}
 		if (sportId == null) {
 			return null;
 		}

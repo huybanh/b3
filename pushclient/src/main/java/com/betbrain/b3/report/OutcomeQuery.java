@@ -16,14 +16,14 @@ public class OutcomeQuery {
 		//query(219387861);
 		//query(219501132);
 		//query(IDs.EVENT_PREMIERLEAGUE);
-		outcome(217562668L, IDs.OUTCOME_WINNER);
+		outcome(217562668L, IDs.OUTCOMETYPE_WINNER);
 	}
 	
 	private static void outcome(long eventId, long outcomeTypeId) {
 		System.out.println("Offers");
 		B3KeyOutcome outcomeKey = new B3KeyOutcome(1L, 1L, eventId, IDs.EVENTPART_ORDINARYTIME, outcomeTypeId, null);
 		@SuppressWarnings("unchecked")
-		ArrayList<Outcome> outcomes = (ArrayList<Outcome>) outcomeKey.listEntities(false, jsonMapper);
+		ArrayList<Outcome> outcomes = (ArrayList<Outcome>) outcomeKey.listEntities(true, jsonMapper);
 		for (Outcome one : outcomes) {
 			System.out.println(one);
 		}

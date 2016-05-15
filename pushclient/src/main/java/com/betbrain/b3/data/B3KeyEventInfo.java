@@ -10,13 +10,25 @@ public class B3KeyEventInfo extends B3MainKey<EventInfo> {
 	
 	private final Long eventId;
 	
+	private final Long eventPartId;
+	
 	private final Long eventInfoTypeId;
 	
 	private final Long eventInfoId;
 
+	@Deprecated
 	public B3KeyEventInfo(Long eventId, Long eventInfoTypeId, Long eventInfoId) {
 		super();
 		this.eventId = eventId;
+		this.eventPartId = null;
+		this.eventInfoTypeId = eventInfoTypeId;
+		this.eventInfoId = eventInfoId;
+	}
+
+	public B3KeyEventInfo(Long eventId, Long eventPartId, Long eventInfoTypeId, Long eventInfoId) {
+		super();
+		this.eventId = eventId;
+		this.eventPartId = eventPartId;
 		this.eventInfoTypeId = eventInfoTypeId;
 		this.eventInfoId = eventInfoId;
 	}
@@ -24,6 +36,7 @@ public class B3KeyEventInfo extends B3MainKey<EventInfo> {
 	public B3KeyEventInfo(Long eventId) {
 		super();
 		this.eventId = eventId;
+		this.eventPartId = null;
 		this.eventInfoTypeId = null;
 		this.eventInfoId = null;
 	}
@@ -40,16 +53,31 @@ public class B3KeyEventInfo extends B3MainKey<EventInfo> {
 	
 	@Override
 	boolean isDetermined() {
-		return eventId != null &&
+		return eventId != null && eventPartId != null &&
 				eventInfoTypeId != null && eventInfoId != null;
 	} 
 	
 	public String getHashKeyInternal() {
+		if (version2) {
+			return Math.abs(eventId % B3Table.DIST_FACTOR) + "";
+		}
 		return String.valueOf(eventId);
 	}
 	
 	@Override
 	String getRangeKeyInternal() {
+		if (version2) {
+			if (eventPartId == null) {
+				return null;
+			}
+			if (eventInfoTypeId == null) {
+				return eventPartId + B3Table.KEY_SEP;
+			}
+			if (eventInfoId == null) {
+				return eventPartId + B3Table.KEY_SEP + eventInfoTypeId + B3Table.KEY_SEP;
+			}
+			return eventPartId + B3Table.KEY_SEP + eventInfoTypeId + B3Table.KEY_SEP + eventInfoId;
+		}
 		if (eventInfoId == null) {
 			return eventInfoTypeId + B3Table.KEY_SEP;
 		}
