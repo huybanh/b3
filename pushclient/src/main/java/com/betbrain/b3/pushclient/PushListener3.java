@@ -1,7 +1,6 @@
 package com.betbrain.b3.pushclient;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -218,6 +217,7 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 				if (oneChange == null) {
 					
 					//change to next changeset
+					ChangeSet previousPersisting = changesetPersiting;
 					synchronized (changesetWorking) {
 						changesetWorking[0].close();
 						changesetPersiting = changesetWorking[0];
@@ -225,8 +225,7 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 					}
 					
 					//update status
-					Date lastBatchTime = changesetPersiting.getLastBatchTime();
-					if (lastBatchTime == null) {
+					if (changesetPersiting.isEmpty()) {
 						//this changeset has no changes
 						try {
 							Thread.sleep(1);
@@ -236,17 +235,17 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 					}
 					
 					//update status to setting table
-					if (statusUpdateCount == 0) {
+					if (previousPersisting != null && !previousPersisting.isEmpty() && statusUpdateCount == 0) {
 						if (lastBatch != null) {
 							DynamoWorker.updateSetting(
 									new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_RECEIVED_ID, String.valueOf(lastBatch.getId())),
 									new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_RECEIVED_TIMESTAMP, lastBatch.getCreateTime().toString()),
-									new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_ID, String.valueOf(changesetPersiting.getLastBatchId())),
-									new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_TIMESTAMP, lastBatchTime.toString()));
+									new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_ID, String.valueOf(previousPersisting.getLastBatchId())),
+									new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_TIMESTAMP, previousPersisting.getLastBatchTime().toString()));
 						} else {
 							DynamoWorker.updateSetting(
-									new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_ID, String.valueOf(changesetPersiting.getLastBatchId())),
-									new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_TIMESTAMP, lastBatchTime.toString()));
+									new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_ID, String.valueOf(previousPersisting.getLastBatchId())),
+									new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_TIMESTAMP, previousPersisting.getLastBatchTime().toString()));
 							
 						}
 					}

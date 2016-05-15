@@ -83,4 +83,17 @@ public class B3Outcome extends B3Entity<Outcome> {
 		
 	}
 
+	@Override
+	public void load(Item item, JsonMapper mapper) {
+		super.load(item, null, mapper);
+		eventPart = new B3EventPart();
+		eventPart.load(item, Outcome.PROPERTY_NAME_eventPartId, mapper);
+		
+		status = new B3OutcomeStatus();
+		status.load(item, Outcome.PROPERTY_NAME_statusId, mapper);
+		
+		type = new B3OutcomeType();
+		type.load(item, Outcome.PROPERTY_NAME_typeId, mapper);
+	}
+
 }

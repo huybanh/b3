@@ -1,0 +1,27 @@
+package com.betbrain.b3.report;
+
+import java.util.ArrayList;
+
+import com.betbrain.b3.data.B3KeyEvent;
+import com.betbrain.b3.data.DynamoWorker;
+import com.betbrain.b3.model.B3Event;
+import com.betbrain.b3.pushclient.JsonMapper;
+
+public class EventSearch {
+	
+	private static JsonMapper jsonMapper = new JsonMapper();
+
+	public static void main(String[] args) {
+		
+		DynamoWorker.initBundleCurrent();
+		//DynamoWorker.initBundleByStatus("SPRINT2");
+		
+		B3KeyEvent eventKey = new B3KeyEvent(IDs.EVENT_PREMIERLEAGUE, IDs.EVENTTYPE_GENERICMATCH, "20160515");
+		@SuppressWarnings("unchecked")
+		ArrayList<B3Event> eventIds = (ArrayList<B3Event>) eventKey.listEntities(false, jsonMapper);
+		for (B3Event e : eventIds) {
+			System.out.println(e.entity);
+		}
+	}
+
+}

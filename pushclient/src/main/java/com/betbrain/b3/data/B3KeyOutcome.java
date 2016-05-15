@@ -83,6 +83,21 @@ public class B3KeyOutcome extends B3MainKey<Outcome> {
 	
 	@Override
 	String getRangeKeyInternal() {
+		if (version2) {
+			if (eventId == null) {
+				return null;
+			}
+			if (eventPartId == null) {
+				return eventId + B3Table.KEY_SEP;
+			}
+			if (outcomeTypeId == null) {
+				return eventId + B3Table.KEY_SEP + eventPartId + B3Table.KEY_SEP;
+			}
+			if (outcomeId == null) {
+				return eventId + B3Table.KEY_SEP + eventPartId + B3Table.KEY_SEP + outcomeTypeId + B3Table.KEY_SEP;
+			}
+			return eventId + B3Table.KEY_SEP + eventPartId + B3Table.KEY_SEP + outcomeTypeId + B3Table.KEY_SEP + outcomeId;
+		}
 		if (eventPartId == null) {
 			return null;
 		}

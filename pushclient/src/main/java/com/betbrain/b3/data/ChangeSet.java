@@ -10,7 +10,7 @@ public class ChangeSet implements DBTrait {
 
 	private LinkedList<ChangeSetItem> changesBeingPersisted;
 	
-	private long lastBatchId;
+	private Long lastBatchId;
 	
 	private Date lastBatchTime;
 	
@@ -22,6 +22,10 @@ public class ChangeSet implements DBTrait {
 	
 	public Date getLastBatchTime() {
 		return lastBatchTime;
+	}
+	
+	public boolean isEmpty() {
+		return lastBatchId == null;
 	}
 
 	public void record(long id, Date createTime) {

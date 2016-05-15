@@ -2,6 +2,7 @@ package com.betbrain.b3.model;
 
 import java.util.HashMap;
 
+import com.amazonaws.services.dynamodbv2.document.Item;
 import com.betbrain.b3.data.B3KeyEvent;
 import com.betbrain.b3.data.EntitySpec2;
 import com.betbrain.b3.pushclient.JsonMapper;
@@ -72,8 +73,24 @@ public class B3Event extends B3Entity<Event> {
 			return null;
 		}
 		//return new B3KeyEvent(entity.getSportId(), entity.getTypeId(), entity.getId());
-		return new B3KeyEvent(entity.getId(), entity.getStartTime());
+		return new B3KeyEvent(entity);
 		
+	}
+
+	@Override
+	public void load(Item item, JsonMapper mapper) {
+		super.load(item, null, mapper);
+		sport = new B3Sport();
+		sport.load(item, Event.PROPERTY_NAME_sportId, mapper);
+		
+		status = new B3EventStatus();
+		status.load(item, Event.PROPERTY_NAME_statusId, mapper);
+		
+		template = new B3EventTemplate();
+		template.load(item, Event.PROPERTY_NAME_templateId, mapper);
+		
+		type = new B3EventType();
+		type.load(item, Event.PROPERTY_NAME_typeId, mapper);
 	}
 
 }

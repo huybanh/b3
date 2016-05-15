@@ -73,6 +73,9 @@ public class InitialDumpDeployer {
 			
 			@Override
 			public void put(B3Table table, String hashKey, String rangeKey, B3Cell<?>... cells) {
+				/*if (rangeKey == null) {
+					throw new RuntimeException();
+				}*/
 				DynamoWorker.putFile(mapper, table, hashKey, rangeKey, cells);
 			}
 

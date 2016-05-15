@@ -1,7 +1,5 @@
 package com.betbrain.b3.data;
 
-import java.util.Date;
-
 import com.betbrain.sepc.connector.sportsmodel.Event;
 
 /**
@@ -12,6 +10,8 @@ public class B3KeyEvent extends B3MainKey<Event> {
 
 	private final Long sportId;
 	
+	private final Long parentId;
+	
 	private final Long eventTypeId;
 	
 	private final String startTime;
@@ -19,10 +19,11 @@ public class B3KeyEvent extends B3MainKey<Event> {
 	private final Long eventId;
 	
 	public B3KeyEvent(Event event) {
+		sportId = event.getSportId();
+		eventTypeId = event.getTypeId();
+		parentId = event.getParentId();
 		startTime = dateFormat.format(event.getStartTime());
 		eventId = event.getId();
-		sportId = null;
-		eventTypeId = null;
 	}
 
 	@Deprecated
@@ -30,16 +31,27 @@ public class B3KeyEvent extends B3MainKey<Event> {
 		super();
 		this.sportId = sportId;
 		this.eventTypeId = eventTypeId;
-		this.eventId = eventId;
+		parentId = null;
 		this.startTime = null;
+		this.eventId = eventId;
 	}
 
-	public B3KeyEvent(Long eventId, Date startTime) {
+	/*public B3KeyEvent(Long parentId, Long eventTypeId, Long eventId, Date startTime) {
 		super();
+		sportId = null;
+		this.eventTypeId = eventTypeId;
+		this.parentId = parentId;
 		this.startTime = dateFormat.format(startTime);
 		this.eventId = eventId;
+	}*/
+
+	public B3KeyEvent(Long parentId, Long typeId, String startTime) {
+		super();
 		sportId = null;
-		eventTypeId = null;
+		this.parentId = parentId;
+		this.eventTypeId = typeId;
+		this.startTime = startTime;
+		this.eventId = null;
 	}
 	
 	@Override
@@ -59,6 +71,9 @@ public class B3KeyEvent extends B3MainKey<Event> {
 	
 	protected String getHashKeyInternal() {
 		if (version2) {
+			if (eventId == null) {
+				return null;
+			}
 			return Math.abs(eventId % B3Table.DIST_FACTOR) + "";
 		}
 		if (sportId == null) {
@@ -74,7 +89,28 @@ public class B3KeyEvent extends B3MainKey<Event> {
 	@Override
 	String getRangeKeyInternal() {
 		if (version2) {
-			return startTime + B3Table.KEY_SEP + eventId;
+
+			//parentId can be null
+			/*if (parentId == null) {
+				return null;
+			}*/
+			
+			long pid;
+			if (parentId == null) {
+				pid = -1;
+			} else {
+				pid = parentId;
+			}
+			if (eventTypeId == null) {
+				return pid + B3Table.KEY_SEP;
+			}
+			if (startTime == null) {
+				return pid + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP;
+			}
+			if (eventId == null) {
+				return pid + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + startTime; 
+			}
+			return pid + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + startTime + B3Table.KEY_SEP + eventId;
 		}
 		
 		return String.valueOf(eventId);
