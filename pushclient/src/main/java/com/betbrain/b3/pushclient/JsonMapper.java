@@ -24,11 +24,26 @@ public class JsonMapper {
 				.transform(new ExcludeTransformer(), void.class)
 				.include("b3PropertyNames")
 				.include("b3PropertyValues")
-				.include("b3Cells");
+				.include("b3Cells")
+				/*.include("scoreProviderNames")
+				.include("oddsProviderNames")
+				.include("statusProviderNames")
+				.include("rows")
+				.include("odds")
+				.include("scores")
+				.include("statuses")*/;
+	}
+	
+	public void prettyPrint(boolean prettyPrint) {
+		flexSer.prettyPrint(prettyPrint);
 	}
 
 	public String serialize(Object entity) {
 		return flexSer.serialize(entity);
+	}
+
+	public String deepSerialize(Object entity) {
+		return flexSer.deepSerialize(entity);
 	}
 	
 	public Entity deserializeEntity(String json) {

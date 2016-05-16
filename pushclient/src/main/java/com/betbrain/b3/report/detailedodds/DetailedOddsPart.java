@@ -1,5 +1,6 @@
-package com.betbrain.b3.report.oddsdetailed;
+package com.betbrain.b3.report.detailedodds;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -13,25 +14,29 @@ import com.betbrain.b3.data.RevisionedEntity;
 import com.betbrain.b3.model.B3BettingOffer;
 import com.betbrain.b3.model.B3Entity;
 import com.betbrain.b3.model.B3EventInfo;
+import com.betbrain.sepc.connector.sportsmodel.Provider;
 
 class DetailedOddsPart {
 	
-	/*private ArrayList<RevisionedEntity<B3EventInfo>> statuses;
-	private ArrayList<RevisionedEntity<B3EventInfo>> scores;
-	private ArrayList<RevisionedEntity<B3BettingOffer>> offers;*/
-	
-	//private TreeMap<Long, DetailedOddsItemStatus> statuses = new TreeMap<>();
-	//private TreeMap<Long, DetailedOddsItemScore> scores = new TreeMap<>();
-	//private TreeMap<Long, DetailedOddsItemOffer> odds = new TreeMap<>();
-	
 	private LinkedList<Long> timePoints = new LinkedList<>();
+	
+	DetailedOddsTableData data;
 
-	public DetailedOddsPart(String caption, ArrayList<RevisionedEntity<B3EventInfo>> statusList,
-			ArrayList<RevisionedEntity<B3EventInfo>> scoreList, ArrayList<RevisionedEntity<B3BettingOffer>> offerList) {
+	public DetailedOddsPart(String outcomeTypeCaption, Long participantId, 
+			ArrayList<RevisionedEntity<B3EventInfo>> statusList,
+			ArrayList<RevisionedEntity<B3EventInfo>> scoreList, 
+			ArrayList<RevisionedEntity<B3BettingOffer>> offerList,
+			PrintStream out) {
 		
-		/*this.statuses = statuses;
-		this.scores = scores;
-		this.offers = offers;*/
+		String caption = "Detailed Odds Table: " + outcomeTypeCaption;
+		if (participantId != null) {
+				caption += " (participant id: " + participantId + ")";
+		}
+		
+		if (out == null) {
+			data = new DetailedOddsTableData();
+			data.setCaption(caption);
+		}
 		
 		HashSet<Long> timeset = new HashSet<>();
 		DetailedOddsColumnSet statuses = new DetailedOddsColumnSet();
@@ -62,34 +67,72 @@ class DetailedOddsPart {
 		scores.prepare();
 		statuses.prepare();
 		
-		System.out.println(caption);
-		System.out.print("Time | ");
-		for (String name : odds.providerNames) {
-			System.out.print("Odds from " + name + " | ");
+		if (out != null) {
+			out.println(caption);
+			out.print("Time | ");
 		}
-		for (String name : scores.providerNames) {
-			System.out.print("Score from " + name + " | ");
+		for (Provider p : odds.providers) {
+			if (out == null) {
+				data.oddsProviderNames.put(p.getId(), p.getName());
+			} else {
+				out.print("Odds from " + p.getName() + " | ");
+			}
 		}
-		for (String name : statuses.providerNames) {
-			System.out.print("Match status from " + name + " | ");
+		for (Provider p : scores.providers) {
+			if (out == null) {
+				data.scoreProviderNames.put(p.getId(), p.getName());
+			} else {
+				out.print("Score from " + p.getName() + " | ");
+			}
 		}
-		System.out.println();
+		for (Provider p : statuses.providers) {
+			if (out == null) {
+				data.statusProviderNames.put(p.getId(), p.getName());
+			} else {
+				out.print("Match status from " + p.getName() + " | ");
+			}
+		}
+		
+		if (out != null) {
+			out.println();
+		}
 		
 		for (Long time : timePoints) {
 			if (time == 0) {
 				continue;
 			}
-			System.out.print(time + ": " + new Date(time) + " | ");
-			for (int i = 0; i < odds.providerNames.length; i++) {
-				System.out.print(odds.getValue(time, i++) + " | ");
+			DetailedOddsTableRow row = new DetailedOddsTableRow();
+			row.setTime(time);
+			if (out == null) {
+				data.addRow(row);
+			} else {
+				out.print(time + ": " + new Date(time) + " | ");
 			}
-			for (int i = 0; i < scores.providerNames.length; i++) {
-				System.out.print(scores.getValue(time, i++) + " | ");
+			for (int i = 0; i < odds.providers.length; i++) {
+				if (out == null) {
+					row.addOdds(odds.providers[i].getId(), odds.getValue(time, i));
+				} else {
+					out.print(odds.getValue(time, i) + " | ");
+				}
 			}
-			for (int i = 0; i < statuses.providerNames.length; i++) {
-				System.out.print(statuses.getValue(time, i++) + " | ");
+			for (int i = 0; i < scores.providers.length; i++) {
+				if (out == null) {
+					row.addScore(scores.providers[i].getId(), scores.getValue(time, i));
+				} else {
+					out.print(scores.getValue(time, i++) + " | ");
+				}
 			}
-			System.out.println();
+			for (int i = 0; i < statuses.providers.length; i++) {
+				if (out == null) {
+					row.addStatus(statuses.providers[i].getId(), statuses.getValue(time, i));
+				} else {
+					out.print(statuses.getValue(time, i++) + " | ");
+				}
+			}
+			
+			if (out != null) {
+				out.println();
+			}
 		}
 		
 	}
@@ -99,9 +142,9 @@ class DetailedOddsPart {
 class DetailedOddsColumnSet {
 	
 	String typeName;
-	private HashMap<String, TreeMap<Long, DetailedOddsItem<?>>> providerMap = new HashMap<>();
+	private HashMap<Provider, TreeMap<Long, DetailedOddsItem<?>>> providerMap = new HashMap<>();
 	
-	String[] providerNames;
+	Provider[] providers;
 	private TreeMap<Long, DetailedOddsItem<?>>[] itemsByProvider;
 	
 	private DetailedOddsItem<?> lastItem;
@@ -117,11 +160,11 @@ class DetailedOddsColumnSet {
 	
 	@SuppressWarnings("unchecked")
 	void prepare() {
-		providerNames = new String[providerMap.size()];
+		providers = new Provider[providerMap.size()];
 		itemsByProvider = new TreeMap[providerMap.size()];
 		int index = 0;
-		for (Entry<String, TreeMap<Long, DetailedOddsItem<?>>> entry : providerMap.entrySet()) {
-			providerNames[index] = entry.getKey();
+		for (Entry<Provider, TreeMap<Long, DetailedOddsItem<?>>> entry : providerMap.entrySet()) {
+			providers[index] = entry.getKey();
 			itemsByProvider[index] = entry.getValue();
 			index++;
 		}
@@ -131,10 +174,10 @@ class DetailedOddsColumnSet {
 		DetailedOddsItem<?> item = itemsByProvider[index].get(time);
 		if (item == null) {
 			if (lastItem == null) {
-				return "   ";
+				return "";
 			} else {
-				//return lastItem.getValue();
-				return "(" + lastItem.getValue() + ")";
+				return lastItem.getValue();
+				//return "(" + lastItem.getValue() + ")";
 			}
 		}
 		lastItem = item;
@@ -155,7 +198,7 @@ abstract class DetailedOddsItem<E extends B3Entity<?>> {
 		return revisionedEntity.time;
 	}
 	
-	abstract String getProvider();
+	abstract Provider getProvider();
 	
 	abstract String getValue();
 }
@@ -169,12 +212,17 @@ class DetailedOddsItemStatus extends DetailedOddsItem<B3EventInfo> {
 	}
 
 	@Override
-	String getProvider() {
+	Provider getProvider() {
+		return revisionedEntity.b3entity.provider.entity;
+	}
+
+	/*@Override
+	String getProviderName() {
 		if (revisionedEntity.b3entity.provider == null) {
 			return revisionedEntity.b3entity.entity.getProviderId() + "";
 		}
 		return revisionedEntity.b3entity.provider.entity.getName();
-	}
+	}*/
 
 	@Override
 	String getValue() {
@@ -190,12 +238,17 @@ class DetailedOddsItemScore extends DetailedOddsItem<B3EventInfo> {
 	}
 
 	@Override
-	String getProvider() {
+	Provider getProvider() {
+		return revisionedEntity.b3entity.provider.entity;
+	}
+
+	/*@Override
+	String getProviderName() {
 		if (revisionedEntity.b3entity.provider == null) {
 			return revisionedEntity.b3entity.entity.getProviderId() + "";
 		}
 		return revisionedEntity.b3entity.provider.entity.getName();
-	}
+	}*/
 
 	@Override
 	String getValue() {
@@ -211,14 +264,19 @@ class DetailedOddsItemOffer extends DetailedOddsItem<B3BettingOffer> {
 	public DetailedOddsItemOffer(RevisionedEntity<B3BettingOffer> revisionedEntity) {
 		super(revisionedEntity);
 	}
-
+	
 	@Override
+	Provider getProvider() {
+		return revisionedEntity.b3entity.provider.entity;
+	}
+
+	/*@Override
 	String getProvider() {
 		if (this.revisionedEntity.b3entity.provider == null) {
 			return revisionedEntity.b3entity.entity.getProviderId() + "";
 		}
 		return this.revisionedEntity.b3entity.provider.entity.getName();
-	}
+	}*/
 
 	@Override
 	String getValue() {
