@@ -1,5 +1,7 @@
 package com.betbrain.b3.service;
 
+import java.util.ArrayList;
+
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -9,16 +11,36 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import com.betbrain.b3.data.B3KeyEvent;
 import com.betbrain.b3.data.DynamoWorker;
+import com.betbrain.b3.model.B3Event;
 import com.betbrain.b3.pushclient.JsonMapper;
+import com.betbrain.b3.report.IDs;
 import com.betbrain.b3.report.detailedodds.DetailedOddsTable2;
  
 @Path("/odds")
 public class OddsService {
 	
+	private JsonMapper mapper = new JsonMapper();
+	
 	public static void main(String[] args) {
 		DynamoWorker.initBundleCurrent();
 		new OddsService().detailedOddsTable(217633296, 3, true, "text");
+	}
+	
+	@GET
+	@Path("league/{leagueId}/matchIds")
+	@Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+	public Response listMatches(@PathParam("leagueId") long leagueId) {
+		B3KeyEvent eventKey = new B3KeyEvent(leagueId, IDs.EVENTTYPE_GENERICMATCH, (String) null);
+		@SuppressWarnings("unchecked")
+		ArrayList<B3Event> eventIds = (ArrayList<B3Event>) eventKey.listEntities(false, mapper);
+		
+		String s = "";
+		for (B3Event e : eventIds) {
+			s += e.entity.getId() + "\n";
+		}
+		return Response.status(200).entity(s).build();
 	}
 	
 	@GET
@@ -37,7 +59,6 @@ public class OddsService {
 		if (format != null && "text".equalsIgnoreCase(format)) {
 			plainText = true;
 		}
-		JsonMapper mapper = new JsonMapper();
 		DetailedOddsTable2 report = new DetailedOddsTable2(matchId, eventPartId, plainText, mapper);
 		report.run();
 		
