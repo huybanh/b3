@@ -1,9 +1,13 @@
-package com.betbrain.b3.report.oddsdetailed;
+package com.betbrain.b3.report.detailedodds;
 
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.LinkedList;
 
 import com.betbrain.b3.data.*;
 import com.betbrain.b3.model.*;
@@ -12,7 +16,7 @@ import com.betbrain.b3.report.IDs;
 
 public class DetailedOddsTable2 {
 	
-	private static JsonMapper mapper = new JsonMapper();
+	private JsonMapper mapper;
 	
 	//report inputs
 	private final long matchId;
@@ -25,6 +29,12 @@ public class DetailedOddsTable2 {
 	
 	private ArrayList<B3Outcome> outcomesDraw;
 	private ArrayList<B3Outcome> outcomesWinner;
+	
+	public LinkedList<DetailedOddsTableData> outputData;
+	
+	public ByteArrayOutputStream outStream;
+	
+	private PrintStream out;
 
 	public static void main(String[] args) {
 		
@@ -42,24 +52,50 @@ public class DetailedOddsTable2 {
 			System.out.println(e.entity);
 			new DetailedOddsTable2(e.entity.getId(), IDs.EVENTPART_ORDINARYTIME).run();
 		}*/
-		new DetailedOddsTable2(217633299, IDs.EVENTPART_ORDINARYTIME).run();
+		
+		JsonMapper jsonMapper = new JsonMapper();
+		DetailedOddsTable2 report = new DetailedOddsTable2(
+				217633296, IDs.EVENTPART_ORDINARYTIME, false, jsonMapper);
+		report.run();
+		LinkedList<DetailedOddsTableData> data = report.outputData;
+		System.out.println("OUTPUT JSON");
+		System.out.println(jsonMapper.deepSerialize(data));
 	}
 	
-	public DetailedOddsTable2(long matchId, long eventPartId) {
+	public DetailedOddsTable2(long matchId, long eventPartId, boolean plainText, JsonMapper mapper) {
 		this.matchId = matchId;
 		this.eventPartId = eventPartId;
+		this.mapper = mapper;
+		if (plainText) {
+			outStream = new ByteArrayOutputStream();
+			out = new PrintStream(new BufferedOutputStream(outStream));
+		} else {
+			outputData = new LinkedList<>();
+		}
 	}
 
 	public void run() {
 		queryData();
 		
 		for (int i = 0; i < offersWinner.length; i++) {
-			new DetailedOddsPart("Detailed 1x2 odds: Winner " + "(outcome id: " + outcomesWinner.get(i).entity.getId() + ")",
-					statuses, scores, offersWinner[i]);
+			DetailedOddsPart part = new DetailedOddsPart("Winner", 
+					outcomesWinner.get(i).entity.getParamParticipantId1(),
+					statuses, scores, offersWinner[i], out);
+			if (outputData != null) {
+				outputData.add(part.data);
+			}
 		}
 		for (int i = 0; i < offersDraw.length; i++) {
-			new DetailedOddsPart("Detailed 1x2 odds: Draw " + "(outcome id: " + outcomesDraw.get(i).entity.getId() + ")",
-					statuses, scores, offersDraw[i]);
+			DetailedOddsPart part = new DetailedOddsPart("Draw ", 
+					//outcomesDraw.get(i).entity.getParamParticipantId1(),
+					null, statuses, scores, offersDraw[i], out);
+			if (outputData != null) {
+				outputData.add(part.data);
+			}
+		}
+		
+		if (out != null) {
+			out.close();
 		}
 	}
 	
@@ -101,7 +137,7 @@ public class DetailedOddsTable2 {
 		
 		offersDraw = new ArrayList[outcomesDraw.size()];
 		for (int i = 0; i < outcomesDraw.size(); i++) {
-			System.out.println("outcome: " + outcomesDraw.get(i).entity);
+			//System.out.println("outcome: " + outcomesDraw.get(i).entity);
 			B3KeyOffer offerKey = new B3KeyOffer(matchId, eventPartId, 
 					IDs.OUTCOMETYPE_DRAW, outcomesDraw.get(i).entity.getId(), IDs.BETTINGTYPE_1X2, null);
 			offersDraw[i] = (ArrayList<RevisionedEntity<B3BettingOffer>>) offerKey.listEntities(true, mapper);
@@ -109,7 +145,7 @@ public class DetailedOddsTable2 {
 
 		offersWinner = new ArrayList[outcomesWinner.size()];
 		for (int i = 0; i < outcomesWinner.size(); i++) {
-			System.out.println("outcome: " + outcomesWinner.get(i).entity);
+			//System.out.println("outcome: " + outcomesWinner.get(i).entity);
 			B3KeyOffer offerKey = new B3KeyOffer(matchId, eventPartId, 
 					IDs.OUTCOMETYPE_WINNER, outcomesWinner.get(i).entity.getId(), IDs.BETTINGTYPE_1X2, null);
 			offersWinner[i] = (ArrayList<RevisionedEntity<B3BettingOffer>>) offerKey.listEntities(true, mapper);
