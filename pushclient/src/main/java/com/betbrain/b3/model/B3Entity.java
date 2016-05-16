@@ -209,7 +209,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		return null; // yes, we can, no error returned
 	}
 	
-	B3Key createMainKey() {
+	public B3Key createMainKey() {
 		return null;
 	}
 	

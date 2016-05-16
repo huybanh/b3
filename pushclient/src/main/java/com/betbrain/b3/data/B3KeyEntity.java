@@ -15,8 +15,6 @@ public class B3KeyEntity extends B3Key {
 	final String classShortName;
 	
 	final Long id;
-	
-	//private JsonMapper jsonMapper = new JsonMapper();
 
 	public B3KeyEntity(Entity entity) {
 		super();
@@ -56,16 +54,16 @@ public class B3KeyEntity extends B3Key {
 		if (id == null) {
 			return classShortName;
 		}
+		if (version2) {
+			return classShortName + Math.abs(id % B3Table.DIST_FACTOR);
+		}
 		return classShortName + Math.abs(((Long) id).hashCode() % B3Table.DIST_FACTOR);
-		//return classShortName + id;
 	}
 	
 	@Override
 	String getRangeKeyInternal() {
 		return String.valueOf(id); 
 	}
-	
-	//static final int hardLimit = 50;
 	
 	@SuppressWarnings("unchecked")
 	public <E extends Entity> ArrayList<E> listEntities(JsonMapper jsonMapper) {

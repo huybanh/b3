@@ -8,20 +8,50 @@ import com.betbrain.sepc.connector.sportsmodel.Event;
  */
 public class B3KeyEvent extends B3MainKey<Event> {
 
-	final Long sportId;
+	private final Long sportId;
 	
-	final Long eventTypeId;
+	private final Long parentId;
 	
-	//final Boolean eventPartFlag;
+	private final Long eventTypeId;
 	
-	final Long eventId;
+	private final String startTime;
+	
+	private final Long eventId;
+	
+	public B3KeyEvent(Event event) {
+		sportId = event.getSportId();
+		eventTypeId = event.getTypeId();
+		parentId = event.getParentId();
+		startTime = dateFormat.format(event.getStartTime());
+		eventId = event.getId();
+	}
 
-	public B3KeyEvent(Long sportId, Long eventTypeId, /*Boolean eventPart,*/ Long eventId) {
+	@Deprecated
+	public B3KeyEvent(Long sportId, Long eventTypeId, Long eventId) {
 		super();
 		this.sportId = sportId;
 		this.eventTypeId = eventTypeId;
-		//this.eventPartFlag = eventPart;
+		parentId = null;
+		this.startTime = null;
 		this.eventId = eventId;
+	}
+
+	/*public B3KeyEvent(Long parentId, Long eventTypeId, Long eventId, Date startTime) {
+		super();
+		sportId = null;
+		this.eventTypeId = eventTypeId;
+		this.parentId = parentId;
+		this.startTime = dateFormat.format(startTime);
+		this.eventId = eventId;
+	}*/
+
+	public B3KeyEvent(Long parentId, Long typeId, String startTime) {
+		super();
+		sportId = null;
+		this.parentId = parentId;
+		this.eventTypeId = typeId;
+		this.startTime = startTime;
+		this.eventId = null;
 	}
 	
 	@Override
@@ -36,30 +66,53 @@ public class B3KeyEvent extends B3MainKey<Event> {
 	
 	@Override
 	boolean isDetermined() {
-		return sportId != null && eventTypeId != null /*&& eventPartFlag != null*/ && eventId != null;
+		return /*sportId != null && eventTypeId != null &&*/ eventId != null;
 	} 
 	
 	protected String getHashKeyInternal() {
+		if (version2) {
+			if (eventId == null) {
+				return null;
+			}
+			return Math.abs(eventId % B3Table.DIST_FACTOR) + "";
+		}
 		if (sportId == null) {
 			return null;
 		}
 		if (eventTypeId == null) {
 			return sportId + B3Table.KEY_SEP;
 		}
-		/*if (eventPartFlag == null) {
-			return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP;
-		}
-		String eventPartMarker = eventPartFlag ? 
-				B3Table.EVENTKEY_MARKER_EVENTPART : B3Table.EVENTKEY_MARKER_EVENT;*/
-
-		return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + /*eventPartMarker +*/
+		return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + 
 				Math.abs(eventId.hashCode() % B3Table.DIST_FACTOR);
 	}
 	
 	@Override
 	String getRangeKeyInternal() {
+		if (version2) {
+
+			//parentId can be null
+			/*if (parentId == null) {
+				return null;
+			}*/
+			
+			long pid;
+			if (parentId == null) {
+				pid = -1;
+			} else {
+				pid = parentId;
+			}
+			if (eventTypeId == null) {
+				return pid + B3Table.KEY_SEP;
+			}
+			if (startTime == null) {
+				return pid + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP;
+			}
+			if (eventId == null) {
+				return pid + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + startTime; 
+			}
+			return pid + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + startTime + B3Table.KEY_SEP + eventId;
+		}
 		
 		return String.valueOf(eventId);
-		//return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventPartMarker + eventId; 
 	}
 }

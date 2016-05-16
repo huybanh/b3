@@ -74,13 +74,26 @@ public class B3Outcome extends B3Entity<Outcome> {
 	}
 
 	@Override
-	B3KeyOutcome createMainKey() {
+	public B3KeyOutcome createMainKey() {
 		if (entity == null || event == null) {
 			return null;
 		}
-		return new B3KeyOutcome(event.entity.getSportId(), event.entity.getTypeId(), event.entity.getId(),
+		return new B3KeyOutcome(event.entity.getId(),
 				entity.getEventPartId(), entity.getTypeId(), entity.getId());
 		
+	}
+
+	@Override
+	public void load(Item item, JsonMapper mapper) {
+		super.load(item, null, mapper);
+		eventPart = new B3EventPart();
+		eventPart.load(item, Outcome.PROPERTY_NAME_eventPartId, mapper);
+		
+		status = new B3OutcomeStatus();
+		status.load(item, Outcome.PROPERTY_NAME_statusId, mapper);
+		
+		type = new B3OutcomeType();
+		type.load(item, Outcome.PROPERTY_NAME_typeId, mapper);
 	}
 
 }

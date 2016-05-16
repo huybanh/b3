@@ -11,34 +11,34 @@ public abstract class B3MainKey<E extends Entity> extends B3Key {
 	
 	abstract EntitySpec2 getEntitySpec();
 
-	@SuppressWarnings("unchecked")
 	public ArrayList<?> listEntities(boolean revisions, JsonMapper jsonMapper ) {
 		
-		String hashKey;
+		String hashKeySuffix;
 		if (revisions) {
-			hashKey = getHashKeyInternal() + B3Table.KEY_SUFFIX_REVISION;
+			hashKeySuffix = B3Table.KEY_SUFFIX_REVISION;
 		} else {
-			hashKey = getHashKeyInternal();
+			hashKeySuffix = "";
 		}
-		
-		/*ArrayList<E> list = new ArrayList<E>();
-		B3ItemIterator it = DynamoWorker.query(getTable(), hashKey, getRangeKey(), null);
-		Class<? extends B3Entity<?>> b3class = getEntitySpec().b3class;
-		while (it.hasNext()) {
-			Item item = it.next();
-			B3Entity<?> b3entity;
-			try {
-				b3entity = b3class.newInstance();
-			} catch (InstantiationException | IllegalAccessException e) {
-				throw new RuntimeException(e);
-			}
-			b3entity.load(item);
-		}*/
-		
+
 		@SuppressWarnings("rawtypes")
 		ArrayList list = new ArrayList();
+		String hashKey = getHashKeyInternal();
+		if (hashKey == null) {
+			for (int i = 0; i < B3Table.DIST_FACTOR; i++) {
+				query(i + hashKeySuffix, 1, revisions, list, jsonMapper);
+			}
+		} else {
+			query(hashKey + hashKeySuffix, null, revisions, list, jsonMapper);
+		}
+		
+		return list;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void query(String hashKey, Integer partitionRecordsLimit, boolean revisions, 
+			@SuppressWarnings("rawtypes") ArrayList list, JsonMapper jsonMapper) {
 		Class<? extends B3Entity<?>> b3class = getEntitySpec().b3class;
-		B3ItemIterator it = DynamoWorker.query(getTable(), hashKey, getRangeKey(), null);
+		B3ItemIterator it = DynamoWorker.query(getTable(), hashKey, getRangeKey(), partitionRecordsLimit);
 		
 		while (it.hasNext()) {
 			Item item = it.next();
@@ -61,7 +61,6 @@ public abstract class B3MainKey<E extends Entity> extends B3Key {
 				list.add(b3entity);
 			}
 		}
-		return list;
 	}
 
 }

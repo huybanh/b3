@@ -16,7 +16,7 @@ public class OfferQuery {
 		
 		//DynamoWorker.initBundleCurrent();
 		DynamoWorker.initBundleByStatus("SPRINT2");
-		offer(217562668L, IDs.OUTCOME_WINNER, 2954860246L, IDs.BETTINGTYPE_1X2);
+		offer(217562668L, IDs.OUTCOMETYPE_WINNER, 2954860246L, IDs.BETTINGTYPE_1X2);
 	}
 	
 	private static void offer(long eventId, long outcomeTypeId, long outcomeId, long bettingTypeId) {

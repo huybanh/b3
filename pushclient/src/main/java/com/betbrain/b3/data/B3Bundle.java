@@ -127,6 +127,8 @@ class B3Bundle {
     
     private static Table createTable(DynamoDB dynamoDB, String prefix,
         String tableName, long readCapacityUnits, long writeCapacityUnits, boolean withRangeKey) {
+    	
+    	//writeCapacityUnits = 1;
         
         System.out.println("Creating table " + prefix + tableName);
         List<KeySchemaElement> keySchema = new ArrayList<KeySchemaElement>();

@@ -7,35 +7,36 @@ import com.betbrain.sepc.connector.sportsmodel.EventInfo;
  *
  */
 public class B3KeyEventInfo extends B3MainKey<EventInfo> {
-
-	//private final Long sportId;
-	
-	//private final Long eventTypeId;
-	
-	//final Boolean eventPartFlag;
 	
 	private final Long eventId;
+	
+	private final Long eventPartId;
 	
 	private final Long eventInfoTypeId;
 	
 	private final Long eventInfoId;
 
-	public B3KeyEventInfo(/*Long sportId, Long eventTypeId,*/ Long eventId, Long eventInfoTypeId, Long eventInfoId) {
+	@Deprecated
+	public B3KeyEventInfo(Long eventId, Long eventInfoTypeId, Long eventInfoId) {
 		super();
-		//this.sportId = sportId;
-		//this.eventTypeId = eventTypeId;
-		//this.eventPartFlag = eventPart;
 		this.eventId = eventId;
+		this.eventPartId = null;
 		this.eventInfoTypeId = eventInfoTypeId;
 		this.eventInfoId = eventInfoId;
 	}
 
-	public B3KeyEventInfo(/*Long sportId, Long eventTypeId,*/ Long eventId) {
+	public B3KeyEventInfo(Long eventId, Long eventPartId, Long eventInfoTypeId, Long eventInfoId) {
 		super();
-		//this.sportId = sportId;
-		//this.eventTypeId = eventTypeId;
-		//this.eventPartFlag = eventPart;
 		this.eventId = eventId;
+		this.eventPartId = eventPartId;
+		this.eventInfoTypeId = eventInfoTypeId;
+		this.eventInfoId = eventInfoId;
+	}
+
+	public B3KeyEventInfo(Long eventId) {
+		super();
+		this.eventId = eventId;
+		this.eventPartId = null;
 		this.eventInfoTypeId = null;
 		this.eventInfoId = null;
 	}
@@ -52,23 +53,34 @@ public class B3KeyEventInfo extends B3MainKey<EventInfo> {
 	
 	@Override
 	boolean isDetermined() {
-		return /*sportId != null && eventTypeId != null &&*/ eventId != null &&
+		return eventId != null && eventPartId != null &&
 				eventInfoTypeId != null && eventInfoId != null;
 	} 
 	
 	public String getHashKeyInternal() {
-		/*if (sportId == null) {
-			return null;
+		if (version2) {
+			return Math.abs(eventId % B3Table.DIST_FACTOR) + "";
 		}
-		if (eventTypeId == null) {
-			return sportId + B3Table.KEY_SEP;
-		}
-		return sportId + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventId;*/
 		return String.valueOf(eventId);
 	}
 	
 	@Override
 	String getRangeKeyInternal() {
+		if (version2) {
+			if (eventId == null) {
+				return null;
+			}
+			if (eventPartId == null) {
+				return eventId + B3Table.KEY_SEP;
+			}
+			if (eventInfoTypeId == null) {
+				return eventId + B3Table.KEY_SEP + eventPartId + B3Table.KEY_SEP;
+			}
+			if (eventInfoId == null) {
+				return eventId + B3Table.KEY_SEP + eventPartId + B3Table.KEY_SEP + eventInfoTypeId + B3Table.KEY_SEP;
+			}
+			return eventId + B3Table.KEY_SEP + eventPartId + B3Table.KEY_SEP + eventInfoTypeId + B3Table.KEY_SEP + eventInfoId;
+		}
 		if (eventInfoId == null) {
 			return eventInfoTypeId + B3Table.KEY_SEP;
 		}

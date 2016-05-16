@@ -1,6 +1,14 @@
 package com.betbrain.b3.data;
 
+import java.text.SimpleDateFormat;
+
 public abstract class B3Key {
+	
+	//static final SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyyyyHHmmss");
+	public static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+	
+	//TODO remove this flag
+	public static boolean version2 = true;
 	
 	private String revisionId;
 	
