@@ -24,6 +24,13 @@ public class DetailedOddsTable2 {
 	private final long eventPartId;
 	private final long bettingType;
 	
+	//report params
+	private final Float paramFloat1;
+	private final Float paramFloat2; 
+	private final Float paramFloat3;
+	private final Boolean paramBoolean1; 
+	private final String paramString1;
+	
 	private ArrayList<RevisionedEntity<B3EventInfo>> statuses;
 	private ArrayList<RevisionedEntity<B3EventInfo>> scores;
 	//private ArrayList<RevisionedEntity<B3BettingOffer>>[] offersWinner;
@@ -59,7 +66,8 @@ public class DetailedOddsTable2 {
 		
 		//JsonMapper jsonMapper = new JsonMapper();
 		DetailedOddsTable2 report = new DetailedOddsTable2(new B3Engine(),
-				217600242, IDs.EVENTPART_ORDINARYTIME, IDs.BETTINGTYPE_1X2);
+				219900664, IDs.EVENTPART_ORDINARYTIME, IDs.BETTINGTYPE_1X2,
+				null, null, null, null, null);
 		report.setPlainText(true);
 		report.run();
 		//LinkedList<DetailedOddsTableData> data = report.outputData;
@@ -68,11 +76,19 @@ public class DetailedOddsTable2 {
 		System.out.println(new String(report.outStream.toByteArray()));
 	}
 	
-	public DetailedOddsTable2(B3Engine b3, long matchId, long eventPartId, long bettingType) {
+	public DetailedOddsTable2(B3Engine b3, long matchId, long eventPartId, long bettingType,
+			Float paramFloat1, Float paramFloat2, Float paramFloat3, Boolean paramBoolean1, String paramString1) {
+		
 		this.b3 = b3;
 		this.matchId = matchId;
 		this.eventPartId = eventPartId;
 		this.bettingType = bettingType;
+		
+		this.paramFloat1 = paramFloat1;
+		this.paramFloat2 = paramFloat2;
+		this.paramFloat3 = paramFloat3;
+		this.paramBoolean1 = paramBoolean1;
+		this.paramString1 = paramString1;
 		//this.mapper = mapper;
 		outputData = new LinkedList<>();
 	}
@@ -144,7 +160,12 @@ public class DetailedOddsTable2 {
 			Iterator<B3Outcome> it = subList.iterator();
 			while (it.hasNext()) {
 				B3Outcome o = it.next();
-				if (o.entity.getIsNegation()) {
+				if (o.entity.getIsNegation() ||
+						(paramFloat1 != null && !paramFloat1.equals(o.entity.getParamFloat1())) ||
+						(paramFloat2 != null && !paramFloat1.equals(o.entity.getParamFloat2())) ||
+						(paramFloat3 != null && !paramFloat1.equals(o.entity.getParamFloat3())) ||
+						(paramBoolean1 != null && !paramFloat1.equals(o.entity.getParamBoolean1())) ||
+						(paramString1 != null && !paramFloat1.equals(o.entity.getParamString1()))) {
 					it.remove();
 					continue;
 				}

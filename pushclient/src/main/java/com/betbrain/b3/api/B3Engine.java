@@ -1,9 +1,11 @@
 package com.betbrain.b3.api;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+import com.betbrain.b3.data.B3Key;
 import com.betbrain.b3.data.B3KeyEntity;
 import com.betbrain.b3.data.B3KeyEvent;
 import com.betbrain.b3.data.DynamoWorker;
@@ -14,23 +16,25 @@ import com.betbrain.b3.model.B3OutcomeTypeBettingTypeRelation;
 import com.betbrain.b3.model.B3Sport;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.b3.report.IDs;
+import com.betbrain.b3.report.detailedodds.DetailedOddsTable2;
+import com.betbrain.b3.report.detailedodds.DetailedOddsTableData;
 import com.betbrain.sepc.connector.sportsmodel.BettingType;
 import com.betbrain.sepc.connector.sportsmodel.Event;
 import com.betbrain.sepc.connector.sportsmodel.Location;
 import com.betbrain.sepc.connector.sportsmodel.OutcomeTypeBettingTypeRelation;
 import com.betbrain.sepc.connector.sportsmodel.Sport;
 
-public class B3Engine {
+public class B3Engine implements B3Api {
 	
 	private final HashMap<Long, LinkedList<Long>> outcomeTypesByBettingType = new HashMap<>();
 	
 	public static void main(String[] args) {
-		B3Engine b3 = new B3Engine();
+		B3Api b3 = new B3Engine();
 		b3.listSports();
 		b3.listCountries();
 		b3.searchLeagues(1L, 77L);
 		System.out.println("Matches");
-		b3.searchMatches(215754838);
+		b3.searchMatches(215754838, null, null);
 		b3.listBettingTypes();
 	}
 
@@ -54,9 +58,19 @@ public class B3Engine {
 	
 	public Long[] getOutcomeTypeIds(long bettingTypeId) {
 		LinkedList<Long> idList = outcomeTypesByBettingType.get(bettingTypeId);
-		return idList.toArray(new Long[idList.size()]);
+		int count;
+		if (idList == null) {
+			count = 0;
+		} else {
+			count = idList.size();
+		}
+		return idList.toArray(new Long[count]);
 	}
 	
+	/* (non-Javadoc)
+	 * @see com.betbrain.b3.api.B3Api#listSports()
+	 */
+	@Override
 	public Sport[] listSports() {
 		JsonMapper jsonMapper = new JsonMapper();
 		B3KeyEntity entityKey = new B3KeyEntity(Sport.class);
@@ -71,6 +85,10 @@ public class B3Engine {
 		return result;
 	}
 	
+	/* (non-Javadoc)
+	 * @see com.betbrain.b3.api.B3Api#listCountries()
+	 */
+	@Override
 	public Location[] listCountries() {
 		JsonMapper jsonMapper = new JsonMapper();
 		B3KeyEntity entityKey = new B3KeyEntity(Location.class);
@@ -106,6 +124,10 @@ public class B3Engine {
 		return result;
 	}*/
 	
+	/* (non-Javadoc)
+	 * @see com.betbrain.b3.api.B3Api#searchLeagues(java.lang.Long, java.lang.Long)
+	 */
+	@Override
 	public Event[] searchLeagues(Long sportId, Long countryId) {
 		JsonMapper jsonMapper = new JsonMapper();
 		B3KeyEvent eventKey = new B3KeyEvent(null, IDs.EVENTTYPE_GENERICTOURNAMENT, (String) null);
@@ -124,9 +146,23 @@ public class B3Engine {
 		return result;
 	}
 	
-	public Event[] searchMatches(long leagueId) {
+	/* (non-Javadoc)
+	 * @see com.betbrain.b3.api.B3Api#searchMatches(long, java.util.Date, java.util.Date)
+	 */
+	@Override
+	public Event[] searchMatches(long leagueId, Date fromTime, Date toTime) {
 		JsonMapper jsonMapper = new JsonMapper();
-		B3KeyEvent eventKey = new B3KeyEvent(leagueId, IDs.EVENTTYPE_GENERICMATCH, (String) null);
+		String fromTimeString = null;
+		if (fromTime != null) {
+			fromTimeString = B3Key.dateFormat.format(fromTime);
+		}
+		String toTimeString = null;
+		if (toTime != null) {
+			toTimeString = B3Key.dateFormat.format(toTime);
+		}
+		B3KeyEvent eventKey = new B3KeyEvent(leagueId, IDs.EVENTTYPE_GENERICMATCH, fromTimeString);
+		eventKey.rangeKeyEnd = toTimeString;
+		
 		@SuppressWarnings("unchecked")
 		ArrayList<B3Event> matches = (ArrayList<B3Event>) eventKey.listEntities(false, jsonMapper);
 		Event[] result = new Event[matches.size()];
@@ -139,6 +175,10 @@ public class B3Engine {
 		return result;
 	}
 	
+	/* (non-Javadoc)
+	 * @see com.betbrain.b3.api.B3Api#listBettingTypes()
+	 */
+	@Override
 	public BettingType[] listBettingTypes() {
 		JsonMapper jsonMapper = new JsonMapper();
 		B3KeyEntity entityKey = new B3KeyEntity(BettingType.class);
@@ -151,5 +191,17 @@ public class B3Engine {
 			index++;
 		}
 		return result;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.betbrain.b3.api.B3Api#reportDetailedOddsTable(long, long, long, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Boolean, java.lang.String)
+	 */
+	@Override
+	public LinkedList<DetailedOddsTableData> reportDetailedOddsTable(long matchId, long eventPartId, long bettingTypeId,
+			Float paramFloat1, Float paramFloat2, Float paramFloat3, Boolean paramBoolean1, String paramString1) {
+		DetailedOddsTable2 report = new DetailedOddsTable2(this, matchId, eventPartId, bettingTypeId,
+				paramFloat1, paramFloat2, paramFloat3, paramBoolean1, paramString1);
+		report.run();
+		return report.outputData;
 	}
 }
