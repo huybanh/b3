@@ -55,9 +55,11 @@ class DetailedOddsPart {
 
 		DetailedOddsColumnSet odds = new DetailedOddsColumnSet();
 		statuses.typeName = "Odds";
-		for (RevisionedEntity<B3BettingOffer> one : offerList) {
-			odds.add(new DetailedOddsItemOffer(one));
-			timeset.add(one.time);
+		if (offerList != null) {
+			for (RevisionedEntity<B3BettingOffer> one : offerList) {
+				odds.add(new DetailedOddsItemOffer(one));
+				timeset.add(one.time);
+			}
 		}
 		
 		timePoints.addAll(timeset);

@@ -55,11 +55,12 @@ public class DetailedOddsTable2 {
 		
 		JsonMapper jsonMapper = new JsonMapper();
 		DetailedOddsTable2 report = new DetailedOddsTable2(
-				217633296, IDs.EVENTPART_ORDINARYTIME, false, jsonMapper);
+				217600242, 2/*IDs.EVENTPART_ORDINARYTIME*/, true, jsonMapper);
 		report.run();
-		LinkedList<DetailedOddsTableData> data = report.outputData;
-		System.out.println("OUTPUT JSON");
-		System.out.println(jsonMapper.deepSerialize(data));
+		//LinkedList<DetailedOddsTableData> data = report.outputData;
+		System.out.println("REPORT OUTPUT");
+		//System.out.println(jsonMapper.deepSerialize(report.outputData));
+		System.out.println(new String(report.outStream.toByteArray()));
 	}
 	
 	public DetailedOddsTable2(long matchId, long eventPartId, boolean plainText, JsonMapper mapper) {
@@ -77,18 +78,26 @@ public class DetailedOddsTable2 {
 	public void run() {
 		queryData();
 		
-		for (int i = 0; i < offersWinner.length; i++) {
-			DetailedOddsPart part = new DetailedOddsPart("Winner", 
-					outcomesWinner.get(i).entity.getParamParticipantId1(),
-					statuses, scores, offersWinner[i], out);
-			if (outputData != null) {
-				outputData.add(part.data);
+		if (offersWinner.length > 0 || offersDraw.length > 0) {
+			for (int i = 0; i < offersWinner.length; i++) {
+				DetailedOddsPart part = new DetailedOddsPart("Winner", 
+						outcomesWinner.get(i).entity.getParamParticipantId1(),
+						statuses, scores, offersWinner[i], out);
+				if (outputData != null) {
+					outputData.add(part.data);
+				}
 			}
-		}
-		for (int i = 0; i < offersDraw.length; i++) {
-			DetailedOddsPart part = new DetailedOddsPart("Draw ", 
-					//outcomesDraw.get(i).entity.getParamParticipantId1(),
-					null, statuses, scores, offersDraw[i], out);
+			for (int i = 0; i < offersDraw.length; i++) {
+				DetailedOddsPart part = new DetailedOddsPart("Draw ", 
+						//outcomesDraw.get(i).entity.getParamParticipantId1(),
+						null, statuses, scores, offersDraw[i], out);
+				if (outputData != null) {
+					outputData.add(part.data);
+				}
+			}
+		} else {
+			DetailedOddsPart part = new DetailedOddsPart("Statuses & scores ",
+					null, statuses, scores, null, out);
 			if (outputData != null) {
 				outputData.add(part.data);
 			}

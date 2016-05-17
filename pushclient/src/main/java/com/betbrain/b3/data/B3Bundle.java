@@ -92,11 +92,11 @@ class B3Bundle {
 	}
 	
 	void ceaseThroughPuts() {
-		ceaseThroughPuts(offerTable, 200);
+		ceaseThroughPuts(offerTable, 100);
 		ceaseThroughPuts(eventTable, 5);
 		ceaseThroughPuts(eventInfoTable, 20);
-		ceaseThroughPuts(outcomeTable, 500);
-		ceaseThroughPuts(lookupTable, 700);
+		ceaseThroughPuts(outcomeTable, 200);
+		ceaseThroughPuts(lookupTable, 500);
 		ceaseThroughPuts(linkTable, 700);
 		ceaseThroughPuts(entityTable, 200);
 	}

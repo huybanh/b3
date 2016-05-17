@@ -3,11 +3,12 @@ package com.betbrain.b3.report;
 import java.util.ArrayList;
 
 import com.betbrain.b3.data.*;
+import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.*;
 
 public class EventQuery {
 
-	//private static JsonMapper jsonMapper = new JsonMapper();
+	private static JsonMapper jsonMapper = new JsonMapper();
 	
 	public static void main(String[] args) {
 		DynamoWorker.initBundleCurrent();
@@ -15,14 +16,14 @@ public class EventQuery {
 		//query(219387861);
 		//query(219501132);
 		//query(IDs.EVENT_PREMIERLEAGUE);
-		match(217562668L);
+		match(217600242);
 	}
 	
 	private static void match(long matchId) {
 		//match
-		//B3KeyEntity keyEntity = new B3KeyEntity(Event.class, matchId);
-		//Event match = keyEntity.load(jsonMapper);
-		//System.out.println("Match: " + match);
+		B3KeyEntity keyEntity = new B3KeyEntity(Event.class, matchId);
+		Event match = keyEntity.load(jsonMapper);
+		System.out.println("Match: " + match);
 		
 		//outcomes
 		B3KeyLink keyLink = new B3KeyLink(Event.class, matchId, Outcome.class, Outcome.PROPERTY_NAME_eventId);
