@@ -5,11 +5,13 @@ import java.util.ArrayList;
 import com.betbrain.b3.data.B3KeyEntity;
 import com.betbrain.b3.data.B3KeyEvent;
 import com.betbrain.b3.data.DynamoWorker;
+import com.betbrain.b3.model.B3BettingType;
 import com.betbrain.b3.model.B3Event;
 import com.betbrain.b3.model.B3Location;
 import com.betbrain.b3.model.B3Sport;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.b3.report.IDs;
+import com.betbrain.sepc.connector.sportsmodel.BettingType;
 import com.betbrain.sepc.connector.sportsmodel.Event;
 import com.betbrain.sepc.connector.sportsmodel.Location;
 import com.betbrain.sepc.connector.sportsmodel.Sport;
@@ -21,6 +23,9 @@ public class B3Engine {
 		b3.listSports();
 		b3.listCountries();
 		b3.searchLeagues(1L, 77L);
+		System.out.println("Matches");
+		b3.searchMatches(215754838);
+		b3.listBettingTypes();
 	}
 
 	public B3Engine() {
@@ -89,6 +94,35 @@ public class B3Engine {
 				result[index] = e;
 				System.out.println(result[index]);
 			}
+			index++;
+		}
+		return result;
+	}
+	
+	public Event[] searchMatches(long leagueId) {
+		JsonMapper jsonMapper = new JsonMapper();
+		B3KeyEvent eventKey = new B3KeyEvent(leagueId, IDs.EVENTTYPE_GENERICMATCH, (String) null);
+		@SuppressWarnings("unchecked")
+		ArrayList<B3Event> matches = (ArrayList<B3Event>) eventKey.listEntities(false, jsonMapper);
+		Event[] result = new Event[matches.size()];
+		int index = 0;
+		for (Object one : matches) {
+			result[index] = ((B3Event) one).entity;
+			System.out.println(result[index]);
+			index++;
+		}
+		return result;
+	}
+	
+	public BettingType[] listBettingTypes() {
+		JsonMapper jsonMapper = new JsonMapper();
+		B3KeyEntity entityKey = new B3KeyEntity(BettingType.class);
+		ArrayList<?> allSports = entityKey.listEntities(false, B3BettingType.class, jsonMapper);
+		BettingType[] result = new BettingType[allSports.size()];
+		int index = 0;
+		for (Object one : allSports) {
+			result[index] = ((B3BettingType) one).entity;
+			System.out.println(result[index]);
 			index++;
 		}
 		return result;

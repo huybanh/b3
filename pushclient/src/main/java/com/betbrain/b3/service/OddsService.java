@@ -11,34 +11,37 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import com.betbrain.b3.api.B3Engine;
 import com.betbrain.b3.data.B3KeyEvent;
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.model.B3Event;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.b3.report.IDs;
 import com.betbrain.b3.report.detailedodds.DetailedOddsTable2;
+import com.betbrain.sepc.connector.sportsmodel.Event;
  
 @Path("/odds")
 public class OddsService {
 	
 	private JsonMapper mapper = new JsonMapper();
+	B3Engine b3 = new B3Engine();
 	
 	public static void main(String[] args) {
 		DynamoWorker.initBundleCurrent();
-		new OddsService().detailedOddsTable(217633296, 3, true, "text");
+		new OddsService().detailedOddsTable(217633296, 3, IDs.BETTINGTYPE_1X2, true, "text");
 	}
 	
 	@GET
 	@Path("league/{leagueId}/matchIds")
 	@Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
 	public Response listMatches(@PathParam("leagueId") long leagueId) {
-		B3KeyEvent eventKey = new B3KeyEvent(leagueId, IDs.EVENTTYPE_GENERICMATCH, (String) null);
+		/*B3KeyEvent eventKey = new B3KeyEvent(leagueId, IDs.EVENTTYPE_GENERICMATCH, (String) null);
 		@SuppressWarnings("unchecked")
-		ArrayList<B3Event> eventIds = (ArrayList<B3Event>) eventKey.listEntities(false, mapper);
-		
+		ArrayList<B3Event> eventIds = (ArrayList<B3Event>) eventKey.listEntities(false, mapper);*/
+		Event[] matches = b3.searchMatches(leagueId);
 		String s = "";
-		for (B3Event e : eventIds) {
-			s += e.entity.getId() + "\n";
+		for (Event e : matches) {
+			s += e.getId() + "\n";
 		}
 		return Response.status(200).entity(s).build();
 	}
@@ -47,7 +50,8 @@ public class OddsService {
 	@Path("/detailedtable/{matchid}")
 	@Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
 	public Response detailedOddsTable(@PathParam("matchid") long matchId, 
-			@DefaultValue("3") @QueryParam("eventPartId") long eventPartId,
+			@QueryParam("eventPartId") long eventPartId,
+			@QueryParam("bettingTypeId") long bettingTypeId,
 			@DefaultValue("false") @QueryParam("prettyPrint") boolean prettyPrint,
 			//@HeaderParam("Accept") String accepted) {
 			@QueryParam("format") String format) {
@@ -59,7 +63,8 @@ public class OddsService {
 		if (format != null && "text".equalsIgnoreCase(format)) {
 			plainText = true;
 		}
-		DetailedOddsTable2 report = new DetailedOddsTable2(matchId, eventPartId, plainText, mapper);
+		DetailedOddsTable2 report = new DetailedOddsTable2(matchId, eventPartId, bettingTypeId, mapper);
+		report.plainText = plainText;
 		report.run();
 		
 		if (!plainText) {

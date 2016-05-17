@@ -6,6 +6,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -21,6 +22,7 @@ public class DetailedOddsTable2 {
 	//report inputs
 	private final long matchId;
 	private final long eventPartId;
+	private final long bettingType;
 	
 	private ArrayList<RevisionedEntity<B3EventInfo>> statuses;
 	private ArrayList<RevisionedEntity<B3EventInfo>> scores;
@@ -29,6 +31,9 @@ public class DetailedOddsTable2 {
 	
 	private ArrayList<B3Outcome> outcomesDraw;
 	private ArrayList<B3Outcome> outcomesWinner;
+	//private HashMap<Long, ArrayList<B3Outcome>> outcomes;
+	
+	public boolean plainText = false;
 	
 	public LinkedList<DetailedOddsTableData> outputData;
 	
@@ -55,7 +60,8 @@ public class DetailedOddsTable2 {
 		
 		JsonMapper jsonMapper = new JsonMapper();
 		DetailedOddsTable2 report = new DetailedOddsTable2(
-				217600242, 2/*IDs.EVENTPART_ORDINARYTIME*/, true, jsonMapper);
+				217600242, 2/*IDs.EVENTPART_ORDINARYTIME*/, IDs.BETTINGTYPE_1X2, jsonMapper);
+		report.plainText = true;
 		report.run();
 		//LinkedList<DetailedOddsTableData> data = report.outputData;
 		System.out.println("REPORT OUTPUT");
@@ -63,9 +69,10 @@ public class DetailedOddsTable2 {
 		System.out.println(new String(report.outStream.toByteArray()));
 	}
 	
-	public DetailedOddsTable2(long matchId, long eventPartId, boolean plainText, JsonMapper mapper) {
+	public DetailedOddsTable2(long matchId, long eventPartId, long bettingType, JsonMapper mapper) {
 		this.matchId = matchId;
 		this.eventPartId = eventPartId;
+		this.bettingType = bettingType;
 		this.mapper = mapper;
 		if (plainText) {
 			outStream = new ByteArrayOutputStream();
@@ -148,7 +155,7 @@ public class DetailedOddsTable2 {
 		for (int i = 0; i < outcomesDraw.size(); i++) {
 			//System.out.println("outcome: " + outcomesDraw.get(i).entity);
 			B3KeyOffer offerKey = new B3KeyOffer(matchId, eventPartId, 
-					IDs.OUTCOMETYPE_DRAW, outcomesDraw.get(i).entity.getId(), IDs.BETTINGTYPE_1X2, null);
+					IDs.OUTCOMETYPE_DRAW, outcomesDraw.get(i).entity.getId(), bettingType, null);
 			offersDraw[i] = (ArrayList<RevisionedEntity<B3BettingOffer>>) offerKey.listEntities(true, mapper);
 		}
 
@@ -156,7 +163,7 @@ public class DetailedOddsTable2 {
 		for (int i = 0; i < outcomesWinner.size(); i++) {
 			//System.out.println("outcome: " + outcomesWinner.get(i).entity);
 			B3KeyOffer offerKey = new B3KeyOffer(matchId, eventPartId, 
-					IDs.OUTCOMETYPE_WINNER, outcomesWinner.get(i).entity.getId(), IDs.BETTINGTYPE_1X2, null);
+					IDs.OUTCOMETYPE_WINNER, outcomesWinner.get(i).entity.getId(), bettingType, null);
 			offersWinner[i] = (ArrayList<RevisionedEntity<B3BettingOffer>>) offerKey.listEntities(true, mapper);
 		}
 		
