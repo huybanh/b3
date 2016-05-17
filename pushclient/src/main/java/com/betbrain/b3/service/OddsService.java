@@ -1,7 +1,5 @@
 package com.betbrain.b3.service;
 
-import java.util.ArrayList;
-
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -12,9 +10,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.betbrain.b3.api.B3Engine;
-import com.betbrain.b3.data.B3KeyEvent;
 import com.betbrain.b3.data.DynamoWorker;
-import com.betbrain.b3.model.B3Event;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.b3.report.IDs;
 import com.betbrain.b3.report.detailedodds.DetailedOddsTable2;
@@ -23,8 +19,7 @@ import com.betbrain.sepc.connector.sportsmodel.Event;
 @Path("/odds")
 public class OddsService {
 	
-	private JsonMapper mapper = new JsonMapper();
-	B3Engine b3 = new B3Engine();
+	private B3Engine b3 = new B3Engine();
 	
 	public static void main(String[] args) {
 		DynamoWorker.initBundleCurrent();
@@ -63,13 +58,14 @@ public class OddsService {
 		if (format != null && "text".equalsIgnoreCase(format)) {
 			plainText = true;
 		}
-		DetailedOddsTable2 report = new DetailedOddsTable2(matchId, eventPartId, bettingTypeId, mapper);
-		report.plainText = plainText;
+		DetailedOddsTable2 report = new DetailedOddsTable2(b3, matchId, eventPartId, bettingTypeId);
+		report.setPlainText(plainText);
 		report.run();
 		
 		if (!plainText) {
 			//LinkedList<DetailedOddsTableData> reportData = report.outputData;
 			//return reportData.toArray(new DetailedOddsTableData[reportData.size()]);
+			JsonMapper mapper = new JsonMapper();
 			mapper.prettyPrint(prettyPrint);
 			return Response.status(200).entity(mapper.deepSerialize(report.outputData)).build();
 		} else {

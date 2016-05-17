@@ -1,6 +1,8 @@
 package com.betbrain.b3.api;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 
 import com.betbrain.b3.data.B3KeyEntity;
 import com.betbrain.b3.data.B3KeyEvent;
@@ -8,15 +10,19 @@ import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.model.B3BettingType;
 import com.betbrain.b3.model.B3Event;
 import com.betbrain.b3.model.B3Location;
+import com.betbrain.b3.model.B3OutcomeTypeBettingTypeRelation;
 import com.betbrain.b3.model.B3Sport;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.b3.report.IDs;
 import com.betbrain.sepc.connector.sportsmodel.BettingType;
 import com.betbrain.sepc.connector.sportsmodel.Event;
 import com.betbrain.sepc.connector.sportsmodel.Location;
+import com.betbrain.sepc.connector.sportsmodel.OutcomeTypeBettingTypeRelation;
 import com.betbrain.sepc.connector.sportsmodel.Sport;
 
-public class B3Engine { 
+public class B3Engine {
+	
+	private final HashMap<Long, LinkedList<Long>> outcomeTypesByBettingType = new HashMap<>();
 	
 	public static void main(String[] args) {
 		B3Engine b3 = new B3Engine();
@@ -30,6 +36,25 @@ public class B3Engine {
 
 	public B3Engine() {
 		DynamoWorker.initBundleCurrent();
+		
+		B3KeyEntity entityKey = new B3KeyEntity(OutcomeTypeBettingTypeRelation.class);
+		JsonMapper jsonMapper = new JsonMapper();
+		@SuppressWarnings("unchecked")
+		ArrayList<B3OutcomeTypeBettingTypeRelation> relations = 
+				(ArrayList<B3OutcomeTypeBettingTypeRelation>) entityKey.listEntities(false, B3OutcomeTypeBettingTypeRelation.class, jsonMapper);
+		for (B3OutcomeTypeBettingTypeRelation one : relations) {
+			LinkedList<Long> outcomeTypeIdList = outcomeTypesByBettingType.get(one.entity.getBettingTypeId());
+			if (outcomeTypeIdList == null) {
+				outcomeTypeIdList = new LinkedList<>();
+				outcomeTypesByBettingType.put(one.entity.getBettingTypeId(), outcomeTypeIdList);
+			}
+			outcomeTypeIdList.add(one.entity.getOutcomeTypeId());
+		}
+	}
+	
+	public Long[] getOutcomeTypeIds(long bettingTypeId) {
+		LinkedList<Long> idList = outcomeTypesByBettingType.get(bettingTypeId);
+		return idList.toArray(new Long[idList.size()]);
 	}
 	
 	public Sport[] listSports() {

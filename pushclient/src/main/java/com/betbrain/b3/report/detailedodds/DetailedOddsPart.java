@@ -14,6 +14,7 @@ import com.betbrain.b3.data.RevisionedEntity;
 import com.betbrain.b3.model.B3BettingOffer;
 import com.betbrain.b3.model.B3Entity;
 import com.betbrain.b3.model.B3EventInfo;
+import com.betbrain.b3.model.B3Outcome;
 import com.betbrain.sepc.connector.sportsmodel.Provider;
 
 class DetailedOddsPart {
@@ -22,17 +23,29 @@ class DetailedOddsPart {
 	
 	DetailedOddsTableData data;
 
-	public DetailedOddsPart(String outcomeTypeCaption, Long participantId, 
+	public DetailedOddsPart(/*String outcomeTypeCaption, Long participantId, */
+			B3Outcome outcome,
 			ArrayList<RevisionedEntity<B3EventInfo>> statusList,
 			ArrayList<RevisionedEntity<B3EventInfo>> scoreList, 
 			ArrayList<RevisionedEntity<B3BettingOffer>> offerList,
 			PrintStream out) {
 		
-		String caption = "Detailed Odds Table: " + outcomeTypeCaption;
+		/*String caption = "Detailed Odds Table: " + outcomeTypeCaption;
 		if (participantId != null) {
 				caption += " (participant id: " + participantId + ")";
-		}
+		}*/
 		
+		String caption;
+		if (outcome == null) {
+			caption = "Statuses & scores";
+		} else {
+			//long outcomeId = offerList.get(0).b3entity.entity.getOutcomeId();
+			caption = "Detailed Odds Table: " + outcome.type.entity.getName(); 
+			Long p = outcome.entity.getParamParticipantId1();
+			if (p != null) {
+				caption += " (participant " + p + ")";
+			}
+		}
 		if (out == null) {
 			data = new DetailedOddsTableData();
 			data.setCaption(caption);

@@ -237,8 +237,8 @@ public class DynamoWorker {
 		settingTable.updateItem(spec);
 	}
 	
-	public static boolean readOnly = true;
-	//public static boolean readOnly = false;
+	//public static boolean readOnly = true;
+	public static boolean readOnly = false;
 
 	/*public static void put(B3Update update) {
 		put(update.table, update.key.getHashKey(), update.key.getRangeKey(), update.cells);

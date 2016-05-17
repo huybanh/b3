@@ -19,6 +19,7 @@ import com.betbrain.b3.model.B3LocationType;
 import com.betbrain.b3.model.B3Outcome;
 import com.betbrain.b3.model.B3OutcomeStatus;
 import com.betbrain.b3.model.B3OutcomeType;
+import com.betbrain.b3.model.B3OutcomeTypeBettingTypeRelation;
 import com.betbrain.b3.model.B3Participant;
 import com.betbrain.b3.model.B3Provider;
 import com.betbrain.b3.model.B3Source;
@@ -53,6 +54,8 @@ public enum EntitySpec2 {
 			com.betbrain.sepc.connector.sportsmodel.Location.class),
 	LocationType("LT", null, false, B3LocationType.class,
 			com.betbrain.sepc.connector.sportsmodel.LocationType.class),
+	OutcomeTypeBettingTypeRelation("OB", null, false, B3OutcomeTypeBettingTypeRelation.class,
+			com.betbrain.sepc.connector.sportsmodel.OutcomeTypeBettingTypeRelation.class),
 	Outcome("OC", B3Table.Outcome, false, B3Outcome.class,
 			com.betbrain.sepc.connector.sportsmodel.Outcome.class),
 	OutcomeStatus("OS", null, false, B3OutcomeStatus.class,
