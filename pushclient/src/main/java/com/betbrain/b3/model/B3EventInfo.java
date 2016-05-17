@@ -12,7 +12,6 @@ import com.betbrain.sepc.connector.sportsmodel.EventInfo;
 import com.betbrain.sepc.connector.sportsmodel.EventInfoType;
 import com.betbrain.sepc.connector.sportsmodel.EventPart;
 import com.betbrain.sepc.connector.sportsmodel.Provider;
-import com.betbrain.sepc.connector.sportsmodel.Source;
 
 public class B3EventInfo extends B3Entity<EventInfo> {
 

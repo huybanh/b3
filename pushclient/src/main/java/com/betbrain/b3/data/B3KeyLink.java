@@ -73,6 +73,9 @@ public class B3KeyLink extends B3Key {
 	
 	@Override
 	String getRangeKeyInternal() {
+		if (linkedEntityId == null) {
+			return null;
+		}
 		return String.valueOf(linkedEntityId); 
 	}
 	
