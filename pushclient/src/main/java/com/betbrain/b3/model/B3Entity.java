@@ -94,7 +94,7 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 	}
 
 	public void load(Item item, JsonMapper mapper) {
-		throw new RuntimeException("Entity must override this");
+		throw new RuntimeException("Entity must override this: " + this.getClass().getName());
 	}
 
 	@SuppressWarnings("unchecked")

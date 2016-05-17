@@ -110,10 +110,10 @@ class B3Bundle {
 		tables[i++] = createTable(dynamoDB, id, "offer", 1, 500, true);
 		tables[i++] = createTable(dynamoDB, id, "event", 1, 100, true);
 		tables[i++] = createTable(dynamoDB, id, "event_info", 1, 50, true);
-		tables[i++] = createTable(dynamoDB, id, "outcome", 1, 1500, true);
-		tables[i++] = createTable(dynamoDB, id, "lookup", 1, capaHigh, true);
+		tables[i++] = createTable(dynamoDB, id, "outcome", 1, 500, true);
+		tables[i++] = createTable(dynamoDB, id, "lookup", 1, 1000, true);
 		tables[i++] = createTable(dynamoDB, id, "link", 1, capaHigh, true);
-		tables[i++] = createTable(dynamoDB, id, "entity", 1, 1500, true);
+		tables[i++] = createTable(dynamoDB, id, "entity", 1, 1000, true);
 		//tables[i++] = createTable(dynamoDB, id, "sepc", 1, 400/*capaLow*/, true);
 		for (Table t : tables) {
 			try {

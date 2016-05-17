@@ -14,9 +14,12 @@ import com.betbrain.b3.model.B3EventPart;
 import com.betbrain.b3.model.B3EventStatus;
 import com.betbrain.b3.model.B3EventTemplate;
 import com.betbrain.b3.model.B3EventType;
+import com.betbrain.b3.model.B3Location;
+import com.betbrain.b3.model.B3LocationType;
 import com.betbrain.b3.model.B3Outcome;
 import com.betbrain.b3.model.B3OutcomeStatus;
 import com.betbrain.b3.model.B3OutcomeType;
+import com.betbrain.b3.model.B3Participant;
 import com.betbrain.b3.model.B3Provider;
 import com.betbrain.b3.model.B3Source;
 import com.betbrain.b3.model.B3Sport;
@@ -46,12 +49,18 @@ public enum EntitySpec2 {
 			com.betbrain.sepc.connector.sportsmodel.EventTemplate.class),
 	EventType("ET", null, false, B3EventType.class,
 			com.betbrain.sepc.connector.sportsmodel.EventType.class),
+	Location("LO", null, false, B3Location.class,
+			com.betbrain.sepc.connector.sportsmodel.Location.class),
+	LocationType("LT", null, false, B3LocationType.class,
+			com.betbrain.sepc.connector.sportsmodel.LocationType.class),
 	Outcome("OC", B3Table.Outcome, false, B3Outcome.class,
 			com.betbrain.sepc.connector.sportsmodel.Outcome.class),
 	OutcomeStatus("OS", null, false, B3OutcomeStatus.class,
 			com.betbrain.sepc.connector.sportsmodel.OutcomeStatus.class),
 	OutcomeType("OT", null, false, B3OutcomeType.class,
 			com.betbrain.sepc.connector.sportsmodel.OutcomeType.class),
+	Participant("PA", null, false, B3Participant.class,
+			com.betbrain.sepc.connector.sportsmodel.Participant.class),
 	Provider("PR", null, false, B3Provider.class,
 			com.betbrain.sepc.connector.sportsmodel.Provider.class),
 	Source("SO", null, false, B3Source.class,

@@ -20,6 +20,8 @@ public class IDs {
 	
 	public static final long BETTINGTYPE_1X2 = 69;
 	
+	public static final long LOCATIONTYPE_COUNTRY = 1;
+	
 	public static void main(String[] args) {
 		System.out.println(new Integer(12345).hashCode());
 		System.out.println(new Integer(12346).hashCode());
