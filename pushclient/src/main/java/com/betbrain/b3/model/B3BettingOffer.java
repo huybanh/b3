@@ -12,13 +12,12 @@ import com.betbrain.sepc.connector.sportsmodel.BettingType;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Outcome;
 import com.betbrain.sepc.connector.sportsmodel.Provider;
-import com.betbrain.sepc.connector.sportsmodel.Source;
 
 public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 	
 	public B3Provider provider;
 	
-	public B3Source source;
+	//public B3Source source;
 	
 	public B3Outcome outcome;
 	
@@ -45,7 +44,7 @@ public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 		addDownlinkUnfollowed(BettingOffer.PROPERTY_NAME_outcomeId, Outcome.class/*, entity.getOutcomeId()*/);
 		
 		addDownlink(BettingOffer.PROPERTY_NAME_providerId, Provider.class, provider);
-		addDownlink(BettingOffer.PROPERTY_NAME_sourceId, Source.class, source);
+		//addDownlink(BettingOffer.PROPERTY_NAME_sourceId, Source.class, source);
 		addDownlink(BettingOffer.PROPERTY_NAME_bettingTypeId, BettingType.class, bettingType);
 		addDownlink(BettingOffer.PROPERTY_NAME_statusId, BettingOfferStatus.class, status);
 	}
@@ -60,8 +59,8 @@ public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 		}
 		this.provider = build(forMainKeyOnly, entity.getProviderId(), new B3Provider(), 
 				Provider.class, masterMap, mapper);
-		this.source = build(forMainKeyOnly, entity.getSourceId(), new B3Source(), 
-				Source.class, masterMap, mapper);
+		//this.source = build(forMainKeyOnly, entity.getSourceId(), new B3Source(), 
+		//		Source.class, masterMap, mapper);
 		this.bettingType = build(forMainKeyOnly, entity.getBettingTypeId(), 
 				new B3BettingType(), BettingType.class, masterMap, mapper);
 		this.status = build(forMainKeyOnly, entity.getStatusId(), 

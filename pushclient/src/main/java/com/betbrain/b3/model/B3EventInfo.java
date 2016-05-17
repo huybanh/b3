@@ -17,7 +17,7 @@ import com.betbrain.sepc.connector.sportsmodel.Source;
 public class B3EventInfo extends B3Entity<EventInfo> {
 
 	public B3Provider provider;
-	public B3Source source;
+	//public B3Source source;
 	public B3EventInfoType type;
 	
 	//package private
@@ -44,7 +44,7 @@ public class B3EventInfo extends B3Entity<EventInfo> {
 		addDownlinkUnfollowed(EventInfo.PROPERTY_NAME_eventPartId, EventPart.class/*, entity.getEventPartId()*/);
 		
 		addDownlink(EventInfo.PROPERTY_NAME_providerId, Provider.class, provider);
-		addDownlink(EventInfo.PROPERTY_NAME_sourceId, Source.class, source);
+		//addDownlink(EventInfo.PROPERTY_NAME_sourceId, Source.class, source);
 		addDownlink(EventInfo.PROPERTY_NAME_typeId, EventInfoType.class, type);
 	}
 
@@ -59,8 +59,8 @@ public class B3EventInfo extends B3Entity<EventInfo> {
 		}
 		this.provider = build(forMainKeyOnly, entity.getProviderId(), new B3Provider(),
 				Provider.class, masterMap, mapper);
-		this.source = build(forMainKeyOnly, entity.getSourceId(), new B3Source(), 
-				Source.class, masterMap, mapper);
+		//this.source = build(forMainKeyOnly, entity.getSourceId(), new B3Source(), 
+		//		Source.class, masterMap, mapper);
 		this.type = build(forMainKeyOnly, entity.getTypeId(), new B3EventInfoType(), 
 				EventInfoType.class, masterMap, mapper);
 		
