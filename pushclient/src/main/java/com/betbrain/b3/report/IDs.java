@@ -19,6 +19,7 @@ public class IDs {
 	public static final long OUTCOMETYPE_WINNER = 10;
 	
 	public static final long BETTINGTYPE_1X2 = 69;
+	public static final long BETTINGTYPE_ASIANHANDICAP = 8;
 	public static final long BETTINGTYPE_OVERUNDER = 47;
 	
 	public static final long LOCATIONTYPE_COUNTRY = 1;
