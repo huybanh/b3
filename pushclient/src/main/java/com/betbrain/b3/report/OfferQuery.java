@@ -14,19 +14,18 @@ public class OfferQuery {
 	
 	public static void main(String[] args) {
 		
-		//DynamoWorker.initBundleCurrent();
-		DynamoWorker.initBundleByStatus("SPRINT2");
+		DynamoWorker.initBundleCurrent();
 		offer(217562668L, IDs.OUTCOMETYPE_WINNER, 2954860246L, IDs.BETTINGTYPE_1X2);
 	}
 	
 	private static void offer(long eventId, long outcomeTypeId, long outcomeId, long bettingTypeId) {
 		System.out.println("Offers");
-		B3KeyOffer offerKey = new B3KeyOffer(1L, 1L, eventId, outcomeTypeId, outcomeId, bettingTypeId, null);
+		B3KeyOffer offerKey = new B3KeyOffer(219900664L, 3L, 14L, 3044603660L, 47L, null);
 		@SuppressWarnings("unchecked")
 		ArrayList<RevisionedEntity<B3BettingOffer>> offers = 
 				(ArrayList<RevisionedEntity<B3BettingOffer>>) offerKey.listEntities(true, mapper);
 		for (RevisionedEntity<B3BettingOffer> one : offers) {
-			System.out.println(one.b3entity);
+			System.out.println(one.b3entity.entity);
 		}
 	}
 }
