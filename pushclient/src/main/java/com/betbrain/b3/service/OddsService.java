@@ -61,11 +61,12 @@ public class OddsService {
 		@SuppressWarnings("unchecked")
 		ArrayList<B3Event> eventIds = (ArrayList<B3Event>) eventKey.listEntities(false, mapper);*/
 		Event[] matches = b3.searchMatches(leagueId, fromTime, toTime);
-		String s = "";
+		/*String s = "";
 		for (Event e : matches) {
 			s += e.getId() + "\n";
-		}
-		return Response.status(200).entity(s).build();
+		}*/
+		JsonMapper mapper = new JsonMapper();
+		return Response.status(200).entity(mapper.serialize(matches)).build();
 	}
 	
 	@GET

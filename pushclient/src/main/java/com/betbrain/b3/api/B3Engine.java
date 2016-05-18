@@ -3,6 +3,7 @@ package com.betbrain.b3.api;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 
 import com.betbrain.b3.data.B3Key;
@@ -40,12 +41,17 @@ public class B3Engine implements B3Api {
 	
 	public static void main(String[] args) {
 		B3Api b3 = new B3Engine();
-		b3.listSports();
-		b3.listCountries();
-		b3.searchLeagues(1L, 77L);
-		System.out.println("Matches");
-		b3.searchMatches(215754838, null, null);
-		b3.listBettingTypes();
+		//b3.listSports();
+		//Location[] result = b3.listCountries();
+		//b3.searchLeagues(1L, 77L);
+		//System.out.println("Matches");
+		//b3.searchMatches(215754838, null, null);
+		//b3.listBettingTypes();
+		LinkedList<DetailedOddsTableData> result = b3.reportDetailedOddsTable(219900664L, 3L, 47L, null, null, null, null, null);
+		
+		for (Object o : result) {
+			System.out.println(o);
+		}
 	}
 
 	public B3Engine() {
@@ -57,6 +63,7 @@ public class B3Engine implements B3Api {
 		ArrayList<B3OutcomeTypeBettingTypeRelation> relations = 
 				(ArrayList<B3OutcomeTypeBettingTypeRelation>) entityKey.listEntities(false, B3OutcomeTypeBettingTypeRelation.class, jsonMapper);
 		for (B3OutcomeTypeBettingTypeRelation one : relations) {
+			System.out.println(one.entity.getId() + ": " + one.entity.getBettingTypeId() + "->" + one.entity.getOutcomeTypeId());
 			LinkedList<Long> outcomeTypeIdList = outcomeTypesByBettingType.get(one.entity.getBettingTypeId());
 			if (outcomeTypeIdList == null) {
 				outcomeTypeIdList = new LinkedList<>();
@@ -68,13 +75,11 @@ public class B3Engine implements B3Api {
 	
 	public Long[] getOutcomeTypeIds(long bettingTypeId) {
 		LinkedList<Long> idList = outcomeTypesByBettingType.get(bettingTypeId);
-		int count;
 		if (idList == null) {
-			count = 0;
+			return new Long[0];
 		} else {
-			count = idList.size();
+			return idList.toArray(new Long[idList.size()]);
 		}
-		return idList.toArray(new Long[count]);
 	}
 	
 	/* (non-Javadoc)
@@ -103,17 +108,15 @@ public class B3Engine implements B3Api {
 		JsonMapper jsonMapper = new JsonMapper();
 		B3KeyEntity entityKey = new B3KeyEntity(Location.class);
 		ArrayList<?> allLocs = entityKey.listEntities(false, B3Location.class, jsonMapper);
-		Location[] result = new Location[allLocs.size()];
-		int index = 0;
-		for (Object one : allLocs) {
-			Location loc = ((B3Location) one).entity;
+		LinkedList<Location> result = new LinkedList<>();
+		Iterator<?> it = allLocs.iterator();
+		while (it.hasNext()) {
+			Location loc = ((B3Location) it.next()).entity;
 			if (loc.getTypeId() == IDs.LOCATIONTYPE_COUNTRY) {
-				result[index] = loc;
-				System.out.println(result[index]);
+				result.add(loc);
 			}
-			index++;
 		}
-		return result;
+		return result.toArray(new Location[result.size()]);
 	}
 	
 	/*public Location[] getCountries() {
@@ -142,18 +145,16 @@ public class B3Engine implements B3Api {
 		JsonMapper jsonMapper = new JsonMapper();
 		B3KeyEvent eventKey = new B3KeyEvent(null, IDs.EVENTTYPE_GENERICTOURNAMENT, (String) null);
 		ArrayList<?> allLeagues = eventKey.listEntities(false, jsonMapper);
-		Event[] result = new Event[allLeagues.size()];
-		int index = 0;
-		for (Object one : allLeagues) {
-			Event e = ((B3Event) one).entity;
+		LinkedList<Event> result = new LinkedList<>();
+		Iterator<?> it = allLeagues.iterator();
+		while (it.hasNext()) {
+			Event e = ((B3Event) it.next()).entity;
 			if ((sportId == null || e.getSportId() == sportId)
 					&& (countryId == null || e.getVenueId() == countryId)) {
-				result[index] = e;
-				System.out.println(result[index]);
+				result.add(e);
 			}
-			index++;
 		}
-		return result;
+		return result.toArray(new Event[result.size()]);
 	}
 	
 	/* (non-Javadoc)
