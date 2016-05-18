@@ -20,7 +20,7 @@ import com.betbrain.sepc.connector.sportsmodel.Event;
 @Path("/b3")
 public class OddsService {
 	
-	private B3Engine b3 = new B3Engine();
+	private static B3Engine b3 = new B3Engine();
 	
 	public static void main(String[] args) {
 		//DynamoWorker.initBundleCurrent();
@@ -30,7 +30,7 @@ public class OddsService {
 	
 	@GET
 	@Path("/sports")
-	@Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+	@Produces({MediaType.TEXT_PLAIN})
 	public Response listSports() {
 		JsonMapper mapper = new JsonMapper();
 		return Response.status(200).entity(mapper.serialize(b3.listSports())).build();
@@ -38,7 +38,7 @@ public class OddsService {
 	
 	@GET
 	@Path("/countries")
-	@Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+	@Produces({MediaType.TEXT_PLAIN})
 	public Response listCountries() {
 		JsonMapper mapper = new JsonMapper();
 		return Response.status(200).entity(mapper.serialize(b3.listCountries())).build();
@@ -46,7 +46,7 @@ public class OddsService {
 	
 	@GET
 	@Path("/countries/{countryId}/leagues")
-	@Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+	@Produces({MediaType.TEXT_PLAIN})
 	public Response listLeagues(@PathParam("countryId") Long countryId, @QueryParam("sportId") Long sportId) {
 		JsonMapper mapper = new JsonMapper();
 		return Response.status(200).entity(mapper.serialize(b3.searchLeagues(sportId, countryId))).build();
@@ -54,7 +54,7 @@ public class OddsService {
 	
 	@GET
 	@Path("/leagues/{leagueId}/matches")
-	@Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+	@Produces({MediaType.TEXT_PLAIN})
 	public Response listMatches(@PathParam("leagueId") long leagueId, 
 			@QueryParam("fromDate") Date fromTime, @QueryParam("toDate") Date toTime) {
 		/*B3KeyEvent eventKey = new B3KeyEvent(leagueId, IDs.EVENTTYPE_GENERICMATCH, (String) null);

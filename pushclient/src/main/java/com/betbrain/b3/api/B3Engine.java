@@ -24,6 +24,16 @@ import com.betbrain.sepc.connector.sportsmodel.Location;
 import com.betbrain.sepc.connector.sportsmodel.OutcomeTypeBettingTypeRelation;
 import com.betbrain.sepc.connector.sportsmodel.Sport;
 
+/**
+ * B3Engine provides high level API to access data, reports in AWS dynamodb.
+ * 
+ * Instantiation of B3Engine is heavy. Clients are recommended to instantiate B3Engine once,
+ * and reuse the instance for all subsequent requests.
+ * 
+ * Thread safety: all methods of B3Engine are thread-safe
+ * 
+ * @author huybanh
+ */
 public class B3Engine implements B3Api {
 	
 	private final HashMap<Long, LinkedList<Long>> outcomeTypesByBettingType = new HashMap<>();

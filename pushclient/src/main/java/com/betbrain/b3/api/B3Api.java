@@ -9,6 +9,12 @@ import com.betbrain.sepc.connector.sportsmodel.Event;
 import com.betbrain.sepc.connector.sportsmodel.Location;
 import com.betbrain.sepc.connector.sportsmodel.Sport;
 
+/**
+ * 
+ * 
+ * @author huybanh
+ *
+ */
 public interface B3Api {
 
 	Sport[] listSports();
