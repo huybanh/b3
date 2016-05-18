@@ -47,7 +47,7 @@ public class B3Engine implements B3Api {
 		//System.out.println("Matches");
 		//b3.searchMatches(215754838, null, null);
 		//b3.listBettingTypes();
-		LinkedList<DetailedOddsTableData> result = b3.reportDetailedOddsTable(219900664L, 3L, 47L, null, null, null, null, null);
+		LinkedList<DetailedOddsTableData> result = b3.reportDetailedOddsTable(219900664L, 3L, 47L, 1F, null, null, null, null);
 		
 		for (Object o : result) {
 			System.out.println(o);
@@ -63,7 +63,7 @@ public class B3Engine implements B3Api {
 		ArrayList<B3OutcomeTypeBettingTypeRelation> relations = 
 				(ArrayList<B3OutcomeTypeBettingTypeRelation>) entityKey.listEntities(false, B3OutcomeTypeBettingTypeRelation.class, jsonMapper);
 		for (B3OutcomeTypeBettingTypeRelation one : relations) {
-			System.out.println(one.entity.getId() + ": " + one.entity.getBettingTypeId() + "->" + one.entity.getOutcomeTypeId());
+			//System.out.println(one.entity.getId() + ": " + one.entity.getBettingTypeId() + "->" + one.entity.getOutcomeTypeId());
 			LinkedList<Long> outcomeTypeIdList = outcomeTypesByBettingType.get(one.entity.getBettingTypeId());
 			if (outcomeTypeIdList == null) {
 				outcomeTypeIdList = new LinkedList<>();

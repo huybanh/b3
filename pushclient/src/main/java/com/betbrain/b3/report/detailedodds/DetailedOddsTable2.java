@@ -66,8 +66,8 @@ public class DetailedOddsTable2 {
 		
 		//JsonMapper jsonMapper = new JsonMapper();
 		DetailedOddsTable2 report = new DetailedOddsTable2(new B3Engine(),
-				219900664, IDs.EVENTPART_ORDINARYTIME, IDs.BETTINGTYPE_1X2,
-				null, null, null, null, null);
+				219900664L, IDs.EVENTPART_ORDINARYTIME, IDs.BETTINGTYPE_OVERUNDER,
+				1F, null, null, null, null);
 		report.setPlainText(true);
 		report.run();
 		//LinkedList<DetailedOddsTableData> data = report.outputData;
@@ -188,9 +188,10 @@ public class DetailedOddsTable2 {
 		
 		offers = new ArrayList[outcomes.size()];
 		for (int i = 0; i < outcomes.size(); i++) {
-			//System.out.println("outcome: " + outcomesDraw.get(i).entity);
+			B3Outcome oneOutcome = outcomes.get(i);
+			System.out.println("outcome: " + oneOutcome.entity);
 			B3KeyOffer offerKey = new B3KeyOffer(matchId, eventPartId, 
-					IDs.OUTCOMETYPE_DRAW, outcomes.get(i).entity.getId(), bettingType, null);
+					oneOutcome.entity.getTypeId(), oneOutcome.entity.getId(), bettingType, null);
 			offers[i] = (ArrayList<RevisionedEntity<B3BettingOffer>>) offerKey.listEntities(true, mapper);
 		}
 		

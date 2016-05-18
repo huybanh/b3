@@ -161,7 +161,7 @@ public abstract class B3Key {
 			partitionRecordsLimit = null;
 		}*/
 		//Class<? extends B3Entity<?>> b3class = getEntitySpec().b3class;
-		//System.out.println("Querying " + getTable().name + ": " + hashKey + "@" + getRangeKey());
+		System.out.println("Querying " + getTable().name + ": " + hashKey + "@" + getRangeKey());
 		B3ItemIterator it = DynamoWorker.query(getTable(), hashKey, getRangeKey(), rangeKeyEnd/*, null*//*partitionRecordsLimit*/);
 		
 		while (it.hasNext()) {

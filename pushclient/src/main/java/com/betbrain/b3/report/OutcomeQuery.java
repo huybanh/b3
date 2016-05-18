@@ -25,6 +25,7 @@ public class OutcomeQuery {
 		@SuppressWarnings("unchecked")
 		ArrayList<B3Outcome> outcomes = (ArrayList<B3Outcome>) outcomeKey.listEntities(false, jsonMapper);
 		for (B3Outcome one : outcomes) {
+			if (one.entity.getTypeId() == 13 || one.entity.getTypeId() == 14)
 			System.out.println(one.entity);
 		}
 	}
