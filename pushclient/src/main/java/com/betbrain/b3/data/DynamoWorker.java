@@ -718,11 +718,11 @@ public class DynamoWorker {
 	}*/
 	
 	public static B3ItemIterator query(B3Table b3table, String hashKey) {
-		return query(b3table, hashKey, null, null, null);
+		return query(b3table, hashKey, null, null/*, null*/);
 	}
 	
 	public static B3ItemIterator query(B3Table b3table, 
-			String hashKey, String rangeStart, String rangeEnd, Integer maxResulteSize) {
+			String hashKey, String rangeStart, String rangeEnd/*, Integer maxResulteSize*/) {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
 		//System.out.println(Thread.currentThread().getName() + 
@@ -737,9 +737,9 @@ public class DynamoWorker {
 			}
 			spec = spec.withRangeKeyCondition(rc);
 		}
-		if (maxResulteSize != null) {
+		/*if (maxResulteSize != null) {
 			spec = spec.withMaxResultSize(maxResulteSize);
-		}
+		}*/
 		ItemCollection<QueryOutcome> coll = table.query(spec);
 		IteratorSupport<Item, QueryOutcome> it = null;
 		if (coll != null) {

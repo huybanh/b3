@@ -73,7 +73,7 @@ public abstract class B3Key {
 		System.out.println(zeroPadding(5, 23));
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public ArrayList<?> listEntities(final boolean revisions, 
 			final Class<? extends B3Entity<?>> b3class, final JsonMapper jsonMapper ) {
 		
@@ -84,72 +84,75 @@ public abstract class B3Key {
 			hashKeySuffix = "";
 		}
 
-		@SuppressWarnings("rawtypes")
-		ArrayList list = new ArrayList();
 		String hashKeyPart = getHashKeyInternal();
 		if (hashKeyPart != null) {
-			query(hashKeyPart + hashKeySuffix, revisions, b3class, list, null, null, jsonMapper);
-		} else {
+			ArrayList[] outLists = new ArrayList[] {new ArrayList()};
+			query(hashKeyPart + hashKeySuffix, revisions, b3class, outLists, 0, jsonMapper);
+			return outLists[0];
+		}
 
-			final String hashKeyPrefix;
-			String prefix = getHashKeyPrefix();
-			if (prefix == null) {
-				hashKeyPrefix = "";
-			} else {
-				hashKeyPrefix = prefix;
-			}
-			final Object[] obj = new Object[B3Table.DIST_FACTOR];
-			final int[] index = new int[] {0};
-			final LinkedList<Object> threadIds = new LinkedList<>();
-			for (int i = 0; i < 20; i++) {
-				final Object oneThreadId = new Object();
-				threadIds.add(oneThreadId);
-				new Thread() {
-					public void run() {
-						while (true) {
-							int thisIndex;
-							synchronized (index) {
-								thisIndex = index[0];
-								if (thisIndex == obj.length) {
-									index.notifyAll();
-									threadIds.remove(oneThreadId);
-									return;
-								}
-								index[0] = thisIndex + 1;
+		final String hashKeyPrefix;
+		String prefix = getHashKeyPrefix();
+		if (prefix == null) {
+			hashKeyPrefix = "";
+		} else {
+			hashKeyPrefix = prefix;
+		}
+		
+		final ArrayList[] outLists = new ArrayList[B3Table.DIST_FACTOR];
+		for (int i = 0; i < outLists.length; i++) {
+			outLists[i] = new ArrayList();
+		}
+		
+		final int[] index = new int[] {0};
+		final LinkedList<Object> threadIds = new LinkedList<>();
+		for (int i = 0; i < 20; i++) {
+			final Object oneThreadId = new Object();
+			threadIds.add(oneThreadId);
+			new Thread() {
+				public void run() {
+					while (true) {
+						int thisIndex;
+						synchronized (index) {
+							thisIndex = index[0];
+							if (thisIndex == outLists.length) {
+								index.notifyAll();
+								threadIds.remove(oneThreadId);
+								return;
 							}
-							query(hashKeyPrefix + thisIndex + hashKeySuffix, 
-									revisions, b3class, null, obj, thisIndex, jsonMapper);
+							index[0] = thisIndex + 1;
 						}
+						query(hashKeyPrefix + thisIndex + hashKeySuffix, 
+								revisions, b3class, outLists, thisIndex, jsonMapper);
 					}
-				}.start();
-			}
-			
-			synchronized (index) {
-				while (true) {
-					if (!threadIds.isEmpty()) {
-						try {
-							index.wait();
-						} catch (InterruptedException e) {
-						}
-						continue;
+				}
+			}.start();
+		}
+		
+		synchronized (index) {
+			while (true) {
+				if (!threadIds.isEmpty()) {
+					try {
+						index.wait();
+					} catch (InterruptedException e) {
 					}
-					break;
+					continue;
 				}
-			}
-			for (int i = 0; i < B3Table.DIST_FACTOR; i++) {
-				if (obj[i] != null) {
-					list.add(obj[i]);
-				}
+				break;
 			}
 		}
 		
-		return list;
+		ArrayList resultList = new ArrayList<>();
+		for (int i = 0; i < outLists.length; i++) {
+			resultList.addAll(outLists[i]);
+		}
+		return resultList;
 	}
 	
 	@SuppressWarnings("unchecked")
 	private void query(String hashKey, boolean revisions, Class<? extends B3Entity<?>> b3class, 
-			@SuppressWarnings("rawtypes") ArrayList list, 
-			Object[] array, Integer arrayIndex, JsonMapper jsonMapper) {
+			@SuppressWarnings("rawtypes") /*ArrayList list,*/ 
+			ArrayList[] outLists, Integer arrayIndex, JsonMapper jsonMapper) {
 		
 		/*Integer partitionRecordsLimit;
 		if (list == null) {
@@ -158,8 +161,8 @@ public abstract class B3Key {
 			partitionRecordsLimit = null;
 		}*/
 		//Class<? extends B3Entity<?>> b3class = getEntitySpec().b3class;
-		//System.out.println("Querying " + getTable().name + ": " + hashKey + "@" + getRangeKey());
-		B3ItemIterator it = DynamoWorker.query(getTable(), hashKey, getRangeKey(), rangeKeyEnd, null/*partitionRecordsLimit*/);
+		System.out.println("Querying " + getTable().name + ": " + hashKey + "@" + getRangeKey());
+		B3ItemIterator it = DynamoWorker.query(getTable(), hashKey, getRangeKey(), rangeKeyEnd/*, null*//*partitionRecordsLimit*/);
 		
 		while (it.hasNext()) {
 			Item item = it.next();
@@ -183,13 +186,14 @@ public abstract class B3Key {
 				obj = b3entity;
 			}
 			
+			outLists[arrayIndex].add(obj);
 			//System.out.println("Got " + obj);
-			if (list != null) {
+			/*if (list != null) {
 				list.add(obj);
 			} else {
-				array[arrayIndex] = obj;
-				break;
-			}
+				array[arrayIndex].add(obj);
+				//break;
+			}*/
 		}
 	}
 }
