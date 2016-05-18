@@ -40,11 +40,8 @@ class DetailedOddsPart {
 			caption = "Statuses & scores";
 		} else {
 			//long outcomeId = offerList.get(0).b3entity.entity.getOutcomeId();
-			caption = "Detailed Odds Table: " + outcome.type.entity.getName(); 
-			Long p = outcome.entity.getParamParticipantId1();
-			if (p != null) {
-				caption += " (participant " + p + ")";
-			}
+			caption = "Detailed Odds Table: " + outcome.type.entity.getName() +
+					" (" + outcome.entity + ")";
 		}
 		if (out == null) {
 			data = new DetailedOddsTableData();
