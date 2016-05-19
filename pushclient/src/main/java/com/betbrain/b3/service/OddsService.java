@@ -97,6 +97,7 @@ public class OddsService {
 		if (format != null && "text".equalsIgnoreCase(format)) {
 			plainText = true;
 		}
+		
 		DetailedOddsTable2 report = new DetailedOddsTable2(b3, matchId, eventPartId, bettingTypeId,
 				paramFloat1, paramFloat2, paramFloat3, paramBoolean1, paramString1);
 		report.setPlainText(plainText);

@@ -5,10 +5,12 @@ import java.util.HashMap;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.betbrain.b3.api.DetailedOddsTableRowTrait;
+import com.betbrain.b3.api.DetailedOddsTableTrait;
 import com.betbrain.sepc.connector.util.beans.BeanUtil;
 
 @XmlRootElement
-public class DetailedOddsTableData {
+public class DetailedOddsTableData implements DetailedOddsTableTrait {
 	
 	private String caption;
 	
@@ -16,12 +18,16 @@ public class DetailedOddsTableData {
 	HashMap<Long, String> scoreProviderNames = new HashMap<>();
 	HashMap<Long, String> statusProviderNames = new HashMap<>();
 
-	private ArrayList<DetailedOddsTableRow> rows = new ArrayList<>();
+	private ArrayList<DetailedOddsTableRowTrait> rows = new ArrayList<>();
 	
 	void addRow(DetailedOddsTableRow row) {
 		rows.add(row);
 	}
 
+	/* (non-Javadoc)
+	 * @see com.betbrain.b3.report.detailedodds.DetailedOddsTableTrait#getCaption()
+	 */
+	@Override
 	public String getCaption() {
 		return caption;
 	}
@@ -30,6 +36,10 @@ public class DetailedOddsTableData {
 		this.caption = caption;
 	}
 
+	/* (non-Javadoc)
+	 * @see com.betbrain.b3.report.detailedodds.DetailedOddsTableTrait#getOddsProviderNames()
+	 */
+	@Override
 	public HashMap<Long, String> getOddsProviderNames() {
 		return oddsProviderNames;
 	}
@@ -38,6 +48,10 @@ public class DetailedOddsTableData {
 		this.oddsProviderNames = oddsProviderNames;
 	}
 
+	/* (non-Javadoc)
+	 * @see com.betbrain.b3.report.detailedodds.DetailedOddsTableTrait#getScoreProviderNames()
+	 */
+	@Override
 	public HashMap<Long, String> getScoreProviderNames() {
 		return scoreProviderNames;
 	}
@@ -46,6 +60,10 @@ public class DetailedOddsTableData {
 		this.scoreProviderNames = scoreProviderNames;
 	}
 
+	/* (non-Javadoc)
+	 * @see com.betbrain.b3.report.detailedodds.DetailedOddsTableTrait#getStatusProviderNames()
+	 */
+	@Override
 	public HashMap<Long, String> getStatusProviderNames() {
 		return statusProviderNames;
 	}
@@ -54,11 +72,15 @@ public class DetailedOddsTableData {
 		this.statusProviderNames = statusProviderNames;
 	}
 
-	public ArrayList<DetailedOddsTableRow> getRows() {
+	/* (non-Javadoc)
+	 * @see com.betbrain.b3.report.detailedodds.DetailedOddsTableTrait#getRows()
+	 */
+	@Override
+	public ArrayList<DetailedOddsTableRowTrait> getRows() {
 		return rows;
 	}
 
-	public void setRows(ArrayList<DetailedOddsTableRow> rows) {
+	public void setRows(ArrayList<DetailedOddsTableRowTrait> rows) {
 		this.rows = rows;
 	}
 	

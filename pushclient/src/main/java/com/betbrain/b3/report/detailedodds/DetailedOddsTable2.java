@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 import com.betbrain.b3.api.B3Engine;
+import com.betbrain.b3.api.DetailedOddsTableTrait;
 import com.betbrain.b3.data.*;
 import com.betbrain.b3.model.*;
 import com.betbrain.b3.pushclient.JsonMapper;
@@ -41,7 +42,7 @@ public class DetailedOddsTable2 {
 	//private ArrayList<B3Outcome> outcomesWinner;
 	private ArrayList<B3Outcome> outcomes;
 	
-	public LinkedList<DetailedOddsTableData> outputData;
+	public LinkedList<DetailedOddsTableTrait> outputData;
 	
 	public ByteArrayOutputStream outStream;
 	
@@ -148,9 +149,11 @@ public class DetailedOddsTable2 {
 		JsonMapper mapper = new JsonMapper();
 		B3KeyEventInfo statusKey = new B3KeyEventInfo(matchId, eventPartId, IDs.EVENTINFOTYPE_CURRENTSTATUS, null);
 		statuses = (ArrayList<RevisionedEntity<B3EventInfo>>) statusKey.listEntities(true, mapper);
+		System.out.println(statuses.size() + " statuses found");
 		
 		B3KeyEventInfo scoreKey = new B3KeyEventInfo(matchId, eventPartId, IDs.EVENTINFOTYPE_SCORE, null);
 		scores = (ArrayList<RevisionedEntity<B3EventInfo>>) scoreKey.listEntities(true, mapper);
+		System.out.println(scores.size() + " scores found");
 
 		outcomes = new ArrayList<>();
 		Long[] outcomeTypes = b3.getOutcomeTypeIds(bettingType);
@@ -173,6 +176,7 @@ public class DetailedOddsTable2 {
 			}
 			outcomes.addAll(subList);
 		}
+		System.out.println(outcomes.size() + " outcomes found");
 		
 		/*outcomeKey = new B3KeyOutcome(matchId, eventPartId, IDs.OUTCOMETYPE_WINNER, null);
 		outcomesWinner = (ArrayList<B3Outcome>) outcomeKey.listEntities(false, mapper);
@@ -193,6 +197,7 @@ public class DetailedOddsTable2 {
 			B3KeyOffer offerKey = new B3KeyOffer(matchId, eventPartId, 
 					oneOutcome.entity.getTypeId(), oneOutcome.entity.getId(), bettingType, null);
 			offers[i] = (ArrayList<RevisionedEntity<B3BettingOffer>>) offerKey.listEntities(true, mapper);
+			System.out.println(offers[i].size() + " offer revisions found");
 		}
 		
 		/*for (ArrayList<RevisionedEntity<B3BettingOffer>> x : offers) {

@@ -18,7 +18,6 @@ import com.betbrain.b3.model.B3Sport;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.b3.report.IDs;
 import com.betbrain.b3.report.detailedodds.DetailedOddsTable2;
-import com.betbrain.b3.report.detailedodds.DetailedOddsTableData;
 import com.betbrain.sepc.connector.sportsmodel.BettingType;
 import com.betbrain.sepc.connector.sportsmodel.Event;
 import com.betbrain.sepc.connector.sportsmodel.Location;
@@ -47,7 +46,7 @@ public class B3Engine implements B3Api {
 		//System.out.println("Matches");
 		//b3.searchMatches(215754838, null, null);
 		//b3.listBettingTypes();
-		LinkedList<DetailedOddsTableData> result = b3.reportDetailedOddsTable(219900664L, 3L, 47L, 1F, null, null, null, null);
+		LinkedList<DetailedOddsTableTrait> result = b3.reportDetailedOddsTable(219900664L, 3L, 47L, 1F, null, null, null, null);
 		
 		for (Object o : result) {
 			System.out.println(o);
@@ -208,7 +207,7 @@ public class B3Engine implements B3Api {
 	 * @see com.betbrain.b3.api.B3Api#reportDetailedOddsTable(long, long, long, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Boolean, java.lang.String)
 	 */
 	@Override
-	public LinkedList<DetailedOddsTableData> reportDetailedOddsTable(long matchId, long eventPartId, long bettingTypeId,
+	public LinkedList<DetailedOddsTableTrait> reportDetailedOddsTable(long matchId, long eventPartId, long bettingTypeId,
 			Float paramFloat1, Float paramFloat2, Float paramFloat3, Boolean paramBoolean1, String paramString1) {
 		DetailedOddsTable2 report = new DetailedOddsTable2(this, matchId, eventPartId, bettingTypeId,
 				paramFloat1, paramFloat2, paramFloat3, paramBoolean1, paramString1);

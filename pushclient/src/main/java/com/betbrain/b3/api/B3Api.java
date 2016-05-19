@@ -3,7 +3,6 @@ package com.betbrain.b3.api;
 import java.util.Date;
 import java.util.LinkedList;
 
-import com.betbrain.b3.report.detailedodds.DetailedOddsTableData;
 import com.betbrain.sepc.connector.sportsmodel.BettingType;
 import com.betbrain.sepc.connector.sportsmodel.Event;
 import com.betbrain.sepc.connector.sportsmodel.Location;
@@ -27,7 +26,7 @@ public interface B3Api {
 
 	BettingType[] listBettingTypes();
 
-	LinkedList<DetailedOddsTableData> reportDetailedOddsTable(long matchId, long eventPartId, long bettingTypeId,
+	LinkedList<DetailedOddsTableTrait> reportDetailedOddsTable(long matchId, long eventPartId, long bettingTypeId,
 			Float paramFloat1, Float paramFloat2, Float paramFloat3, Boolean paramBoolean1, String paramString1);
 
 }
