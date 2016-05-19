@@ -9,8 +9,8 @@ public abstract class B3MainKey<E extends Entity> extends B3Key {
 	
 	abstract EntitySpec2 getEntitySpec();
 	
-	public ArrayList<?> listEntities(final boolean revisions, final JsonMapper jsonMapper ) {
-		return listEntities(revisions, getEntitySpec().b3class, jsonMapper);
+	public ArrayList<?> listEntities(final boolean revisions, final JsonMapper jsonMapper, String... colNames ) {
+		return listEntities(revisions, getEntitySpec().b3class, jsonMapper, colNames);
 	}
 
 }

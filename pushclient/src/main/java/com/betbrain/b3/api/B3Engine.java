@@ -3,24 +3,33 @@ package com.betbrain.b3.api;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map.Entry;
 
 import com.betbrain.b3.data.B3Key;
 import com.betbrain.b3.data.B3KeyEntity;
 import com.betbrain.b3.data.B3KeyEvent;
+import com.betbrain.b3.data.B3KeyOffer;
+import com.betbrain.b3.data.B3KeyOutcome;
+import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.DynamoWorker;
-import com.betbrain.b3.model.B3BettingType;
+import com.betbrain.b3.model.B3BettingOffer;
 import com.betbrain.b3.model.B3Event;
 import com.betbrain.b3.model.B3Location;
+import com.betbrain.b3.model.B3Outcome;
 import com.betbrain.b3.model.B3OutcomeTypeBettingTypeRelation;
 import com.betbrain.b3.model.B3Sport;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.b3.report.IDs;
 import com.betbrain.b3.report.detailedodds.DetailedOddsTable2;
+import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
 import com.betbrain.sepc.connector.sportsmodel.BettingType;
 import com.betbrain.sepc.connector.sportsmodel.Event;
+import com.betbrain.sepc.connector.sportsmodel.EventPart;
 import com.betbrain.sepc.connector.sportsmodel.Location;
+import com.betbrain.sepc.connector.sportsmodel.Outcome;
 import com.betbrain.sepc.connector.sportsmodel.OutcomeTypeBettingTypeRelation;
 import com.betbrain.sepc.connector.sportsmodel.Sport;
 
@@ -37,16 +46,20 @@ import com.betbrain.sepc.connector.sportsmodel.Sport;
 public class B3Engine implements B3Api {
 	
 	private final HashMap<Long, LinkedList<Long>> outcomeTypesByBettingType = new HashMap<>();
+	private final HashMap<Long, LinkedList<Long>> bettingTypesByOutcomeType = new HashMap<>();
 	
 	public static void main(String[] args) {
 		B3Api b3 = new B3Engine();
 		//b3.listSports();
-		//Location[] result = b3.listCountries();
+		//Location[] result = b3.listCountries(1L);
 		//b3.searchLeagues(1L, 77L);
 		//System.out.println("Matches");
 		//b3.searchMatches(215754838, null, null);
-		//b3.listBettingTypes();
-		LinkedList<DetailedOddsTableTrait> result = b3.reportDetailedOddsTable(219900664L, 3L, 47L, 1F, null, null, null, null);
+		//((B3Engine) b3).searchBettingTypes2(219900664L);
+		//b3.searchBettingTypes(219900664L);
+		//b3.searchEventParts(219900664L, IDs.BETTINGTYPE_1X2);
+		HashSet<OutcomeParameter>[] result = b3.searchParameters(219900664L, IDs.BETTINGTYPE_OVERUNDER, 3L);
+		//LinkedList<DetailedOddsTableTrait> result = b3.reportDetailedOddsTable(219900664L, 3L, 47L, 1F, null, null, null, null);
 		
 		for (Object o : result) {
 			System.out.println(o);
@@ -69,6 +82,20 @@ public class B3Engine implements B3Api {
 				outcomeTypesByBettingType.put(one.entity.getBettingTypeId(), outcomeTypeIdList);
 			}
 			outcomeTypeIdList.add(one.entity.getOutcomeTypeId());
+			
+			LinkedList<Long> bettingTypeIdList = bettingTypesByOutcomeType.get(one.entity.getOutcomeTypeId());
+			if (bettingTypeIdList == null) {
+				bettingTypeIdList = new LinkedList<>();
+				bettingTypesByOutcomeType.put(one.entity.getOutcomeTypeId(), bettingTypeIdList);
+			}
+			bettingTypeIdList.add(one.entity.getBettingTypeId());
+		}
+		
+		for (Entry<Long, LinkedList<Long>> e : outcomeTypesByBettingType.entrySet()) {
+			System.out.println("Betting " + e.getKey() + "->" + e.getValue());
+		}
+		for (Entry<Long, LinkedList<Long>> e : bettingTypesByOutcomeType.entrySet()) {
+			System.out.println("Outcome " + e.getKey() + "->" + e.getValue());
 		}
 	}
 	
@@ -81,11 +108,20 @@ public class B3Engine implements B3Api {
 		}
 	}
 	
+	public Long[] getBettingTypeIds(long outcomeTypeId) {
+		LinkedList<Long> idList = bettingTypesByOutcomeType.get(outcomeTypeId);
+		if (idList == null) {
+			return new Long[0];
+		} else {
+			return idList.toArray(new Long[idList.size()]);
+		}
+	}
+	
 	/* (non-Javadoc)
 	 * @see com.betbrain.b3.api.B3Api#listSports()
 	 */
 	@Override
-	public Sport[] listSports() {
+	public Sport[] searchSports() {
 		JsonMapper jsonMapper = new JsonMapper();
 		B3KeyEntity entityKey = new B3KeyEntity(Sport.class);
 		ArrayList<?> allSports = entityKey.listEntities(false, B3Sport.class, jsonMapper);
@@ -99,10 +135,6 @@ public class B3Engine implements B3Api {
 		return result;
 	}
 	
-	/* (non-Javadoc)
-	 * @see com.betbrain.b3.api.B3Api#listCountries()
-	 */
-	@Override
 	public Location[] listCountries() {
 		JsonMapper jsonMapper = new JsonMapper();
 		B3KeyEntity entityKey = new B3KeyEntity(Location.class);
@@ -116,6 +148,26 @@ public class B3Engine implements B3Api {
 			}
 		}
 		return result.toArray(new Location[result.size()]);
+	}
+
+	/* (non-Javadoc)
+	 * @see com.betbrain.b3.api.B3Api#listCountries()
+	 */
+	@Override
+	public Location[] searchCountries(Long sportId) {
+		JsonMapper jsonMapper = new JsonMapper();
+		B3KeyEvent eventKey = new B3KeyEvent(null, IDs.EVENTTYPE_GENERICTOURNAMENT, (String) null);
+		ArrayList<?> allLeagues = eventKey.listEntities(false, jsonMapper);
+		LinkedList<Location> countries = new LinkedList<>();
+		Iterator<?> it = allLeagues.iterator();
+		while (it.hasNext()) {
+			B3Event e = (B3Event) it.next();
+			if ((sportId == null || e.entity.getSportId() == sportId) &&
+					e.venue.entity.getTypeId() == IDs.LOCATIONTYPE_COUNTRY) {
+				countries.add(e.venue.entity);
+			}
+		}
+		return countries.toArray(new Location[countries.size()]);
 	}
 	
 	/*public Location[] getCountries() {
@@ -189,7 +241,36 @@ public class B3Engine implements B3Api {
 	 * @see com.betbrain.b3.api.B3Api#listBettingTypes()
 	 */
 	@Override
-	public BettingType[] listBettingTypes() {
+	public BettingType[] searchBettingTypes(Long matchId) {
+		JsonMapper jsonMapper = new JsonMapper();
+		B3KeyOffer offerKey = new B3KeyOffer(matchId, null, null, null, null, null);
+		@SuppressWarnings("unchecked")
+		ArrayList<B3BettingOffer> offers = (ArrayList<B3BettingOffer>) offerKey.listEntities(
+				false, jsonMapper, B3Table.CELL_LOCATOR_THIZ, BettingOffer.PROPERTY_NAME_bettingTypeId);
+		HashSet<BettingType> result = new HashSet<>();
+		for (B3BettingOffer one : offers) {
+			result.add(one.bettingType.entity);
+		}
+		System.out.println(result.size());
+		return result.toArray(new BettingType[result.size()]);
+	}
+	
+	public BettingType[] searchBettingTypes2(Long eventId) {
+		JsonMapper jsonMapper = new JsonMapper();
+		B3KeyOutcome outcomeKey = new B3KeyOutcome(eventId, null, null, null);
+		@SuppressWarnings("unchecked")
+		ArrayList<B3Outcome> outcomes = (ArrayList<B3Outcome>) outcomeKey.listEntities(false, jsonMapper);
+		HashSet<Long> result = new HashSet<>();
+		for (B3Outcome one : outcomes) {
+			long outcomeTypeId = one.entity.getTypeId();
+			LinkedList<Long> bettingTypeIdList = bettingTypesByOutcomeType.get(outcomeTypeId);
+			result.addAll(bettingTypeIdList);
+		}
+		System.out.println(result.size());
+		return null;
+	}
+	
+	/*public BettingType[] listBettingTypes() {
 		JsonMapper jsonMapper = new JsonMapper();
 		B3KeyEntity entityKey = new B3KeyEntity(BettingType.class);
 		ArrayList<?> allSports = entityKey.listEntities(false, B3BettingType.class, jsonMapper);
@@ -201,6 +282,79 @@ public class B3Engine implements B3Api {
 			index++;
 		}
 		return result;
+	}*/
+	
+	/* (non-Javadoc)
+	 * @see com.betbrain.b3.api.B3Api#searchEventParts(long, java.lang.Long)
+	 */
+	@Override
+	public EventPart[] searchEventParts(long matchId, Long bettingTypeId) {
+		JsonMapper jsonMapper = new JsonMapper();
+		B3KeyOutcome outcomeKey = new B3KeyOutcome(matchId, null, null, null);
+		@SuppressWarnings("unchecked")
+		ArrayList<B3Outcome> outcomes = (ArrayList<B3Outcome>) outcomeKey.listEntities(
+				false, jsonMapper, B3Table.CELL_LOCATOR_THIZ, Outcome.PROPERTY_NAME_eventPartId);
+		HashSet<EventPart> result = new HashSet<>();
+		LinkedList<Long> preferedOutcomeTypes = outcomeTypesByBettingType.get(bettingTypeId);
+		for (B3Outcome one : outcomes) {
+			if (one.entity.getIsNegation()) {
+				continue;
+			}
+			if (!preferedOutcomeTypes.contains(one.entity.getTypeId())) {
+				continue;
+			}
+			result.add(one.eventPart.entity);
+		}
+		System.out.println(result.size());
+		return result.toArray(new EventPart[result.size()]);
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public HashSet<OutcomeParameter>[] searchParameters(Long matchId, Long bettingTypeId, Long eventPartId) {
+		
+		JsonMapper jsonMapper = new JsonMapper();
+		LinkedList<Long> preferedOutcomeTypes = outcomeTypesByBettingType.get(bettingTypeId);
+		ArrayList<B3Outcome> allOutcomes = new ArrayList<>();
+		
+		for (Long outcomeTypeId : preferedOutcomeTypes) {
+			B3KeyOutcome outcomeKey = new B3KeyOutcome(matchId, eventPartId, outcomeTypeId, null);
+			ArrayList<B3Outcome> outcomesByType = (ArrayList<B3Outcome>) outcomeKey.listEntities(
+					false, jsonMapper, B3Table.CELL_LOCATOR_THIZ, Outcome.PROPERTY_NAME_eventPartId);
+			allOutcomes.addAll(outcomesByType);
+		}
+		
+		HashSet<HashSet<OutcomeParameter>> result = new HashSet<>();
+		for (B3Outcome one : allOutcomes) {
+			if (one.entity.getIsNegation()) {
+				continue;
+			}
+			System.out.println(one.entity);
+			HashSet<OutcomeParameter> paramSet = extractParameters(one.entity);
+			if (!paramSet.isEmpty()) {
+				result.add(paramSet);
+			}
+		}
+		//System.out.println(result.size());
+		return result.toArray(new HashSet[result.size()]);
+	}
+	
+	private static HashSet<OutcomeParameter> extractParameters(Outcome outcome) {
+		HashSet<OutcomeParameter> paramSet = new HashSet<>();
+		addParam(paramSet, "paramBoolean1", outcome.getParamBoolean1());
+		addParam(paramSet, "paramString1", outcome.getParamString1());
+		addParam(paramSet, "paramFloat1", outcome.getParamFloat1());
+		addParam(paramSet, "paramFloat2", outcome.getParamFloat2());
+		addParam(paramSet, "paramFloat3", outcome.getParamFloat3());
+		System.out.println("Extracted params: " + paramSet);
+		return paramSet;
+	}
+	
+	private static void addParam(HashSet<OutcomeParameter> paramSet, String name, Object value) {
+		if (value == null) {
+			return;
+		}
+		paramSet.add(new OutcomeParameter(name, value));
 	}
 	
 	/* (non-Javadoc)

@@ -12,6 +12,7 @@ import com.betbrain.sepc.connector.sportsmodel.EventPart;
 import com.betbrain.sepc.connector.sportsmodel.EventStatus;
 import com.betbrain.sepc.connector.sportsmodel.EventTemplate;
 import com.betbrain.sepc.connector.sportsmodel.EventType;
+import com.betbrain.sepc.connector.sportsmodel.Location;
 import com.betbrain.sepc.connector.sportsmodel.Sport;
 
 public class B3Event extends B3Entity<Event> {
@@ -20,6 +21,7 @@ public class B3Event extends B3Entity<Event> {
 	public B3EventStatus status;
 	public B3EventTemplate template;
 	public B3EventType type;
+	public B3Location venue;
 	
 	@Override
 	public EntitySpec2 getSpec() {
@@ -40,6 +42,7 @@ public class B3Event extends B3Entity<Event> {
 		addDownlink(Event.PROPERTY_NAME_templateId, EventTemplate.class, template);
 		//addDownlink(Event.PROPERTY_NAME_venueId, linkedEntity), //no venue entity
 		addDownlink(Event.PROPERTY_NAME_typeId, EventType.class, type);
+		addDownlink(Event.PROPERTY_NAME_venueId, B3Location.class, venue);
 	}
 
 	@Override
@@ -57,6 +60,8 @@ public class B3Event extends B3Entity<Event> {
 				EventTemplate.class, masterMap, mapper);
 		this.type = build(forMainKeyOnly, entity.getTypeId(), new B3EventType(),
 				EventType.class, masterMap, mapper);
+		this.venue = build(forMainKeyOnly, entity.getVenueId(), new B3Location(),
+				Location.class, masterMap, mapper);
 	}
 	
 	@Override
@@ -91,6 +96,9 @@ public class B3Event extends B3Entity<Event> {
 		
 		type = new B3EventType();
 		type.load(item, Event.PROPERTY_NAME_typeId, mapper);
+		
+		venue = new B3Location();
+		venue.load(item, Event.PROPERTY_NAME_venueId, mapper);
 	}
 
 }

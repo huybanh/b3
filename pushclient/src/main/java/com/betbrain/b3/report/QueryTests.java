@@ -12,6 +12,7 @@ import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Event;
 import com.betbrain.sepc.connector.sportsmodel.Sport;
 
+@Deprecated
 public class QueryTests {
 	
 	private static JsonMapper mapper = new JsonMapper();

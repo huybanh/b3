@@ -33,7 +33,7 @@ public class OddsService {
 	@Produces({MediaType.TEXT_PLAIN})
 	public Response listSports() {
 		JsonMapper mapper = new JsonMapper();
-		return Response.status(200).entity(mapper.serialize(b3.listSports())).build();
+		return Response.status(200).entity(mapper.serialize(b3.searchSports())).build();
 	}
 	
 	@GET

@@ -74,8 +74,8 @@ public abstract class B3Key {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public ArrayList<?> listEntities(final boolean revisions, 
-			final Class<? extends B3Entity<?>> b3class, final JsonMapper jsonMapper ) {
+	public ArrayList<?> listEntities(final boolean revisions, final Class<? extends B3Entity<?>> b3class,
+			final JsonMapper jsonMapper, final String... colNames ) {
 		
 		final String hashKeySuffix;
 		if (revisions) {
@@ -87,7 +87,7 @@ public abstract class B3Key {
 		String hashKeyPart = getHashKeyInternal();
 		if (hashKeyPart != null) {
 			ArrayList[] outLists = new ArrayList[] {new ArrayList()};
-			query(hashKeyPart + hashKeySuffix, revisions, b3class, outLists, 0, jsonMapper);
+			query(hashKeyPart + hashKeySuffix, revisions, b3class, outLists, 0, jsonMapper, colNames);
 			return outLists[0];
 		}
 
@@ -123,7 +123,7 @@ public abstract class B3Key {
 							index[0] = thisIndex + 1;
 						}
 						query(hashKeyPrefix + thisIndex + hashKeySuffix, 
-								revisions, b3class, outLists, thisIndex, jsonMapper);
+								revisions, b3class, outLists, thisIndex, jsonMapper, colNames);
 					}
 				}
 			}.start();
@@ -152,7 +152,8 @@ public abstract class B3Key {
 	@SuppressWarnings("unchecked")
 	private void query(String hashKey, boolean revisions, Class<? extends B3Entity<?>> b3class, 
 			@SuppressWarnings("rawtypes") /*ArrayList list,*/ 
-			ArrayList[] outLists, Integer arrayIndex, JsonMapper jsonMapper) {
+			ArrayList[] outLists, Integer arrayIndex, JsonMapper jsonMapper,
+			String... colNames) {
 		
 		/*Integer partitionRecordsLimit;
 		if (list == null) {
@@ -161,9 +162,9 @@ public abstract class B3Key {
 			partitionRecordsLimit = null;
 		}*/
 		//Class<? extends B3Entity<?>> b3class = getEntitySpec().b3class;
-		System.out.println("Querying " + getTable().name + ": " + hashKey + "@" + getRangeKey());
-		B3ItemIterator it = DynamoWorker.query(getTable(), hashKey, getRangeKey(), rangeKeyEnd/*, null*//*partitionRecordsLimit*/);
 		
+		long time = System.currentTimeMillis();
+		B3ItemIterator it = DynamoWorker.query(getTable(), hashKey, getRangeKey(), rangeKeyEnd, colNames);
 		while (it.hasNext()) {
 			Item item = it.next();
 			B3Entity<Entity> b3entity;
@@ -195,5 +196,7 @@ public abstract class B3Key {
 				//break;
 			}*/
 		}
+		System.out.println("Queried " + getTable().name + ": " + hashKey + "@" + getRangeKey() +
+				", returned " + outLists[arrayIndex].size() + " in " + (System.currentTimeMillis() - time) + " ms");
 	}
 }
