@@ -290,23 +290,24 @@ class DetailedOddsItemOffer extends DetailedOddsItem<B3BettingOffer> {
 		return this.revisionedEntity.b3entity.provider.entity.getName();
 	}*/
 	
-	private static String[] statuses = new String[] {
+	/*private static String[] statuses = new String[] {
 			"Standard", "Starting Price", "Non-Participant", "Removed", "Invalid", "Resolved"
-	};
+	};*/
 
 	@Override
 	String getValue() {
-		/*if (revisionedEntity.b3entity.status.entity.getIsAvailable()) {
+		if (revisionedEntity.b3entity.status.entity.getIsAvailable()) {
 			return revisionedEntity.b3entity.entity.getOdds() + "";
 		} else {
-			return statuses[(int) revisionedEntity.b3entity.entity.getStatusId()];
-		}*/
-		int status = (int) revisionedEntity.b3entity.entity.getStatusId();
+			//return statuses[(int) revisionedEntity.b3entity.entity.getStatusId()];
+			return revisionedEntity.b3entity.status.entity.getName();
+		}
+		/*int status = (int) revisionedEntity.b3entity.entity.getStatusId();
 		if (status == 1 || status == 2) {
 			return revisionedEntity.b3entity.entity.getOdds() + "";
 		} else {
 			return statuses[status - 1];
-		}
+		}*/
 	}
 	
 }

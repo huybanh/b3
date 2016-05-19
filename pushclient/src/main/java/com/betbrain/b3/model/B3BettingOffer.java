@@ -35,6 +35,12 @@ public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 		super.load(item, null, mapper);
 		provider = new B3Provider();
 		provider.load(item, BettingOffer.PROPERTY_NAME_providerId, mapper);
+		
+		bettingType = new B3BettingType();
+		bettingType.load(item, BettingOffer.PROPERTY_NAME_bettingTypeId, mapper);
+		
+		status = new B3BettingOfferStatus();
+		status.load(item, BettingOffer.PROPERTY_NAME_statusId, mapper);
 	}
 
 	@Override
