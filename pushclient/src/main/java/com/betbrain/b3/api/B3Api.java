@@ -1,7 +1,6 @@
 package com.betbrain.b3.api;
 
 import java.util.Date;
-import java.util.HashSet;
 import java.util.LinkedList;
 
 import com.betbrain.sepc.connector.sportsmodel.BettingType;
@@ -80,6 +79,6 @@ public interface B3Api {
 	 * @return Detailed odds report
 	 */
 	LinkedList<DetailedOddsTableTrait> reportDetailedOddsTable(long matchId, long eventPartId, long bettingTypeId,
-			HashSet<OutcomeParameter> outcomeParams);
+			OutcomeParameter[] outcomeParams);
 
 }

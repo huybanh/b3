@@ -60,8 +60,10 @@ class DetailedOddsPart {
 			s = append(s, "paramParticipantId3", outcome.entity.getParamParticipantId3());
 			s = append(s, "paramString1", outcome.entity.getParamString1());
 			//long outcomeId = offerList.get(0).b3entity.entity.getOutcomeId();
-			caption = "Detailed Odds Table: " + outcome.type.entity.getName() +
-					" (" + s + ")";
+			caption = "Detailed Odds Table: " + outcome.type.entity.getName();
+			if (s != null) {
+				caption += " (" + s + ")";
+			}
 		}
 		if (out == null) {
 			data = new DetailedOddsTableData();

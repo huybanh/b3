@@ -55,15 +55,15 @@ public class B3Engine implements B3Api {
 		//System.out.println("Matches");
 		//b3.searchMatches(215754838, null, null);
 		//((B3Engine) b3).searchBettingTypes2(219900664L);
-		b3.searchBettingTypes(219900664L);
+		//b3.searchBettingTypes(219900664L);
 		//b3.searchEventParts(219900664L, null);
-		//OutcomeParameter[][] result = b3.searchParameters(219900664L, IDs.BETTINGTYPE_ASIANHANDICAP, IDs.EVENTPART_ORDINARYTIME);
-		//LinkedList<DetailedOddsTableTrait> result = b3.reportDetailedOddsTable(219900664L, 3L, 47L, 1F, null, null, null, null);
+		OutcomeParameter[][] result = b3.searchParameters(219464997L, 177L, IDs.EVENTPART_ORDINARYTIME);
+		//LinkedList<DetailedOddsTableTrait> result = b3.reportDetailedOddsTable(219464997L, 3L, 177L, null);
 		
-		/*int i = 0;
+		int i = 0;
 		for (Object o : result) {
 			System.out.println(i++ + ": " + o);
-		}*/
+		}
 	}
 
 	public B3Engine() {
@@ -357,19 +357,26 @@ public class B3Engine implements B3Api {
 			allOutcomes.add(one.outcome.entity);
 		}
 		
-		HashSet<OutcomeParameter[]> result = new HashSet<>();
+		HashSet<HashSet<OutcomeParameter>> setOfSets = new HashSet<>();
 		for (Outcome one : allOutcomes) {
 			if (one.getIsNegation()) {
 				continue;
 			}
-			System.out.println(one);
+			System.out.println("Looking for param in outcome: " + one);
 			HashSet<OutcomeParameter> paramSet = extractParameters(one);
 			if (!paramSet.isEmpty()) {
-				result.add(paramSet.toArray(new OutcomeParameter[paramSet.size()]));
+				setOfSets.add(paramSet);
 			}
 		}
+		
+		OutcomeParameter[][] result = new OutcomeParameter[setOfSets.size()][];
+		int i = 0;
+		for (HashSet<OutcomeParameter> oneSet : setOfSets) {
+			result[i] = oneSet.toArray(new OutcomeParameter[oneSet.size()]);
+			i++;
+		}
 		//System.out.println(result.size());
-		return result.toArray(new OutcomeParameter[result.size()][]);
+		return result;
 	}
 
 	/*@SuppressWarnings("unchecked")
@@ -424,7 +431,7 @@ public class B3Engine implements B3Api {
 	 */
 	@Override
 	public LinkedList<DetailedOddsTableTrait> reportDetailedOddsTable(long matchId, long eventPartId, long bettingTypeId,
-			HashSet<OutcomeParameter> outcomeParams) {
+			OutcomeParameter[] outcomeParams) {
 		DetailedOddsTable2 report = new DetailedOddsTable2(this, matchId, eventPartId, bettingTypeId, outcomeParams);
 		report.run();
 		return report.outputData;

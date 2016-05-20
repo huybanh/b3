@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -18,6 +17,7 @@ import com.betbrain.b3.data.*;
 import com.betbrain.b3.model.*;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.b3.report.IDs;
+import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
 
 public class DetailedOddsTable2 {
 	
@@ -80,7 +80,7 @@ public class DetailedOddsTable2 {
 	}
 	
 	public DetailedOddsTable2(B3Engine b3, long matchId, long eventPartId, long bettingType,
-			HashSet<OutcomeParameter> outcomeParams) {
+			OutcomeParameter[] outcomeParams) {
 		
 		this.b3 = b3;
 		this.matchId = matchId;
@@ -231,7 +231,9 @@ public class DetailedOddsTable2 {
 			System.out.println("outcome: " + oneOutcome.entity);
 			B3KeyOffer offerKey = new B3KeyOffer(matchId, bettingType, eventPartId, 
 					oneOutcome.entity.getTypeId(), oneOutcome.entity.getId(), null);
-			offers[i] = (ArrayList<RevisionedEntity<B3BettingOffer>>) offerKey.listEntities(true, mapper);
+			offers[i] = (ArrayList<RevisionedEntity<B3BettingOffer>>) offerKey.listEntities(
+					true, mapper, DynamoWorker.RANGE, B3Table.CELL_LOCATOR_THIZ,
+					BettingOffer.PROPERTY_NAME_providerId, BettingOffer.PROPERTY_NAME_statusId);
 			System.out.println(offers[i].size() + " offer revisions found");
 		}
 		

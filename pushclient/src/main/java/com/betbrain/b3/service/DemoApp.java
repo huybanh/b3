@@ -135,7 +135,8 @@ public class DemoApp {
 			//b3.reportDetailedOddsTable(Long.parseLong(matchId), Long.parseLong(eventPartId), 
 			//		Long.parseLong(bettingTypeId), outcomeParams);
 			DetailedOddsTable2 report = new DetailedOddsTable2(
-					b3, Long.parseLong(matchId), Long.parseLong(eventPartId), Long.parseLong(bettingTypeId), outcomeParams);
+					b3, Long.parseLong(matchId), Long.parseLong(eventPartId), Long.parseLong(bettingTypeId),
+					outcomeParams.toArray(new OutcomeParameter[outcomeParams.size()]));
 			report.setPlainText(true);
 			report.run();
 			return Response.status(200).entity(new String(report.outStream.toByteArray())).build();
