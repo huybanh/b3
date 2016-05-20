@@ -26,6 +26,7 @@ import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputExceededException;
+import com.amazonaws.services.dynamodbv2.model.ReturnConsumedCapacity;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -84,7 +85,6 @@ public class DynamoWorker {
 	static Table settingTable;
 	
 	private static void initialize() {
-
 		EntitySpec2.initialize();
 		dynaClient = new AmazonDynamoDBClient(new ProfileCredentialsProvider());
 		dynaClient.setRegion(Region.getRegion(Regions.AP_SOUTHEAST_1));
@@ -391,7 +391,7 @@ public class DynamoWorker {
 									readerIndex = 0;
 								}
 								if (pendTimes[readerIndex] != null && 
-										System.currentTimeMillis() - pendTimes[readerIndex] < 2000) {
+										System.currentTimeMillis() - pendTimes[readerIndex] < 5000) {
 									continue;
 								}
 								reader = allReaders[readerIndex];
@@ -719,28 +719,38 @@ public class DynamoWorker {
 	}*/
 	
 	public static B3ItemIterator query(B3Table b3table, String hashKey) {
-		return query(b3table, hashKey, null, null);
+		return query(b3table, hashKey, null, null/*, null*/);
 	}
 	
 	public static B3ItemIterator query(B3Table b3table, 
-			String hashKey, String rangeStart, Integer maxResulteSize) {
+			String hashKey, String rangeStart, String rangeEnd/*, Integer maxResulteSize*/, String... colNames) {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
-		System.out.println(Thread.currentThread().getName() + 
-				": DB-QUERY " + table.getTableName() + ": " + hashKey + "@" + rangeStart);
+		//System.out.println(Thread.currentThread().getName() + 
+		//		": DB-QUERY " + table.getTableName() + ": " + hashKey + "@" + rangeStart);
 		QuerySpec spec = new QuerySpec().withHashKey(HASH, hashKey);
 		if (rangeStart != null) {
-			spec = spec.withRangeKeyCondition(new RangeKeyCondition(RANGE).beginsWith(rangeStart));
+			RangeKeyCondition rc = new RangeKeyCondition(RANGE).beginsWith(rangeStart);
+			if (rangeEnd != null) {
+				rc = new RangeKeyCondition(RANGE).between(rangeStart, rangeEnd);
+			} else {
+				rc = new RangeKeyCondition(RANGE).beginsWith(rangeStart);
+			}
+			spec = spec.withRangeKeyCondition(rc);
 		}
-		if (maxResulteSize != null) {
+		/*if (maxResulteSize != null) {
 			spec = spec.withMaxResultSize(maxResulteSize);
+		}*/
+		if (colNames != null && colNames.length > 0) {
+			spec = spec.withAttributesToGet(colNames);
 		}
+		spec = spec.withReturnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
 		ItemCollection<QueryOutcome> coll = table.query(spec);
 		IteratorSupport<Item, QueryOutcome> it = null;
 		if (coll != null) {
 			it = coll.iterator();
 		}
-		return new B3ItemIterator(it);
+		return new B3ItemIterator(it, coll);
 	}
 	
 	/*public static B3ItemIterator queryRangeBeginsWith(

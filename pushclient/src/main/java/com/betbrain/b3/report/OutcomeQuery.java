@@ -3,8 +3,8 @@ package com.betbrain.b3.report;
 import java.util.ArrayList;
 
 import com.betbrain.b3.data.*;
+import com.betbrain.b3.model.B3Outcome;
 import com.betbrain.b3.pushclient.JsonMapper;
-import com.betbrain.sepc.connector.sportsmodel.*;
 
 public class OutcomeQuery {
 
@@ -16,16 +16,17 @@ public class OutcomeQuery {
 		//query(219387861);
 		//query(219501132);
 		//query(IDs.EVENT_PREMIERLEAGUE);
-		outcome(217562668L, IDs.OUTCOMETYPE_WINNER);
+		outcome(219900664L, IDs.OUTCOMETYPE_WINNER);
 	}
 	
 	private static void outcome(long eventId, long outcomeTypeId) {
-		System.out.println("Offers");
-		B3KeyOutcome outcomeKey = new B3KeyOutcome(1L, 1L, eventId, IDs.EVENTPART_ORDINARYTIME, outcomeTypeId, null);
+		System.out.println("Outcomes");
+		B3KeyOutcome outcomeKey = new B3KeyOutcome(eventId, null, null, null);
 		@SuppressWarnings("unchecked")
-		ArrayList<Outcome> outcomes = (ArrayList<Outcome>) outcomeKey.listEntities(true, jsonMapper);
-		for (Outcome one : outcomes) {
-			System.out.println(one);
+		ArrayList<B3Outcome> outcomes = (ArrayList<B3Outcome>) outcomeKey.listEntities(false, jsonMapper);
+		for (B3Outcome one : outcomes) {
+			if (one.entity.getTypeId() == 13 || one.entity.getTypeId() == 14)
+			System.out.println(one.entity);
 		}
 	}
 }

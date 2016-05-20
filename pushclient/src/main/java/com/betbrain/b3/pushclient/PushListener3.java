@@ -1,5 +1,7 @@
 package com.betbrain.b3.pushclient;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -107,7 +109,7 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 	
 	private void processInitialDump(List<? extends Entity> entityList) {
 		
-		/*logger.info("Saving initial_dump file for debugging purpose");
+		logger.info("Saving initial_dump file for debugging purpose");
 		JsonMapper jsonMapper = new JsonMapper();
 		try {
 			BufferedWriter writer = new BufferedWriter(new FileWriter("initial_dump", false));
@@ -118,7 +120,7 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 			writer.close();
 		} catch (IOException e1) {
 			throw new RuntimeException(e1);
-		}*/
+		}
 		
 		//another map for initial dump
 		final HashMap<String, HashMap<Long, Entity>> immutableMasterMap = new HashMap<>();

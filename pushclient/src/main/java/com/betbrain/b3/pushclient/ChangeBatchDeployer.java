@@ -75,7 +75,7 @@ public class ChangeBatchDeployer {
 		System.out.println("Querying " + B3Table.DIST_FACTOR + " partitions for first change batch id");
 		final ArrayList<String> allRangeIds = new ArrayList<String>();
 		for (int dist = 0; dist < B3Table.DIST_FACTOR; dist++) {
-			B3ItemIterator iter = DynamoWorker.query(B3Table.SEPC, DynamoWorker.SEPC_CHANGEBATCH + dist, null, 1);
+			B3ItemIterator iter = DynamoWorker.query(B3Table.SEPC, DynamoWorker.SEPC_CHANGEBATCH + dist, null, null/*, 1*/);
 			while (iter.hasNext()) {
 				Item item = iter.next();
 				allRangeIds.add(item.getString(DynamoWorker.RANGE));
@@ -88,7 +88,7 @@ public class ChangeBatchDeployer {
 			System.out.println("Loading batch " + batchId);
 			String hashKey = BatchWorker.generateChangeBatchHashKey(batchId);
 			B3ItemIterator it = DynamoWorker.query(
-					B3Table.SEPC, hashKey, B3Key.zeroPadding(BatchWorker.BATCHID_DIGIT_COUNT, batchId), null);
+					B3Table.SEPC, hashKey, B3Key.zeroPadding(BatchWorker.BATCHID_DIGIT_COUNT, batchId), null/*, null*/);
 			
 			Long nextBatchId = null;
 			while (it.hasNext()) {

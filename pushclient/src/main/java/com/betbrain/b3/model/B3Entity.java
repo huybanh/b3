@@ -93,12 +93,12 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		return links;
 	}
 
-	public void load(Item item, JsonMapper mapper) {
-		throw new RuntimeException("Main entity must override this");
-	}
+	/*public void load(Item item, JsonMapper mapper) {
+		throw new RuntimeException("Entity must override this: " + this.getClass().getName());
+	}*/
 
 	@SuppressWarnings("unchecked")
-	void load(Item item, String cellName, JsonMapper mapper) {
+	public void load(Item item, String cellName, JsonMapper mapper) {
 
 		String actualCellName;
 		if (cellName == null) {

@@ -2,9 +2,10 @@ package com.betbrain.b3.report.detailedodds;
 
 import java.util.HashMap;
 
+import com.betbrain.b3.api.DetailedOddsTableRowTrait;
 import com.betbrain.sepc.connector.util.beans.BeanUtil;
 
-public class DetailedOddsTableRow {
+public class DetailedOddsTableRow implements DetailedOddsTableRowTrait {
 
 	private long time;
 	
@@ -24,6 +25,10 @@ public class DetailedOddsTableRow {
 		statuses.put(providerId, value);
 	}
 	
+	/* (non-Javadoc)
+	 * @see com.betbrain.b3.report.detailedodds.DetailedOddsTableRowTrait#getTime()
+	 */
+	@Override
 	public long getTime() {
 		return time;
 	}
@@ -32,12 +37,28 @@ public class DetailedOddsTableRow {
 		this.time = time;
 	}
 	
-	public HashMap<Long, String> getOdds() {
+	/* (non-Javadoc)
+	 * @see com.betbrain.b3.report.detailedodds.DetailedOddsTableRowTrait#getOdds(long)
+	 */
+	@Override
+	public String getOdds(long providerId) {
+		return odds.get(providerId);
+	}
+	
+	public HashMap<Long, String> getOddsMap() {
 		return odds;
 	}
 	
-	public void setOdds(HashMap<Long, String> odds) {
+	public void setOddsMap(HashMap<Long, String> odds) {
 		this.odds = odds;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.betbrain.b3.report.detailedodds.DetailedOddsTableRowTrait#getScore(long)
+	 */
+	@Override
+	public String getScore(long providerId) {
+		return scores.get(providerId);
 	}
 	
 	public HashMap<Long, String> getScores() {
@@ -46,6 +67,14 @@ public class DetailedOddsTableRow {
 	
 	public void setScores(HashMap<Long, String> scores) {
 		this.scores = scores;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.betbrain.b3.report.detailedodds.DetailedOddsTableRowTrait#getStatus(long)
+	 */
+	@Override
+	public String getStatus(long providerId) {
+		return statuses.get(providerId);
 	}
 	
 	public HashMap<Long, String> getStatuses() {

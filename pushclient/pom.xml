@@ -3,9 +3,8 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.betbrain.b3</groupId>
-	<artifactId>pushclient</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<packaging>war</packaging>
+	<artifactId>b3-api</artifactId>
+	<version>0.0.4</version>
 
 	<name>pushclient</name>
 	<url>http://maven.apache.org</url>
@@ -65,7 +64,7 @@
         <dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-dynamodb</artifactId>
-			<version>1.10.71</version>
+			<version>1.11.2</version>
 		</dependency>
         
 		<dependency>
@@ -89,4 +88,5 @@
 		
 		
 	</dependencies>
+	<packaging>war</packaging>
 </project>

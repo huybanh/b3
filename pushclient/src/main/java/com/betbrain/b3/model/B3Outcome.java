@@ -84,16 +84,22 @@ public class B3Outcome extends B3Entity<Outcome> {
 	}
 
 	@Override
-	public void load(Item item, JsonMapper mapper) {
-		super.load(item, null, mapper);
+	public void load(Item item, String cellName, JsonMapper mapper) {
+		super.load(item, cellName, mapper);
+		String baseCellName;
+		if (cellName == null) {
+			baseCellName = "";
+		} else {
+			baseCellName = cellName + B3Table.CELL_LOCATOR_SEP;
+		}
 		eventPart = new B3EventPart();
-		eventPart.load(item, Outcome.PROPERTY_NAME_eventPartId, mapper);
+		eventPart.load(item, baseCellName + Outcome.PROPERTY_NAME_eventPartId, mapper);
 		
 		status = new B3OutcomeStatus();
-		status.load(item, Outcome.PROPERTY_NAME_statusId, mapper);
+		status.load(item, baseCellName + Outcome.PROPERTY_NAME_statusId, mapper);
 		
 		type = new B3OutcomeType();
-		type.load(item, Outcome.PROPERTY_NAME_typeId, mapper);
+		type.load(item, baseCellName + Outcome.PROPERTY_NAME_typeId, mapper);
 	}
 
 }

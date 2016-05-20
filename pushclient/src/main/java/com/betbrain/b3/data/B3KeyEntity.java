@@ -50,9 +50,11 @@ public class B3KeyEntity extends B3Key {
 		return classShortName != null && id != null;
 	}
 	
+	@Override
 	public String getHashKeyInternal() {
 		if (id == null) {
-			return classShortName;
+			//return classShortName;
+			return null;
 		}
 		if (version2) {
 			return classShortName + Math.abs(id % B3Table.DIST_FACTOR);
@@ -61,11 +63,19 @@ public class B3KeyEntity extends B3Key {
 	}
 	
 	@Override
+	String getHashKeyPrefix() {
+		return classShortName;
+	}
+	
+	@Override
 	String getRangeKeyInternal() {
+		if (id == null) {
+			return null;
+		}
 		return String.valueOf(id); 
 	}
 	
-	@SuppressWarnings("unchecked")
+	/*@SuppressWarnings("unchecked")
 	public <E extends Entity> ArrayList<E> listEntities(JsonMapper jsonMapper) {
 		ArrayList<E> list = new ArrayList<E>();
 		//int i = hardLimit;
@@ -80,7 +90,7 @@ public class B3KeyEntity extends B3Key {
 			}
 		}
 		return list;
-	}
+	}*/
 
 	public static <E extends Entity> ArrayList<E> load(JsonMapper mapper, Class<E> clazz, long id) {
 		ArrayList<Long> idList = new ArrayList<Long>();
@@ -112,9 +122,9 @@ public class B3KeyEntity extends B3Key {
 	}
 
 	public <E extends Entity> E load(JsonMapper mapper) {
+		System.out.println("Getting for " + getHashKey() + "@" + getRangeKey());
 		Item item = DynamoWorker.get(B3Table.Entity, getHashKey(), getRangeKey());
 		if (item == null) {
-			System.out.println("ID not found: " + getHashKey() + "@" + getRangeKey());
 			return null;
 		}
 		String json = item.getString(B3Table.CELL_LOCATOR_THIZ);

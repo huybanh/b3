@@ -14,6 +14,7 @@ import com.betbrain.b3.data.RevisionedEntity;
 import com.betbrain.b3.model.B3BettingOffer;
 import com.betbrain.b3.model.B3Entity;
 import com.betbrain.b3.model.B3EventInfo;
+import com.betbrain.b3.model.B3Outcome;
 import com.betbrain.sepc.connector.sportsmodel.Provider;
 
 class DetailedOddsPart {
@@ -21,18 +22,49 @@ class DetailedOddsPart {
 	private LinkedList<Long> timePoints = new LinkedList<>();
 	
 	DetailedOddsTableData data;
+	
+	private static String append(String s, String name, Object value) {
+		if (value == null) {
+			return s;
+		}
+		if (s == null) {
+			return name + ":" + value;
+		} else {
+			return s + ", " + name + ":" + value;
+		}
+	}
 
-	public DetailedOddsPart(String outcomeTypeCaption, Long participantId, 
+	public DetailedOddsPart(/*String outcomeTypeCaption, Long participantId, */
+			B3Outcome outcome,
 			ArrayList<RevisionedEntity<B3EventInfo>> statusList,
 			ArrayList<RevisionedEntity<B3EventInfo>> scoreList, 
 			ArrayList<RevisionedEntity<B3BettingOffer>> offerList,
 			PrintStream out) {
 		
-		String caption = "Detailed Odds Table: " + outcomeTypeCaption;
+		/*String caption = "Detailed Odds Table: " + outcomeTypeCaption;
 		if (participantId != null) {
 				caption += " (participant id: " + participantId + ")";
-		}
+		}*/
 		
+		String caption;
+		if (outcome == null) {
+			caption = "Statuses & scores";
+		} else {
+			String s = append(null, "paramBoolean1", outcome.entity.getParamBoolean1());
+			s = append(s, "paramEventPartId1", outcome.entity.getParamEventPartId1());
+			s = append(s, "paramFloat1", outcome.entity.getParamFloat1());
+			s = append(s, "paramFloat2", outcome.entity.getParamFloat2());
+			s = append(s, "paramFloat3", outcome.entity.getParamFloat3());
+			s = append(s, "paramParticipantId1", outcome.entity.getParamParticipantId1());
+			s = append(s, "paramParticipantId2", outcome.entity.getParamParticipantId2());
+			s = append(s, "paramParticipantId3", outcome.entity.getParamParticipantId3());
+			s = append(s, "paramString1", outcome.entity.getParamString1());
+			//long outcomeId = offerList.get(0).b3entity.entity.getOutcomeId();
+			caption = "Detailed Odds Table: " + outcome.type.entity.getName();
+			if (s != null) {
+				caption += " (" + s + ")";
+			}
+		}
 		if (out == null) {
 			data = new DetailedOddsTableData();
 			data.setCaption(caption);
@@ -55,9 +87,11 @@ class DetailedOddsPart {
 
 		DetailedOddsColumnSet odds = new DetailedOddsColumnSet();
 		statuses.typeName = "Odds";
-		for (RevisionedEntity<B3BettingOffer> one : offerList) {
-			odds.add(new DetailedOddsItemOffer(one));
-			timeset.add(one.time);
+		if (offerList != null) {
+			for (RevisionedEntity<B3BettingOffer> one : offerList) {
+				odds.add(new DetailedOddsItemOffer(one));
+				timeset.add(one.time);
+			}
 		}
 		
 		timePoints.addAll(timeset);
@@ -68,7 +102,7 @@ class DetailedOddsPart {
 		statuses.prepare();
 		
 		if (out != null) {
-			out.println(caption);
+			out.println(caption + "<br/>");
 			out.print("Time | ");
 		}
 		for (Provider p : odds.providers) {
@@ -94,7 +128,7 @@ class DetailedOddsPart {
 		}
 		
 		if (out != null) {
-			out.println();
+			out.println("</br>");
 		}
 		
 		for (Long time : timePoints) {
@@ -131,10 +165,12 @@ class DetailedOddsPart {
 			}
 			
 			if (out != null) {
-				out.println();
+				out.println("<br/>");
 			}
 		}
-		
+		if (out != null) {
+			out.println("<br/>");
+		}
 	}
 
 }
@@ -277,10 +313,25 @@ class DetailedOddsItemOffer extends DetailedOddsItem<B3BettingOffer> {
 		}
 		return this.revisionedEntity.b3entity.provider.entity.getName();
 	}*/
+	
+	/*private static String[] statuses = new String[] {
+			"Standard", "Starting Price", "Non-Participant", "Removed", "Invalid", "Resolved"
+	};*/
 
 	@Override
 	String getValue() {
-		return revisionedEntity.b3entity.entity.getOdds() + "";
+		if (revisionedEntity.b3entity.status.entity.getIsAvailable()) {
+			return revisionedEntity.b3entity.entity.getOdds() + "";
+		} else {
+			//return statuses[(int) revisionedEntity.b3entity.entity.getStatusId()];
+			return revisionedEntity.b3entity.status.entity.getName();
+		}
+		/*int status = (int) revisionedEntity.b3entity.entity.getStatusId();
+		if (status == 1 || status == 2) {
+			return revisionedEntity.b3entity.entity.getOdds() + "";
+		} else {
+			return statuses[status - 1];
+		}*/
 	}
 	
 }

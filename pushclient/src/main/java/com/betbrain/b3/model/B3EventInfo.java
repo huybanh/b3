@@ -4,6 +4,7 @@ import java.util.HashMap;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.betbrain.b3.data.B3KeyEventInfo;
+import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.EntitySpec2;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
@@ -12,12 +13,11 @@ import com.betbrain.sepc.connector.sportsmodel.EventInfo;
 import com.betbrain.sepc.connector.sportsmodel.EventInfoType;
 import com.betbrain.sepc.connector.sportsmodel.EventPart;
 import com.betbrain.sepc.connector.sportsmodel.Provider;
-import com.betbrain.sepc.connector.sportsmodel.Source;
 
 public class B3EventInfo extends B3Entity<EventInfo> {
 
 	public B3Provider provider;
-	public B3Source source;
+	//public B3Source source;
 	public B3EventInfoType type;
 	
 	//package private
@@ -30,10 +30,16 @@ public class B3EventInfo extends B3Entity<EventInfo> {
 	}
 
 	@Override
-	public void load(Item item, JsonMapper mapper) {
-		super.load(item, null, mapper);
+	public void load(Item item, String cellName, JsonMapper mapper) {
+		super.load(item, cellName, mapper);
+		String baseCellName;
+		if (cellName == null) {
+			baseCellName = "";
+		} else {
+			baseCellName = cellName + B3Table.CELL_LOCATOR_SEP;
+		}
 		provider = new B3Provider();
-		provider.load(item, EventInfo.PROPERTY_NAME_providerId, mapper);
+		provider.load(item, baseCellName + EventInfo.PROPERTY_NAME_providerId, mapper);
 	}
 
 	@Override
@@ -44,7 +50,7 @@ public class B3EventInfo extends B3Entity<EventInfo> {
 		addDownlinkUnfollowed(EventInfo.PROPERTY_NAME_eventPartId, EventPart.class/*, entity.getEventPartId()*/);
 		
 		addDownlink(EventInfo.PROPERTY_NAME_providerId, Provider.class, provider);
-		addDownlink(EventInfo.PROPERTY_NAME_sourceId, Source.class, source);
+		//addDownlink(EventInfo.PROPERTY_NAME_sourceId, Source.class, source);
 		addDownlink(EventInfo.PROPERTY_NAME_typeId, EventInfoType.class, type);
 	}
 
@@ -59,8 +65,8 @@ public class B3EventInfo extends B3Entity<EventInfo> {
 		}
 		this.provider = build(forMainKeyOnly, entity.getProviderId(), new B3Provider(),
 				Provider.class, masterMap, mapper);
-		this.source = build(forMainKeyOnly, entity.getSourceId(), new B3Source(), 
-				Source.class, masterMap, mapper);
+		//this.source = build(forMainKeyOnly, entity.getSourceId(), new B3Source(), 
+		//		Source.class, masterMap, mapper);
 		this.type = build(forMainKeyOnly, entity.getTypeId(), new B3EventInfoType(), 
 				EventInfoType.class, masterMap, mapper);
 		

@@ -4,6 +4,7 @@ import java.util.HashMap;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.betbrain.b3.data.B3KeyOffer;
+import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.EntitySpec2;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
@@ -12,13 +13,12 @@ import com.betbrain.sepc.connector.sportsmodel.BettingType;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Outcome;
 import com.betbrain.sepc.connector.sportsmodel.Provider;
-import com.betbrain.sepc.connector.sportsmodel.Source;
 
 public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 	
 	public B3Provider provider;
 	
-	public B3Source source;
+	//public B3Source source;
 	
 	public B3Outcome outcome;
 	
@@ -32,20 +32,37 @@ public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 	}
 
 	@Override
-	public void load(Item item, JsonMapper mapper) {
-		super.load(item, null, mapper);
+	public void load(Item item, String cellName, JsonMapper mapper) {
+		super.load(item, cellName, mapper);
+		
+		String baseCellName;
+		if (cellName == null) {
+			baseCellName = "";
+		} else {
+			baseCellName = cellName + B3Table.CELL_LOCATOR_SEP;
+		}
+		outcome = new B3Outcome();
+		outcome.load(item, baseCellName + BettingOffer.PROPERTY_NAME_outcomeId, mapper);
+		
 		provider = new B3Provider();
-		provider.load(item, BettingOffer.PROPERTY_NAME_providerId, mapper);
+		provider.load(item, baseCellName + BettingOffer.PROPERTY_NAME_providerId, mapper);
+		
+		bettingType = new B3BettingType();
+		bettingType.load(item, baseCellName + BettingOffer.PROPERTY_NAME_bettingTypeId, mapper);
+		
+		status = new B3BettingOfferStatus();
+		status.load(item, baseCellName + BettingOffer.PROPERTY_NAME_statusId, mapper);
 	}
 
 	@Override
 	public void getDownlinkedEntitiesInternal() {
 		
 		//unfollowed links
-		addDownlinkUnfollowed(BettingOffer.PROPERTY_NAME_outcomeId, Outcome.class/*, entity.getOutcomeId()*/);
+		//addDownlinkUnfollowed(BettingOffer.PROPERTY_NAME_outcomeId, Outcome.class/*, entity.getOutcomeId()*/);
 		
+		addDownlink(BettingOffer.PROPERTY_NAME_outcomeId, Outcome.class, outcome);
 		addDownlink(BettingOffer.PROPERTY_NAME_providerId, Provider.class, provider);
-		addDownlink(BettingOffer.PROPERTY_NAME_sourceId, Source.class, source);
+		//addDownlink(BettingOffer.PROPERTY_NAME_sourceId, Source.class, source);
 		addDownlink(BettingOffer.PROPERTY_NAME_bettingTypeId, BettingType.class, bettingType);
 		addDownlink(BettingOffer.PROPERTY_NAME_statusId, BettingOfferStatus.class, status);
 	}
@@ -60,8 +77,8 @@ public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 		}
 		this.provider = build(forMainKeyOnly, entity.getProviderId(), new B3Provider(), 
 				Provider.class, masterMap, mapper);
-		this.source = build(forMainKeyOnly, entity.getSourceId(), new B3Source(), 
-				Source.class, masterMap, mapper);
+		//this.source = build(forMainKeyOnly, entity.getSourceId(), new B3Source(), 
+		//		Source.class, masterMap, mapper);
 		this.bettingType = build(forMainKeyOnly, entity.getBettingTypeId(), 
 				new B3BettingType(), BettingType.class, masterMap, mapper);
 		this.status = build(forMainKeyOnly, entity.getStatusId(), 
@@ -87,10 +104,10 @@ public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 		return new B3KeyOffer(/*outcome.event.entity.getSportId(),
 				outcome.event.entity.getTypeId(),*/
 				outcome.event.entity.getId(),
+				this.entity.getBettingTypeId(),
 				outcome.entity.getEventPartId(),
 				outcome.entity.getTypeId(),
 				outcome.entity.getId(),
-				this.entity.getBettingTypeId(),
 				this.entity.getId());
 		
 	}

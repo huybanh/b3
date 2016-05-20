@@ -17,4 +17,9 @@ public abstract class B3EntityLeaf<E extends Entity> extends B3Entity<E> {
 		//no downlinks
 	}
 
+	/*@Override
+	public void load(Item item, JsonMapper mapper) {
+		super.load(item, null, mapper);
+	}*/
+
 }
