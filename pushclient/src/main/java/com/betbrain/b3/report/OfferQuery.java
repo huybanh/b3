@@ -20,7 +20,7 @@ public class OfferQuery {
 	
 	private static void offer(long eventId, long outcomeTypeId, long outcomeId, long bettingTypeId) {
 		System.out.println("Offers");
-		B3KeyOffer offerKey = new B3KeyOffer(219900664L, 3L, 14L, 3044603660L, 47L, null);
+		B3KeyOffer offerKey = new B3KeyOffer(219900664L, 47L, 3L, 14L, 3044603660L, null);
 		@SuppressWarnings("unchecked")
 		ArrayList<RevisionedEntity<B3BettingOffer>> offers = 
 				(ArrayList<RevisionedEntity<B3BettingOffer>>) offerKey.listEntities(true, mapper);

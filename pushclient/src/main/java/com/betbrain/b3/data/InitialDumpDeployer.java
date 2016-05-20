@@ -410,6 +410,8 @@ public class InitialDumpDeployer {
 		}
 	}
 	
+	private static boolean useLookupAndLink = false;
+	
 	/**
 	 * @param putToFile
 	 * @param mainTable
@@ -437,7 +439,7 @@ public class InitialDumpDeployer {
 		mainCells.add(jsonCell);
 		
 		//put event to lookup
-		if (mainKey != null && cellName != null) {
+		if (useLookupAndLink && mainKey != null && cellName != null) {
 			B3KeyLookup lookupKey = new B3KeyLookup(
 					b3entity.entity, mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), thisCellName);
 			db.put(B3Table.Lookup, lookupKey.getHashKey(), lookupKey.getRangeKey());
@@ -451,7 +453,7 @@ public class InitialDumpDeployer {
 				if (link.linkedEntity != null) {
 					link.linkedEntity.buildDownlinks(false, masterMap, jsonMapper);
 				}
-				if (mainKey != null) {
+				if (useLookupAndLink && mainKey != null) {
 					B3KeyLink linkKey = new B3KeyLink(link.linkedEntityClazz, link.linkedEntityId, b3entity.entity, link.name); //reverse link direction
 					db.put(B3Table.Link, linkKey.getHashKey(), linkKey.getRangeKey());
 					

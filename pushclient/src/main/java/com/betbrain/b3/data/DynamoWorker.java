@@ -390,7 +390,7 @@ public class DynamoWorker {
 									readerIndex = 0;
 								}
 								if (pendTimes[readerIndex] != null && 
-										System.currentTimeMillis() - pendTimes[readerIndex] < 2000) {
+										System.currentTimeMillis() - pendTimes[readerIndex] < 5000) {
 									continue;
 								}
 								reader = allReaders[readerIndex];

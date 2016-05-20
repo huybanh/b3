@@ -4,6 +4,7 @@ import java.util.HashMap;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.betbrain.b3.data.B3KeyEvent;
+import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.EntitySpec2;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
@@ -83,22 +84,28 @@ public class B3Event extends B3Entity<Event> {
 	}
 
 	@Override
-	public void load(Item item, JsonMapper mapper) {
-		super.load(item, null, mapper);
+	public void load(Item item, String cellName, JsonMapper mapper) {
+		super.load(item, cellName, mapper);
+		String baseCellName;
+		if (cellName == null) {
+			baseCellName = "";
+		} else {
+			baseCellName = cellName + B3Table.CELL_LOCATOR_SEP;
+		}
 		sport = new B3Sport();
-		sport.load(item, Event.PROPERTY_NAME_sportId, mapper);
+		sport.load(item, baseCellName + Event.PROPERTY_NAME_sportId, mapper);
 		
 		status = new B3EventStatus();
-		status.load(item, Event.PROPERTY_NAME_statusId, mapper);
+		status.load(item, baseCellName + Event.PROPERTY_NAME_statusId, mapper);
 		
 		template = new B3EventTemplate();
-		template.load(item, Event.PROPERTY_NAME_templateId, mapper);
+		template.load(item, baseCellName + Event.PROPERTY_NAME_templateId, mapper);
 		
 		type = new B3EventType();
-		type.load(item, Event.PROPERTY_NAME_typeId, mapper);
+		type.load(item, baseCellName + Event.PROPERTY_NAME_typeId, mapper);
 		
 		venue = new B3Location();
-		venue.load(item, Event.PROPERTY_NAME_venueId, mapper);
+		venue.load(item, baseCellName + Event.PROPERTY_NAME_venueId, mapper);
 	}
 
 }

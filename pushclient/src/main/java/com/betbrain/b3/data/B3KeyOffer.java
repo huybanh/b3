@@ -25,8 +25,8 @@ public class B3KeyOffer extends B3MainKey<BettingOffer> {
 	
 	private final Long offerId;
 	
-	public B3KeyOffer(Long eventId, Long eventPartId,
-			Long outcomeTypeId, Long outcomeId, Long bettingTypeId, Long offerId) {
+	public B3KeyOffer(Long eventId, Long bettingTypeId, Long eventPartId,
+			Long outcomeTypeId, Long outcomeId, Long offerId) {
 
 		this.sportId = null;
 		this.eventTypeId = null;
@@ -95,24 +95,29 @@ public class B3KeyOffer extends B3MainKey<BettingOffer> {
 	@Override
 	String getRangeKeyInternal() {
 		if (version2) {
-			if (eventPartId == null) {
+			if (eventId == null) {
 				return null;
 			}
+			if (bettingTypeId == null) {
+				return eventId + B3Table.KEY_SEP;
+			}
+			if (eventPartId == null) {
+				return eventId + B3Table.KEY_SEP + bettingTypeId + B3Table.KEY_SEP;
+			}
 			if (outcomeTypeId == null) {
-				return eventPartId + B3Table.KEY_SEP;
+				return eventId + B3Table.KEY_SEP + bettingTypeId + B3Table.KEY_SEP + eventPartId;
 			}
 			if (outcomeId == null) {
-				return eventPartId + B3Table.KEY_SEP + outcomeTypeId;
-			}
-			if (bettingTypeId == null) {
-				return eventPartId + B3Table.KEY_SEP + outcomeTypeId + B3Table.KEY_SEP + outcomeId;
+				return eventId + B3Table.KEY_SEP + bettingTypeId + B3Table.KEY_SEP + 
+						eventPartId + B3Table.KEY_SEP + outcomeTypeId;
 			}
 			if (offerId == null) {
-				return eventPartId + B3Table.KEY_SEP + outcomeTypeId + B3Table.KEY_SEP + outcomeId + 
-						B3Table.KEY_SEP + bettingTypeId;
+				return eventId + B3Table.KEY_SEP + bettingTypeId + B3Table.KEY_SEP + 
+						eventPartId + B3Table.KEY_SEP + outcomeTypeId + B3Table.KEY_SEP + outcomeId;
 			}
-			return eventPartId + B3Table.KEY_SEP + outcomeTypeId + B3Table.KEY_SEP + outcomeId + 
-					B3Table.KEY_SEP + bettingTypeId + B3Table.KEY_SEP + offerId;
+			return eventId + B3Table.KEY_SEP + bettingTypeId + B3Table.KEY_SEP +
+					eventPartId + B3Table.KEY_SEP + outcomeTypeId + 
+					B3Table.KEY_SEP + outcomeId + B3Table.KEY_SEP + offerId;
 		}
 		if (outcomeTypeId == null) {
 			return null;

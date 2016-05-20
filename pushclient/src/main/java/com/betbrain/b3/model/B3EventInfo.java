@@ -4,6 +4,7 @@ import java.util.HashMap;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.betbrain.b3.data.B3KeyEventInfo;
+import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.EntitySpec2;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
@@ -29,10 +30,16 @@ public class B3EventInfo extends B3Entity<EventInfo> {
 	}
 
 	@Override
-	public void load(Item item, JsonMapper mapper) {
-		super.load(item, null, mapper);
+	public void load(Item item, String cellName, JsonMapper mapper) {
+		super.load(item, cellName, mapper);
+		String baseCellName;
+		if (cellName == null) {
+			baseCellName = "";
+		} else {
+			baseCellName = cellName + B3Table.CELL_LOCATOR_SEP;
+		}
 		provider = new B3Provider();
-		provider.load(item, EventInfo.PROPERTY_NAME_providerId, mapper);
+		provider.load(item, baseCellName + EventInfo.PROPERTY_NAME_providerId, mapper);
 	}
 
 	@Override

@@ -6,11 +6,14 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 
 import com.betbrain.b3.api.B3Engine;
 import com.betbrain.b3.api.DetailedOddsTableTrait;
+import com.betbrain.b3.api.OutcomeParameter;
 import com.betbrain.b3.data.*;
 import com.betbrain.b3.model.*;
 import com.betbrain.b3.pushclient.JsonMapper;
@@ -67,8 +70,7 @@ public class DetailedOddsTable2 {
 		
 		//JsonMapper jsonMapper = new JsonMapper();
 		DetailedOddsTable2 report = new DetailedOddsTable2(new B3Engine(),
-				219900664L, IDs.EVENTPART_ORDINARYTIME, IDs.BETTINGTYPE_OVERUNDER,
-				1F, null, null, null, null);
+				219900664L, IDs.EVENTPART_ORDINARYTIME, IDs.BETTINGTYPE_OVERUNDER, null);
 		report.setPlainText(true);
 		report.run();
 		//LinkedList<DetailedOddsTableData> data = report.outputData;
@@ -78,18 +80,51 @@ public class DetailedOddsTable2 {
 	}
 	
 	public DetailedOddsTable2(B3Engine b3, long matchId, long eventPartId, long bettingType,
-			Float paramFloat1, Float paramFloat2, Float paramFloat3, Boolean paramBoolean1, String paramString1) {
+			HashSet<OutcomeParameter> outcomeParams) {
 		
 		this.b3 = b3;
 		this.matchId = matchId;
 		this.eventPartId = eventPartId;
 		this.bettingType = bettingType;
 		
-		this.paramFloat1 = paramFloat1;
-		this.paramFloat2 = paramFloat2;
-		this.paramFloat3 = paramFloat3;
-		this.paramBoolean1 = paramBoolean1;
-		this.paramString1 = paramString1;
+		if (outcomeParams != null) {
+			HashMap<String, String> paramMap = new HashMap<>();
+			for (OutcomeParameter p : outcomeParams) {
+				paramMap.put(p.name, p.value);
+			}
+			
+			String value = paramMap.get("paramFloat1");
+			if (value != null) {
+				this.paramFloat1 = Float.parseFloat(value);
+			} else {
+				this.paramFloat1 = null;
+			}
+			value = paramMap.get("paramFloat2");
+			if (value != null) {
+				this.paramFloat2 = Float.parseFloat(value);
+			} else {
+				this.paramFloat2 = null;
+			}
+			value = paramMap.get("paramFloat3");
+			if (value != null) {
+				this.paramFloat3 = Float.parseFloat(value);
+			} else {
+				this.paramFloat3 = null;
+			}
+			value = paramMap.get("paramBoolean1");
+			if (value != null) {
+				this.paramBoolean1 = Boolean.parseBoolean(value);
+			} else {
+				this.paramBoolean1 = null;
+			}
+			this.paramString1 = paramMap.get("paramString1");
+		} else {
+			paramBoolean1 = null;
+			paramFloat1 = null;
+			paramFloat2 = null;
+			paramFloat3 = null;
+			paramString1 = null;
+		}
 		//this.mapper = mapper;
 		outputData = new LinkedList<>();
 	}
@@ -165,10 +200,10 @@ public class DetailedOddsTable2 {
 				B3Outcome o = it.next();
 				if (o.entity.getIsNegation() ||
 						(paramFloat1 != null && !paramFloat1.equals(o.entity.getParamFloat1())) ||
-						(paramFloat2 != null && !paramFloat1.equals(o.entity.getParamFloat2())) ||
-						(paramFloat3 != null && !paramFloat1.equals(o.entity.getParamFloat3())) ||
-						(paramBoolean1 != null && !paramFloat1.equals(o.entity.getParamBoolean1())) ||
-						(paramString1 != null && !paramFloat1.equals(o.entity.getParamString1()))) {
+						(paramFloat2 != null && !paramFloat2.equals(o.entity.getParamFloat2())) ||
+						(paramFloat3 != null && !paramFloat3.equals(o.entity.getParamFloat3())) ||
+						(paramBoolean1 != null && !paramBoolean1.equals(o.entity.getParamBoolean1())) ||
+						(paramString1 != null && !paramString1.equals(o.entity.getParamString1()))) {
 					it.remove();
 					continue;
 				}
@@ -194,8 +229,8 @@ public class DetailedOddsTable2 {
 		for (int i = 0; i < outcomes.size(); i++) {
 			B3Outcome oneOutcome = outcomes.get(i);
 			System.out.println("outcome: " + oneOutcome.entity);
-			B3KeyOffer offerKey = new B3KeyOffer(matchId, eventPartId, 
-					oneOutcome.entity.getTypeId(), oneOutcome.entity.getId(), bettingType, null);
+			B3KeyOffer offerKey = new B3KeyOffer(matchId, bettingType, eventPartId, 
+					oneOutcome.entity.getTypeId(), oneOutcome.entity.getId(), null);
 			offers[i] = (ArrayList<RevisionedEntity<B3BettingOffer>>) offerKey.listEntities(true, mapper);
 			System.out.println(offers[i].size() + " offer revisions found");
 		}

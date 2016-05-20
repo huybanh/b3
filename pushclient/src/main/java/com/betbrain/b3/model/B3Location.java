@@ -3,6 +3,7 @@ package com.betbrain.b3.model;
 import java.util.HashMap;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
+import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.EntitySpec2;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
@@ -33,10 +34,16 @@ public class B3Location extends B3Entity<Location> {
 	}
 
 	@Override
-	public void load(Item item, JsonMapper mapper) {
-		super.load(item, null, mapper);
+	public void load(Item item, String cellName, JsonMapper mapper) {
+		super.load(item, cellName, mapper);
+		String baseCellName;
+		if (cellName == null) {
+			baseCellName = "";
+		} else {
+			baseCellName = cellName + B3Table.CELL_LOCATOR_SEP;
+		}
 		locationType = new B3LocationType();
-		locationType.load(item, Event.PROPERTY_NAME_typeId, mapper);
+		locationType.load(item, baseCellName + Event.PROPERTY_NAME_typeId, mapper);
 	}
 
 }

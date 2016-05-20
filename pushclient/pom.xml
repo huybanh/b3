@@ -4,7 +4,7 @@
 
 	<groupId>com.betbrain.b3</groupId>
 	<artifactId>b3-api</artifactId>
-	<version>0.0.3</version>
+	<version>0.0.4</version>
 
 	<name>pushclient</name>
 	<url>http://maven.apache.org</url>
@@ -88,4 +88,5 @@
 		
 		
 	</dependencies>
+	<packaging>jar</packaging>
 </project>

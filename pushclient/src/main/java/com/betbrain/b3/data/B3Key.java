@@ -174,7 +174,7 @@ public abstract class B3Key {
 				throw new RuntimeException(e);
 			}
 			//b3entity.entity = entity;
-			b3entity.load(item, jsonMapper);
+			b3entity.load(item, null, jsonMapper);
 			Object obj;
 			if (revisions) {
 				String rangeKey = item.getString(DynamoWorker.RANGE);

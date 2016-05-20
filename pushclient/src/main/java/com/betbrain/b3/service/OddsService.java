@@ -11,7 +11,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import com.betbrain.b3.api.B3Engine;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.b3.report.IDs;
 import com.betbrain.b3.report.detailedodds.DetailedOddsTable2;
@@ -20,11 +19,9 @@ import com.betbrain.sepc.connector.sportsmodel.Event;
 @Path("/b3")
 public class OddsService {
 	
-	private static B3Engine b3 = new B3Engine();
-	
 	public static void main(String[] args) {
 		//DynamoWorker.initBundleCurrent();
-		new OddsService().detailedOddsTable(217633296L, 3L, IDs.BETTINGTYPE_1X2, 
+		new OddsService().detailedOddsTable(219900664L, 3L, IDs.BETTINGTYPE_1X2, 
 				null, null, null, null, null, true, "text");
 	}
 	
@@ -33,7 +30,7 @@ public class OddsService {
 	@Produces({MediaType.TEXT_PLAIN})
 	public Response listSports() {
 		JsonMapper mapper = new JsonMapper();
-		return Response.status(200).entity(mapper.serialize(b3.searchSports())).build();
+		return Response.status(200).entity(mapper.serialize(DemoApp.b3.searchSports())).build();
 	}
 	
 	@GET
@@ -41,7 +38,7 @@ public class OddsService {
 	@Produces({MediaType.TEXT_PLAIN})
 	public Response listCountries() {
 		JsonMapper mapper = new JsonMapper();
-		return Response.status(200).entity(mapper.serialize(b3.listCountries())).build();
+		return Response.status(200).entity(mapper.serialize(DemoApp.b3.listCountries())).build();
 	}
 	
 	@GET
@@ -49,7 +46,7 @@ public class OddsService {
 	@Produces({MediaType.TEXT_PLAIN})
 	public Response listLeagues(@PathParam("countryId") Long countryId, @QueryParam("sportId") Long sportId) {
 		JsonMapper mapper = new JsonMapper();
-		return Response.status(200).entity(mapper.serialize(b3.searchLeagues(sportId, countryId))).build();
+		return Response.status(200).entity(mapper.serialize(DemoApp.b3.searchLeagues(sportId, countryId))).build();
 	}
 	
 	@GET
@@ -60,7 +57,7 @@ public class OddsService {
 		/*B3KeyEvent eventKey = new B3KeyEvent(leagueId, IDs.EVENTTYPE_GENERICMATCH, (String) null);
 		@SuppressWarnings("unchecked")
 		ArrayList<B3Event> eventIds = (ArrayList<B3Event>) eventKey.listEntities(false, mapper);*/
-		Event[] matches = b3.searchMatches(leagueId, fromTime, toTime);
+		Event[] matches = DemoApp.b3.searchMatches(leagueId, fromTime, toTime);
 		/*String s = "";
 		for (Event e : matches) {
 			s += e.getId() + "\n";
@@ -98,8 +95,7 @@ public class OddsService {
 			plainText = true;
 		}
 		
-		DetailedOddsTable2 report = new DetailedOddsTable2(b3, matchId, eventPartId, bettingTypeId,
-				paramFloat1, paramFloat2, paramFloat3, paramBoolean1, paramString1);
+		DetailedOddsTable2 report = new DetailedOddsTable2(DemoApp.b3, matchId, eventPartId, bettingTypeId, null);
 		report.setPlainText(plainText);
 		report.run();
 		

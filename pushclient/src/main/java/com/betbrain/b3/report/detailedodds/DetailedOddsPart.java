@@ -22,6 +22,17 @@ class DetailedOddsPart {
 	private LinkedList<Long> timePoints = new LinkedList<>();
 	
 	DetailedOddsTableData data;
+	
+	private static String append(String s, String name, Object value) {
+		if (value == null) {
+			return s;
+		}
+		if (s == null) {
+			return name + ":" + value;
+		} else {
+			return s + ", " + name + ":" + value;
+		}
+	}
 
 	public DetailedOddsPart(/*String outcomeTypeCaption, Long participantId, */
 			B3Outcome outcome,
@@ -39,9 +50,18 @@ class DetailedOddsPart {
 		if (outcome == null) {
 			caption = "Statuses & scores";
 		} else {
+			String s = append(null, "paramBoolean1", outcome.entity.getParamBoolean1());
+			s = append(s, "paramEventPartId1", outcome.entity.getParamEventPartId1());
+			s = append(s, "paramFloat1", outcome.entity.getParamFloat1());
+			s = append(s, "paramFloat2", outcome.entity.getParamFloat2());
+			s = append(s, "paramFloat3", outcome.entity.getParamFloat3());
+			s = append(s, "paramParticipantId1", outcome.entity.getParamParticipantId1());
+			s = append(s, "paramParticipantId2", outcome.entity.getParamParticipantId2());
+			s = append(s, "paramParticipantId3", outcome.entity.getParamParticipantId3());
+			s = append(s, "paramString1", outcome.entity.getParamString1());
 			//long outcomeId = offerList.get(0).b3entity.entity.getOutcomeId();
 			caption = "Detailed Odds Table: " + outcome.type.entity.getName() +
-					" (" + outcome.entity + ")";
+					" (" + s + ")";
 		}
 		if (out == null) {
 			data = new DetailedOddsTableData();
@@ -80,7 +100,7 @@ class DetailedOddsPart {
 		statuses.prepare();
 		
 		if (out != null) {
-			out.println(caption);
+			out.println(caption + "<br/>");
 			out.print("Time | ");
 		}
 		for (Provider p : odds.providers) {
@@ -106,7 +126,7 @@ class DetailedOddsPart {
 		}
 		
 		if (out != null) {
-			out.println();
+			out.println("</br>");
 		}
 		
 		for (Long time : timePoints) {
@@ -143,10 +163,12 @@ class DetailedOddsPart {
 			}
 			
 			if (out != null) {
-				out.println();
+				out.println("<br/>");
 			}
 		}
-		
+		if (out != null) {
+			out.println("<br/>");
+		}
 	}
 
 }

@@ -4,9 +4,9 @@ public class OutcomeParameter {
 	
 	public final String name;
 
-	public final Object value;
+	public final String value;
 	
-	public OutcomeParameter(String name, Object value) {
+	public OutcomeParameter(String name, String value) {
 		super();
 		this.name = name;
 		this.value = value;
