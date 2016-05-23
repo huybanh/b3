@@ -50,20 +50,20 @@ public class B3Engine implements B3Api {
 	public static void main(String[] args) {
 		B3Api b3 = new B3Engine();
 		//b3.searchSports();
-		//b3.searchCountries(null);
+		b3.searchCountries(null);
 		//b3.searchLeagues(null, null);
 		//System.out.println("Matches");
 		//b3.searchMatches(215754838, null, null);
 		//((B3Engine) b3).searchBettingTypes2(219900664L);
 		//b3.searchBettingTypes(219900664L);
 		//b3.searchEventParts(219900664L, null);
-		OutcomeParameter[][] result = b3.searchParameters(219464997L, 177L, IDs.EVENTPART_ORDINARYTIME);
+		//OutcomeParameter[][] result = b3.searchParameters(219464997L, 177L, IDs.EVENTPART_ORDINARYTIME);
 		//LinkedList<DetailedOddsTableTrait> result = b3.reportDetailedOddsTable(219464997L, 3L, 177L, null);
 		
-		int i = 0;
+		/*int i = 0;
 		for (Object o : result) {
 			System.out.println(i++ + ": " + o);
-		}
+		}*/
 	}
 
 	public B3Engine() {
@@ -165,7 +165,8 @@ public class B3Engine implements B3Api {
 	public Location[] searchCountries(Long sportId) {
 		JsonMapper jsonMapper = new JsonMapper();
 		B3KeyEvent eventKey = new B3KeyEvent(null, IDs.EVENTTYPE_GENERICTOURNAMENT, (String) null);
-		ArrayList<?> allLeagues = eventKey.listEntities(false, jsonMapper);
+		ArrayList<?> allLeagues = eventKey.listEntities(false, jsonMapper, 
+				B3Table.CELL_LOCATOR_THIZ, Event.PROPERTY_NAME_venueId);
 		HashSet<Location> countrySet = new HashSet<>();
 		Iterator<?> it = allLeagues.iterator();
 		while (it.hasNext()) {
@@ -212,7 +213,7 @@ public class B3Engine implements B3Api {
 	public Event[] searchLeagues(Long sportId, Long countryId) {
 		JsonMapper jsonMapper = new JsonMapper();
 		B3KeyEvent eventKey = new B3KeyEvent(null, IDs.EVENTTYPE_GENERICTOURNAMENT, (String) null);
-		ArrayList<?> allLeagues = eventKey.listEntities(false, jsonMapper);
+		ArrayList<?> allLeagues = eventKey.listEntities(false, jsonMapper, B3Table.CELL_LOCATOR_THIZ);
 		LinkedList<Event> result = new LinkedList<>();
 		Iterator<?> it = allLeagues.iterator();
 		while (it.hasNext()) {
@@ -243,7 +244,7 @@ public class B3Engine implements B3Api {
 		eventKey.rangeKeyEnd = toTimeString;
 		
 		@SuppressWarnings("unchecked")
-		ArrayList<B3Event> matches = (ArrayList<B3Event>) eventKey.listEntities(false, jsonMapper);
+		ArrayList<B3Event> matches = (ArrayList<B3Event>) eventKey.listEntities(false, jsonMapper, B3Table.CELL_LOCATOR_THIZ);
 		Event[] result = new Event[matches.size()];
 		int index = 0;
 		for (Object one : matches) {
