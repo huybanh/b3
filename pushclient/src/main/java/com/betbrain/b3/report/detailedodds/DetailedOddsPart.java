@@ -263,6 +263,9 @@ class DetailedOddsItemStatus extends DetailedOddsItem<B3EventInfo> {
 	@Override
 	String getValue() {
 		long id = (Long) this.revisionedEntity.b3entity.entity.getParamEventStatusId1() - 1;
+		if (id >= CAPTIONS.length) {
+			return "status[" + id + "]";
+		}
 		return CAPTIONS[(int) id];
 	}
 }
