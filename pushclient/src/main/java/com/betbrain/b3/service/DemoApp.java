@@ -225,7 +225,7 @@ class ItemBettingType extends Item<BettingType> {
 		if (e == null) {
 			return "x";
 		}
-		return e.getDescription();
+		return e.getName();
 	}
 
 	@Override
