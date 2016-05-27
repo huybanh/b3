@@ -32,8 +32,10 @@ public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 	}
 
 	@Override
-	public void load(Item item, String cellName, JsonMapper mapper) {
-		super.load(item, cellName, mapper);
+	public boolean load(Item item, String cellName, JsonMapper mapper) {
+		if (!super.load(item, cellName, mapper)) {
+			return false;
+		}
 		
 		String baseCellName;
 		if (cellName == null) {
@@ -41,17 +43,11 @@ public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 		} else {
 			baseCellName = cellName + B3Table.CELL_LOCATOR_SEP;
 		}
-		outcome = new B3Outcome();
-		outcome.load(item, baseCellName + BettingOffer.PROPERTY_NAME_outcomeId, mapper);
-		
-		provider = new B3Provider();
-		provider.load(item, baseCellName + BettingOffer.PROPERTY_NAME_providerId, mapper);
-		
-		bettingType = new B3BettingType();
-		bettingType.load(item, baseCellName + BettingOffer.PROPERTY_NAME_bettingTypeId, mapper);
-		
-		status = new B3BettingOfferStatus();
-		status.load(item, baseCellName + BettingOffer.PROPERTY_NAME_statusId, mapper);
+		outcome = loadChild(new B3Outcome(), item, baseCellName + BettingOffer.PROPERTY_NAME_outcomeId, mapper);
+		provider = loadChild(new B3Provider(), item, baseCellName + BettingOffer.PROPERTY_NAME_providerId, mapper);
+		bettingType = loadChild(new B3BettingType(), item, baseCellName + BettingOffer.PROPERTY_NAME_bettingTypeId, mapper);
+		status = loadChild(new B3BettingOfferStatus(), item, baseCellName + BettingOffer.PROPERTY_NAME_statusId, mapper);
+		return true;
 	}
 
 	@Override
@@ -70,8 +66,7 @@ public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 	@Override
 	public void buildDownlinks(boolean forMainKeyOnly, HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper) {
 
-		this.outcome = build(forMainKeyOnly, entity.getOutcomeId(), new B3Outcome(), 
-				Outcome.class, masterMap, mapper);
+		this.outcome = build(forMainKeyOnly, entity.getOutcomeId(), new B3Outcome(true), Outcome.class, masterMap, mapper);
 		if (forMainKeyOnly) {
 			return;
 		}

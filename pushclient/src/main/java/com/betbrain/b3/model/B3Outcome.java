@@ -21,6 +21,16 @@ public class B3Outcome extends B3Entity<Outcome> {
 	public B3OutcomeStatus status;
 	public B3OutcomeType type;
 	
+	private boolean shorten = false;
+	
+	public B3Outcome() {
+		//for reflection
+	}
+	
+	public B3Outcome(boolean shorten) {
+		this.shorten = shorten;
+	}
+	
 	@Override
 	public EntitySpec2 getSpec() {
 		return EntitySpec2.Outcome;
@@ -34,6 +44,10 @@ public class B3Outcome extends B3Entity<Outcome> {
 		
 		//followed
 		addDownlink(Outcome.PROPERTY_NAME_eventPartId, EventPart.class, eventPart);
+		
+		if (shorten) {
+			return;
+		}
 		addDownlink(Outcome.PROPERTY_NAME_statusId, OutcomeStatus.class, status);
 		addDownlink(Outcome.PROPERTY_NAME_typeId, OutcomeType.class, type);
 	}
@@ -48,19 +62,23 @@ public class B3Outcome extends B3Entity<Outcome> {
 		}
 		this.eventPart = build(forMainKeyOnly, entity.getEventPartId(), 
 				new B3EventPart(), EventPart.class, masterMap, mapper);
+		
+		if (shorten) {
+			return;
+		}
 		this.status = build(forMainKeyOnly, entity.getStatusId(),
 				new B3OutcomeStatus(), OutcomeStatus.class, masterMap, mapper);
 		this.type = build(forMainKeyOnly, entity.getTypeId(),
 				new B3OutcomeType(), OutcomeType.class, masterMap, mapper);
 	}
 	
-	public void loadFull(Item item, JsonMapper mapper) {
+	/*public void loadFull(Item item, JsonMapper mapper) {
 		deserialize(mapper, item, B3Table.CELL_LOCATOR_THIZ);
 		this.status = new B3OutcomeStatus();
 		this.status.deserialize(mapper, item, Outcome.PROPERTY_NAME_statusId);
 		this.type = new B3OutcomeType();
 		this.type.deserialize(mapper, item, Outcome.PROPERTY_NAME_typeId);
-	}
+	}*/
 	
 	@Override
 	String canCreateMainKey() {
@@ -84,22 +102,21 @@ public class B3Outcome extends B3Entity<Outcome> {
 	}
 
 	@Override
-	public void load(Item item, String cellName, JsonMapper mapper) {
-		super.load(item, cellName, mapper);
+	public boolean load(Item item, String cellName, JsonMapper mapper) {
+		if (!super.load(item, cellName, mapper)) {
+			return false;
+		}
 		String baseCellName;
 		if (cellName == null) {
 			baseCellName = "";
 		} else {
 			baseCellName = cellName + B3Table.CELL_LOCATOR_SEP;
 		}
-		eventPart = new B3EventPart();
-		eventPart.load(item, baseCellName + Outcome.PROPERTY_NAME_eventPartId, mapper);
 		
-		status = new B3OutcomeStatus();
-		status.load(item, baseCellName + Outcome.PROPERTY_NAME_statusId, mapper);
-		
-		type = new B3OutcomeType();
-		type.load(item, baseCellName + Outcome.PROPERTY_NAME_typeId, mapper);
+		eventPart = loadChild(new B3EventPart(), item, baseCellName + Outcome.PROPERTY_NAME_eventPartId, mapper);
+		status = loadChild(new B3OutcomeStatus(), item, baseCellName + Outcome.PROPERTY_NAME_statusId, mapper);
+		type = loadChild(new B3OutcomeType(), item, baseCellName + Outcome.PROPERTY_NAME_typeId, mapper);
+		return true;
 	}
 
 }

@@ -84,28 +84,22 @@ public class B3Event extends B3Entity<Event> {
 	}
 
 	@Override
-	public void load(Item item, String cellName, JsonMapper mapper) {
-		super.load(item, cellName, mapper);
+	public boolean load(Item item, String cellName, JsonMapper mapper) {
+		if (!super.load(item, cellName, mapper)) {
+			return false;
+		}
 		String baseCellName;
 		if (cellName == null) {
 			baseCellName = "";
 		} else {
 			baseCellName = cellName + B3Table.CELL_LOCATOR_SEP;
 		}
-		sport = new B3Sport();
-		sport.load(item, baseCellName + Event.PROPERTY_NAME_sportId, mapper);
-		
-		status = new B3EventStatus();
-		status.load(item, baseCellName + Event.PROPERTY_NAME_statusId, mapper);
-		
-		template = new B3EventTemplate();
-		template.load(item, baseCellName + Event.PROPERTY_NAME_templateId, mapper);
-		
-		type = new B3EventType();
-		type.load(item, baseCellName + Event.PROPERTY_NAME_typeId, mapper);
-		
-		venue = new B3Location();
-		venue.load(item, baseCellName + Event.PROPERTY_NAME_venueId, mapper);
+		sport = loadChild(new B3Sport(), item, baseCellName + Event.PROPERTY_NAME_sportId, mapper);
+		status = loadChild(new B3EventStatus(), item, baseCellName + Event.PROPERTY_NAME_statusId, mapper);
+		template = loadChild(new B3EventTemplate(), item, baseCellName + Event.PROPERTY_NAME_templateId, mapper);
+		type = loadChild(new B3EventType(), item, baseCellName + Event.PROPERTY_NAME_typeId, mapper);
+		venue = loadChild(new B3Location(), item, baseCellName + Event.PROPERTY_NAME_venueId, mapper);
+		return true;
 	}
 
 }

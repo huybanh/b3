@@ -30,16 +30,18 @@ public class B3EventInfo extends B3Entity<EventInfo> {
 	}
 
 	@Override
-	public void load(Item item, String cellName, JsonMapper mapper) {
-		super.load(item, cellName, mapper);
+	public boolean load(Item item, String cellName, JsonMapper mapper) {
+		if (!super.load(item, cellName, mapper)) {
+			return false;
+		}
 		String baseCellName;
 		if (cellName == null) {
 			baseCellName = "";
 		} else {
 			baseCellName = cellName + B3Table.CELL_LOCATOR_SEP;
 		}
-		provider = new B3Provider();
-		provider.load(item, baseCellName + EventInfo.PROPERTY_NAME_providerId, mapper);
+		provider = loadChild(new B3Provider(), item, baseCellName + EventInfo.PROPERTY_NAME_providerId, mapper);
+		return true;
 	}
 
 	@Override
