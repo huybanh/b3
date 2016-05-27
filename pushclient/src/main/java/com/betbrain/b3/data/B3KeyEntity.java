@@ -111,10 +111,10 @@ public class B3KeyEntity extends B3Key {
 				
 				@Override
 				public E call() {
-					return new B3KeyEntity(clazz, entityId).load(mapper);
+					return new B3KeyEntity(clazz, entityId).load(new JsonMapper());
 				}
 			};
-			exectuorService.submit(task);
+			futures.add(exectuorService.submit(task));
 		}
 		
 		ArrayList<E> list = new ArrayList<E>();

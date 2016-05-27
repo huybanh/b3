@@ -12,12 +12,14 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.betbrain.b3.api.B3Engine;
+import com.betbrain.b3.api.Match;
 import com.betbrain.b3.api.OutcomeParameter;
 import com.betbrain.b3.report.detailedodds.DetailedOddsTable2;
 import com.betbrain.sepc.connector.sportsmodel.BettingType;
 import com.betbrain.sepc.connector.sportsmodel.Event;
 import com.betbrain.sepc.connector.sportsmodel.EventPart;
 import com.betbrain.sepc.connector.sportsmodel.Location;
+import com.betbrain.sepc.connector.sportsmodel.Participant;
 import com.betbrain.sepc.connector.sportsmodel.Sport;
 
 @Path("/demoapp")
@@ -25,8 +27,9 @@ public class DemoApp {
 	
 	public static void main(String[] args) {
 		//new DemoApp().choose("3", null, null, null, null, null, null, null, null, null, null, "matchId", "220058001");
-		new DemoApp().choose(null, null, null, null, null, null, null, null, null, null, null, "matchId", "220066898");
-		new DemoApp().choose(null, null, null, "220066898", null, null, null, null, null, null, null, "bettingTypeId", "112");
+		new DemoApp().choose("8", null, null, null, null, null, null, null, null, null, null, "leagueId", "213795777");
+		//new DemoApp().choose(null, null, null, null, null, null, null, null, null, null, null, "matchId", "220066898");
+		//new DemoApp().choose(null, null, null, "220066898", null, null, null, null, null, null, null, "bettingTypeId", "112");
 	}
 	
 	static B3Engine b3 = new B3Engine();
@@ -106,7 +109,7 @@ public class DemoApp {
 			return buildResponse(leagues, ItemLeague.class, buildQueryString(params));
 		} else if (name.equals("leagueId")) {
 			params.put("leagueId", value);
-			Event[] matches = b3.searchMatches(Long.parseLong(value), null, null);
+			Match[] matches = b3.searchMatches(Long.parseLong(value), null, null);
 			return buildResponse(matches, ItemMatch.class, buildQueryString(params));
 		} else if (name.equals("matchId")) {
 			params.put("matchId", value);
@@ -210,16 +213,25 @@ class ItemLeague extends Item<Event> {
 	
 }
 
-class ItemMatch extends Item<Event> {
+class ItemMatch extends Item<Match> {
 
 	@Override
 	String getText() {
-		return e.getId() + ": startTime: " + e.getStartTime() + ", isComplete: " + e.getIsComplete();
+		String s = null;
+		for (Participant p : e.participants) {
+			String one = p.getName(); // + " (" + e.relations.get(p.getId()).getParticipantRoleId() + ")";
+			if (s == null) {
+				s = one;
+			} else {
+				s = s + " vs " + one;
+			}
+		}
+		return s + ", start at " + e.event.getStartTime();
 	}
 
 	@Override
 	String getHref() {
-		return "set?name=matchId&value=" + e.getId();
+		return "set?name=matchId&value=" + e.event.getId();
 	}
 	
 }
@@ -267,7 +279,12 @@ class ItemOutcomeParams extends Item<OutcomeParameter[]> {
 			if (!"".equals(s)) {
 				s += ", ";
 			}
-			s += p.name + "=" + p.value;
+			
+			if (p.valueName == null) {
+				s += p.name + "=" + p.value;
+			} else {
+				s += p.name + "=" + p.valueName;
+			}
 		}
 		return s;
 	}

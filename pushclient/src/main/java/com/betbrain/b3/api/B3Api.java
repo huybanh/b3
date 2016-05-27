@@ -48,7 +48,7 @@ public interface B3Api {
 	 * @return matches belong to given leagueId, with start time in between fromTime inclusive and toTime exclusive.
 	 * 
 	 */
-	Event[] searchMatches(long leagueId, Date fromTime, Date toTime);
+	Match[] searchMatches(long leagueId, Date fromTime, Date toTime);
 
 	/**
 	 * @param matchId

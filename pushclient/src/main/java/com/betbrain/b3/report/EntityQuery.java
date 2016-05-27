@@ -11,7 +11,7 @@ public class EntityQuery {
 		DynamoWorker.initBundleCurrent();
 		JsonMapper mapper = new JsonMapper();
 		//B3KeyEntity keyEntity = new B3KeyEntity(Event.class, 217562679L);
-		B3KeyEntity keyEntity = new B3KeyEntity(Outcome.class, 2383565601L);
+		B3KeyEntity keyEntity = new B3KeyEntity(Event.class, 220066898L);
 		Entity e = keyEntity.load(mapper);
 		System.out.println(e);
 	}

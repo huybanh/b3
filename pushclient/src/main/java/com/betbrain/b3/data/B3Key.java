@@ -193,7 +193,7 @@ public abstract class B3Key {
 			Runnable task = new Runnable() {
 				public void run() {
 					query(hashKeyPrefix + oneDist + hashKeySuffix, 
-							revisions, b3class, outLists, oneDist, jsonMapper, colNames);
+							revisions, b3class, outLists, oneDist, new JsonMapper(), colNames);
 				}
 			};
 			futures.add(exectuorService.submit(task));

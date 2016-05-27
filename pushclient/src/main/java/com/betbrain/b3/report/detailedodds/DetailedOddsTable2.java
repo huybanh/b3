@@ -142,7 +142,8 @@ public class DetailedOddsTable2 {
 	}
 
 	public void run() {
-		queryData();
+		JsonMapper mapper = new JsonMapper();
+		queryData(mapper);
 		
 		if (!outcomes.isEmpty()) {
 			for (int i = 0; i < outcomes.size(); i++) {
@@ -151,7 +152,7 @@ public class DetailedOddsTable2 {
 				}
 				DetailedOddsPart part = new DetailedOddsPart(/*"Winner", */
 						outcomes.get(i),
-						statuses, scores, offers[i], out);
+						statuses, scores, offers[i], out, mapper);
 				if (outputData != null) {
 					outputData.add(part.data);
 				}
@@ -166,7 +167,7 @@ public class DetailedOddsTable2 {
 			}*/
 		} else {
 			DetailedOddsPart part = new DetailedOddsPart(/*"Statuses & scores ",
-					null,*/ null, statuses, scores, null, out);
+					null,*/ null, statuses, scores, null, out, mapper);
 			if (outputData != null) {
 				outputData.add(part.data);
 			}
@@ -178,10 +179,9 @@ public class DetailedOddsTable2 {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private void queryData() {
+	private void queryData(JsonMapper mapper) {
 		
 		long startTime = System.currentTimeMillis();
-		JsonMapper mapper = new JsonMapper();
 		B3KeyEventInfo statusKey = new B3KeyEventInfo(matchId, eventPartId, IDs.EVENTINFOTYPE_CURRENTSTATUS, null);
 		statuses = (ArrayList<RevisionedEntity<B3EventInfo>>) statusKey.listEntities(true, mapper);
 		System.out.println(statuses.size() + " statuses found");
