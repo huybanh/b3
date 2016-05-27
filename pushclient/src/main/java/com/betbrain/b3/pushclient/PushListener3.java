@@ -124,7 +124,7 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 		}*/
 		
 		//another map for initial dump
-		/*final HashMap<String, HashMap<Long, Entity>> immutableMasterMap = new HashMap<>();
+		final HashMap<String, HashMap<Long, Entity>> immutableMasterMap = new HashMap<>();
 		for (Entity e : entityList) {
 			HashMap<Long, Entity> subMap = immutableMasterMap.get(e.getClass().getName());
 			if (subMap == null) {
@@ -135,14 +135,8 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 		}
 		new InitialDumpDeployer(immutableMasterMap).initialPutMaster();
 		logger.info("Start deploying initial dump");
-		DynamoWorker.putAllFromLocal(initialThreadCount);*/
+		DynamoWorker.putAllFromLocal(initialThreadCount);
 		
-		try {
-			Thread.sleep(60000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		logger.info("Start deploying changesets now");
 		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSHING);
 		for (int i = 0; i < pushThreadCount; i++) {
