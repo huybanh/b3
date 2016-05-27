@@ -23,16 +23,8 @@ public class InitialDumpDeployer {
 	//private int totalProcessedCount;
 
 	private final HashMap<String, HashMap<Long, Entity>> masterMap;
-	//private final HashMap<Long, Long> eventPartToEventMap;
 	
 	public static LinkedList<String> linkingErrors = new LinkedList<String>();
-	
-	/*private abstract class InitialTask implements Runnable {
-		
-		//int processedCount;
-		
-		//int subTotalCount;
-	}*/
 	
 	@SuppressWarnings("unchecked")
 	private final ArrayList<Runnable>[] allTasks = new ArrayList[] {
@@ -45,6 +37,8 @@ public class InitialDumpDeployer {
 			//outcome
 			new ArrayList<Runnable>(),
 			//offer
+			new ArrayList<Runnable>(),
+			//event-participant relations
 			new ArrayList<Runnable>()
 	};
 	
@@ -53,6 +47,7 @@ public class InitialDumpDeployer {
 	private ArrayList<Runnable> eventInfoTasks = allTasks[2];
 	private ArrayList<Runnable> outcomeTasks = allTasks[3];
 	private ArrayList<Runnable> offerTasks = allTasks[4];
+	private ArrayList<Runnable> epRelationTasks = allTasks[5];
 	private int taskTypeIndex = 0;
 	
 	//private ArrayList<Runnable> allTasks = new ArrayList<>();
@@ -95,6 +90,7 @@ public class InitialDumpDeployer {
 		initialPutAllToMainTable(db, offerTasks, EntitySpec2.BettingOffer);
 		initialPutAllToMainTable(db, outcomeTasks, EntitySpec2.Outcome);
 		initialPutAllToMainTable(db, eventInfoTasks, EntitySpec2.EventInfo);
+		initialPutAllToMainTable(db, epRelationTasks, EntitySpec2.EventParticipantRelation);
 		
 		int allTaskCount = 0;
 		for (ArrayList<?> subList : allTasks) {
@@ -178,100 +174,11 @@ public class InitialDumpDeployer {
 		return;
 	}
 	
-	/*public void initialPutAllEvents(DBTrait db) {
-		
-		initialPutAllToMainTable(db, eventTasks, B3Table.Event, Event.class, new B3KeyBuilder<Event>() {
-
-			public B3Entity<Event> newB3Entity() {
-				return new B3Event();
-			}
-
-			public B3Key buildKey(B3Entity<Event> b3entity) {
-				B3Event event = (B3Event) b3entity;
-				return new B3KeyEvent(
-						event.entity.getSportId(),
-						event.entity.getTypeId(),
-						//false,
-						event.entity.getId());
-			}
-		});
-		
-	}
-	
-	public void initialPutAllEventInfos(DBTrait db) {
-		
-		initialPutAllToMainTable(db, eventInfoTasks, B3Table.EventInfo, EventInfo.class, new B3KeyBuilder<EventInfo>() {
-
-			public B3Entity<EventInfo> newB3Entity() {
-				return new B3EventInfo();
-			}
-
-			public B3Key buildKey(B3Entity<EventInfo> b3entity) {
-				B3EventInfo eventInfo = (B3EventInfo) b3entity;
-				return new B3KeyEventInfo(
-						//eventInfo.event.entity.getSportId(),
-						//eventInfo.event.entity.getTypeId(),
-						//false,
-						eventInfo.event.entity.getId(),
-						eventInfo.entity.getTypeId(),
-						eventInfo.entity.getId());
-			}
-		});
-		
-	}
-	
-	public void initialPutAllOutcomes(DBTrait db) {
-		
-		initialPutAllToMainTable(db, outcomeTasks, B3Table.Outcome, Outcome.class, new B3KeyBuilder<Outcome>() {
-
-			public B3Outcome newB3Entity() {
-				return new B3Outcome();
-			}
-
-			public B3Key buildKey(B3Entity<Outcome> b3entity) {
-				B3Outcome outcome = (B3Outcome) b3entity;
-				return new B3KeyOutcome(
-						outcome.event.entity.getSportId(),
-						outcome.event.entity.getTypeId(),
-						//false,
-						outcome.event.entity.getId(),
-						outcome.entity.getEventPartId(),
-						outcome.entity.getTypeId(),
-						outcome.entity.getId());
-			}
-		});
-		
-	}
-	
-	public void initialPutAllOffers(DBTrait db) {
-		
-		initialPutAllToMainTable(db, offerTasks, B3Table.BettingOffer, BettingOffer.class, new B3KeyBuilder<BettingOffer>() {
-
-			public B3BettingOffer newB3Entity() {
-				return new B3BettingOffer();
-			}
-
-			public B3Key buildKey(B3Entity<BettingOffer> b3entity) {
-				B3BettingOffer offer = (B3BettingOffer) b3entity;
-				return new B3KeyOffer(
-						offer.outcome.event.entity.getSportId(),
-						offer.outcome.event.entity.getTypeId(),
-						//false,
-						offer.outcome.event.entity.getId(),
-						offer.outcome.entity.getTypeId(),
-						offer.outcome.entity.getId(),
-						offer.entity.getBettingTypeId(),
-						offer.entity.getId());
-			}
-		});
-		
-	}*/
-	
-	@SuppressWarnings("unchecked")
+	/*@SuppressWarnings("unchecked")
 	private static <E> Collection<E>[] split(Collection<E> coll) {
-		/*if (coll.size() < 1000) {
+		if (coll.size() < 1000) {
 			return new Collection[] {coll};
-		}*/
+		}
 		
 		int i = 0;
 		LinkedList<ArrayList<E>> parentList = new LinkedList<ArrayList<E>>();
@@ -283,19 +190,19 @@ public class InitialDumpDeployer {
 			}
 			subList.add(e);
 			i++;
-			if (i == 50000) {
+			if (i == 100000) {
 				subList = null;
 				i = 0;
 			}
 		}
 		return parentList.toArray(new ArrayList[parentList.size()]);
-	}
+	}*/
 	
 	public void initialPutAllEntities(final DBTrait db) {
 
 		for (Entry<String, HashMap<Long, Entity>> entry : masterMap.entrySet()) {
-			Collection<Entity> entities = entry.getValue().values();
-			Collection<Entity>[] subLists = split(entities);
+			final Collection<Entity> entities = entry.getValue().values();
+			//Collection<Entity>[] subLists = split(entities);
 			final int subTotalCount = entities.size();
 			final int[] subProcessedCount = new int[] {0};
 			//final String subType = entry.getKey();
@@ -303,8 +210,8 @@ public class InitialDumpDeployer {
 			if (spec == null) {
 				continue;
 			}
-			for (Collection<Entity> oneSubList : subLists) {
-				final Collection<Entity> oneSubListFinal = oneSubList;
+			//for (Collection<Entity> oneSubList : subLists) {
+				//final Collection<Entity> oneSubListFinal = oneSubList;
 				Runnable oneTask = new Runnable() {
 					
 					private JsonMapper jsonMapper = new JsonMapper();
@@ -314,20 +221,21 @@ public class InitialDumpDeployer {
 					public void run() {
 						//final int total = oneSubListFinal.size();
 						//int count = 0;
-						for (Entity entity : oneSubListFinal) {
+						//for (Entity entity : oneSubListFinal) {
+						for (Entity entity : entities) {
 							B3KeyEntity entityKey = new B3KeyEntity(entity);
 							db.put(B3Table.Entity, entityKey.getHashKey(), entityKey.getRangeKey(), 
 									new B3CellString(B3Table.CELL_LOCATOR_THIZ, jsonMapper.serialize(entity)));
 						}
 						synchronized (subProcessedCount) {
-							subProcessedCount[0] += oneSubListFinal.size();
+							subProcessedCount[0] += entities.size();
 							logger.info(Thread.currentThread().getName() + ": Entity " + spec.shortName + ": deployed " + subProcessedCount[0] + " of " + subTotalCount);
 						}
 					}
 				};
 				//oneTask.subTotalCount = entities.size();
 				entityTasks.add(oneTask);
-			}
+			//}
 		}
 	}
 	
@@ -348,10 +256,11 @@ public class InitialDumpDeployer {
 		if (allEntities == null) {
 			return;
 		}
-		Collection<Entity>[] subLists = split(allEntities.values());
+		//Collection<Entity>[] subLists = split(allEntities.values());
+		final Collection<Entity> entityList = allEntities.values();
 		final B3Table table = spec.mainTable;
-		for (Collection<Entity> oneSubList : subLists) {
-			final Collection<Entity> oneSubListFinal = oneSubList;
+		//for (Collection<Entity> oneSubList : subLists) {
+			//final Collection<Entity> oneSubListFinal = oneSubList;
 			Runnable oneTask = new Runnable() {
 				
 				private JsonMapper jsonMapper = new JsonMapper();
@@ -361,7 +270,7 @@ public class InitialDumpDeployer {
 				public void run() {
 					//int entityCount = oneSubListFinal.size();
 					//int count = 0;
-					for (Entity entity : oneSubListFinal) {
+					for (Entity entity : entityList) {
 						//processedCount++;
 						/*if (count < start) {
 							continue;
@@ -401,14 +310,15 @@ public class InitialDumpDeployer {
 						//}
 					}
 					synchronized (subProcessedCount) {
-						subProcessedCount[0] += oneSubListFinal.size();
-						logger.info(Thread.currentThread().getName() + ": " + table.name + ": deployed " + subProcessedCount[0] + " of " + allEntities.size());
+						subProcessedCount[0] += entityList.size();
+						logger.info(Thread.currentThread().getName() + ": " + 
+								table.name + ": deployed " + subProcessedCount[0] + " of " + allEntities.size());
 					}
 				}
 			};
 			//oneTask.subTotalCount = allEntities.size();
 			runnerList.add(oneTask);
-		}
+		//}
 	}
 	
 	private static boolean useLookupAndLink = false;
