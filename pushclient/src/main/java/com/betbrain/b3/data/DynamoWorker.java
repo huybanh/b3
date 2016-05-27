@@ -730,7 +730,7 @@ public class DynamoWorker {
 		//		": DB-QUERY " + table.getTableName() + ": " + hashKey + "@" + rangeStart);
 		QuerySpec spec = new QuerySpec().withHashKey(HASH, hashKey);
 		if (rangeStart != null) {
-			RangeKeyCondition rc = new RangeKeyCondition(RANGE).beginsWith(rangeStart);
+			RangeKeyCondition rc;
 			if (rangeEnd != null) {
 				rc = new RangeKeyCondition(RANGE).between(rangeStart, rangeEnd);
 			} else {
