@@ -23,6 +23,10 @@ import com.betbrain.sepc.connector.sportsmodel.Sport;
 @Path("/demoapp")
 public class DemoApp {
 	
+	public static void main(String[] args) {
+		new DemoApp().choose("3", null, null, null, null, null, null, null, null, null, null, "matchId", "220058001");
+	}
+	
 	static B3Engine b3 = new B3Engine();
 	
 	@GET

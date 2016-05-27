@@ -57,7 +57,7 @@ public class InitialDumpDeployer {
 	
 	//private ArrayList<Runnable> allTasks = new ArrayList<>();
 	
-	public InitialDumpDeployer(HashMap<String, HashMap<Long, Entity>> masterMap, int totalCount) {
+	public InitialDumpDeployer(HashMap<String, HashMap<Long, Entity>> masterMap) {
 
 		this.masterMap = masterMap;
 		//this.eventPartToEventMap = eventPartToEventMap;
@@ -66,6 +66,7 @@ public class InitialDumpDeployer {
 	
 	public void initialPutMaster() {
 
+		DynamoWorker.openLocalWriters();
 		//DBTrait db = new FileWorker(new JsonMapper());
 		DBTrait db = new DBTrait() {
 
@@ -103,7 +104,7 @@ public class InitialDumpDeployer {
 		
 		final ArrayList<Object> threadIds = new ArrayList<Object>();
 		//we have 7 files, so 20 threads
-		for (int i = 0; i < 20; i++) {
+		for (int i = 0; i < 10; i++) {
 			final Object oneThreadId = new Object();
 			threadIds.add(oneThreadId);
 			new Thread("LocalPut-thread-" + i) {

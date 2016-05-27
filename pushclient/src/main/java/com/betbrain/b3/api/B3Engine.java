@@ -267,6 +267,7 @@ public class B3Engine implements B3Api {
 				false, jsonMapper, B3Table.CELL_LOCATOR_THIZ, BettingOffer.PROPERTY_NAME_bettingTypeId);
 		HashSet<BettingType> result = new HashSet<>();
 		for (B3BettingOffer one : offers) {
+			System.out.println("Offer: " + one.entity);
 			result.add(one.bettingType.entity);
 		}
 		System.out.println(result.size());
