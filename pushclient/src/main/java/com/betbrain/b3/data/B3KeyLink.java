@@ -13,13 +13,15 @@ public class B3KeyLink extends B3Key {
 
 	final String classShortName;
 	
-	final long id;
+	final Long id;
 	
 	final String linkName;
 	
 	final String linkedClassShortName;
 	
 	final Long linkedEntityId;
+	
+	final EntityLinkSourcePart[] sourceParts;
 
 	public B3KeyLink(Entity entity, Class<? extends Entity> clazz, String linkName) {
 		super();
@@ -28,6 +30,7 @@ public class B3KeyLink extends B3Key {
 		linkedClassShortName = EntitySpec2.getShortName(clazz.getName());
 		this.linkName = linkName;
 		linkedEntityId = null;
+		sourceParts = null;
 	}
 
 	public B3KeyLink(Class<?> entityClazz, long entityId, Class<?> linkedClazz, String linkName) {
@@ -37,6 +40,7 @@ public class B3KeyLink extends B3Key {
 		linkedClassShortName = EntitySpec2.getShortName(linkedClazz.getName());
 		this.linkName = linkName;
 		linkedEntityId = null;
+		sourceParts = null;
 	}
 
 	public B3KeyLink(Class<?> entityClazz, long entityId, Entity linkedEntity, String linkName) {
@@ -46,6 +50,7 @@ public class B3KeyLink extends B3Key {
 		linkedClassShortName = EntitySpec2.getShortName(linkedEntity.getClass().getName());
 		linkedEntityId = linkedEntity.getId();
 		this.linkName = linkName;
+		sourceParts = null;
 	}
 
 	public B3KeyLink(Entity entity, Entity linkedEntity, String linkName) {
@@ -55,6 +60,17 @@ public class B3KeyLink extends B3Key {
 		linkedClassShortName = EntitySpec2.getShortName(linkedEntity.getClass().getName());
 		this.linkName = linkName;
 		this.linkedEntityId = linkedEntity.getId();
+		sourceParts = null;
+	}
+
+	public B3KeyLink(Class<?> linkedEntityClazz, Long linkedEntityId, EntityLinkSourcePart... sourceParts) {
+		super();
+		this.classShortName = null; 
+		this.id = null;
+		this.linkedClassShortName = EntitySpec2.getShortName(linkedEntityClazz.getName());
+		this.linkedEntityId = linkedEntityId;
+		this.linkName = null;
+		this.sourceParts = sourceParts;
 	}
 	
 	@Override
@@ -68,7 +84,21 @@ public class B3KeyLink extends B3Key {
 	} 
 	
 	public String getHashKeyInternal() {
-		return classShortName + linkedClassShortName + linkName + B3Table.KEY_SEP + id;
+		if (sourceParts == null) {
+			return classShortName + linkedClassShortName + linkName + B3Table.KEY_SEP + id;
+		}
+		
+		//cross links
+		String hashKey = null;
+		for (EntityLinkSourcePart p : sourceParts) {
+			if (hashKey == null) {
+				hashKey = "R" + B3Table.KEY_SEP;
+			} else {
+				hashKey += B3Table.KEY_SEP;
+			}
+			hashKey += EntitySpec2.getShortName(p.entityClass.getName()) + p.entityId;
+		}
+		return hashKey + B3Table.KEY_SEP + this.linkedClassShortName;
 	}
 	
 	@Override

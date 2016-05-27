@@ -477,6 +477,15 @@ public class InitialDumpDeployer {
 				}
 			}
 		}
+		
+		//cross links: must be after downlinks, for the link building processed first
+		LinkedList<EntityLink> crossLinks = b3entity.getCrossLinks();
+		if (crossLinks != null) {
+			for (EntityLink link : crossLinks) {
+				B3KeyLink linkKey = new B3KeyLink(link.linkedEntityClazz, link.linkedEntityId, link.sourceParts);
+				db.put(B3Table.Link, linkKey.getHashKey(), linkKey.getRangeKey());
+			}
+		}
 	}
 	
 	//private int missedDownlinkCount;

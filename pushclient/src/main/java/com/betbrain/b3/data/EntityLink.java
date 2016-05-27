@@ -11,22 +11,40 @@ public class EntityLink {
 	public final Class<?> linkedEntityClazz;
 	
 	final B3Entity<?> linkedEntity;
+	
+	public final EntityLinkSourcePart[] sourceParts;
 
 	//for SPECs : no longer used
-	public EntityLink(String name, Long targetId, Class<?> linkedEntityClazz) {
+	/*public EntityLink(String name, Long targetId, Class<?> linkedEntityClazz) {
 		super();
 		this.name = name;
 		this.linkedEntityId = targetId;
 		this.linkedEntityClazz = linkedEntityClazz;
 		linkedEntity = null;
+	}*/
+	
+	public static EntityLink createCrossLink(Class<?> linkedEntityClazz, Long linkedEntityId, EntityLinkSourcePart... sourceParts) {
+		return new EntityLink(null, linkedEntityClazz, linkedEntityId, sourceParts);
 	}
 	
-	public EntityLink(String name, Class<?> linkedEntityClazz, long linkedEntityId) {
+	private EntityLink(String name, Class<?> linkedEntityClazz, Long linkedEntityId, EntityLinkSourcePart[] sourceParts) {
 		super();
 		this.name = name;
 		this.linkedEntityClazz = linkedEntityClazz;
 		this.linkedEntityId = linkedEntityId;
 		linkedEntity = null;
+		
+		this.sourceParts = sourceParts;
+	}
+	
+	public EntityLink(String name, Class<?> linkedEntityClazz, Long linkedEntityId) {
+		super();
+		this.name = name;
+		this.linkedEntityClazz = linkedEntityClazz;
+		this.linkedEntityId = linkedEntityId;
+		linkedEntity = null;
+		
+		this.sourceParts = null;
 	}
 	
 	public EntityLink(String name, B3Entity<?> linkedEntity) {
@@ -42,6 +60,8 @@ public class EntityLink {
 			this.linkedEntityId = null;
 			this.linkedEntityClazz = null;
 		}
+
+		this.sourceParts = null;
 	}
 	
 	public String getLinkName() {

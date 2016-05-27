@@ -1,16 +1,21 @@
 package com.betbrain.b3.model;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.betbrain.b3.data.B3KeyOffer;
 import com.betbrain.b3.data.B3Table;
+import com.betbrain.b3.data.EntityLink;
+import com.betbrain.b3.data.EntityLinkSourcePart;
 import com.betbrain.b3.data.EntitySpec2;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
 import com.betbrain.sepc.connector.sportsmodel.BettingOfferStatus;
 import com.betbrain.sepc.connector.sportsmodel.BettingType;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
+import com.betbrain.sepc.connector.sportsmodel.Event;
+import com.betbrain.sepc.connector.sportsmodel.EventPart;
 import com.betbrain.sepc.connector.sportsmodel.Outcome;
 import com.betbrain.sepc.connector.sportsmodel.Provider;
 
@@ -51,7 +56,7 @@ public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 	}
 
 	@Override
-	public void getDownlinkedEntitiesInternal() {
+	void getDownlinkedEntitiesInternal() {
 		
 		//unfollowed links
 		//addDownlinkUnfollowed(BettingOffer.PROPERTY_NAME_outcomeId, Outcome.class/*, entity.getOutcomeId()*/);
@@ -78,6 +83,18 @@ public class B3BettingOffer extends B3Entity<BettingOffer/*, B3KeyOffer*/> {
 				new B3BettingType(), BettingType.class, masterMap, mapper);
 		this.status = build(forMainKeyOnly, entity.getStatusId(), 
 				new B3BettingOfferStatus(), BettingOfferStatus.class, masterMap, mapper);
+	}
+	
+	@Override
+	public LinkedList<EntityLink> getCrossLinks() {
+
+		LinkedList<EntityLink> crossLinks = new LinkedList<EntityLink>();
+		crossLinks.add(EntityLink.createCrossLink(BettingType.class, entity.getBettingTypeId(),
+				new EntityLinkSourcePart(Event.class, outcome.entity.getEventId())));
+		crossLinks.add(EntityLink.createCrossLink(EventPart.class, outcome.entity.getEventPartId(),
+				new EntityLinkSourcePart(Event.class, outcome.entity.getEventId()),
+				new EntityLinkSourcePart(BettingType.class, entity.getBettingTypeId())));
+		return crossLinks;
 	}
 	
 	@Override

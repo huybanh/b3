@@ -46,12 +46,13 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 	
 	private boolean workingOnLinkNamesOnly = false;
 	
-	abstract protected void getDownlinkedEntitiesInternal();
+	abstract void getDownlinkedEntitiesInternal();
 	
 	protected final void addDownlink(String name, Class<?> linkedEntityClazz, B3Entity<?> linkedEntity) {
 		
 		if (workingOnLinkNamesOnly) {
-			downlinks.add(new EntityLink(name, null, linkedEntityClazz));
+			//downlinks.add(new EntityLink(name, null, linkedEntityClazz));
+			downlinks.add(new EntityLink(name, linkedEntityClazz, null));
 			return;
 		}
 		
@@ -91,6 +92,10 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		EntityLink[] links = downlinks.toArray(new EntityLink[downlinks.size()]);
 		downlinks = null;
 		return links;
+	}
+	
+	public LinkedList<EntityLink> getCrossLinks() {
+		return null;
 	}
 
 	/*public void load(Item item, JsonMapper mapper) {
