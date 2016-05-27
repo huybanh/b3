@@ -1,6 +1,9 @@
 package com.betbrain.b3.data;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.betbrain.b3.pushclient.JsonMapper;
@@ -98,31 +101,29 @@ public class B3KeyEntity extends B3Key {
 		return load(mapper, clazz, idList);
 	}
 
-	public static <E extends Entity> ArrayList<E> load(JsonMapper mapper,
-			Class<E> clazz, ArrayList<Long> idList) {
+	public static <E extends Entity> ArrayList<E> load(final JsonMapper mapper,
+			final Class<E> clazz, ArrayList<Long> idList) {
+		
+		LinkedList<Future<E>> futures = new LinkedList<>();
+		for (Long id : idList) {
+			final long entityId = id;
+			Callable<E> task = new Callable<E>() {
+				
+				@Override
+				public E call() {
+					return new B3KeyEntity(clazz, entityId).load(mapper);
+				}
+			};
+			exectuorService.submit(task);
+		}
 		
 		ArrayList<E> list = new ArrayList<E>();
-		for (Long id : idList) {
-			B3KeyEntity key = new B3KeyEntity(clazz, id);
-			/*Item item = DynamoWorker.get(B3Table.Entity, key.getHashKey(), key.getRangeKey());
-			if (item == null) {
-				continue;
-			}
-			String json = item.getString(B3Table.CELL_LOCATOR_THIZ);
-			@SuppressWarnings("unchecked")
-			E entity = (E) JsonMapper.DeserializeF(json);
-			System.out.println(entity);*/
-			E entity = key.load(mapper);
-			//let clients may need to know if an entity is missing
-			//if (entity != null) {
-				list.add(entity);
-			//}
-		}
+		waitForTaskCompletions(futures, list);
 		return list;
 	}
 
 	public <E extends Entity> E load(JsonMapper mapper) {
-		System.out.println("Getting for " + getHashKey() + "@" + getRangeKey());
+		//System.out.println("Loading entity " + getHashKey() + "@" + getRangeKey());
 		Item item = DynamoWorker.get(B3Table.Entity, getHashKey(), getRangeKey());
 		if (item == null) {
 			return null;

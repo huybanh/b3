@@ -12,9 +12,11 @@ import java.util.LinkedList;
 import com.betbrain.b3.data.B3Key;
 import com.betbrain.b3.data.B3KeyEntity;
 import com.betbrain.b3.data.B3KeyEvent;
+import com.betbrain.b3.data.B3KeyLink;
 import com.betbrain.b3.data.B3KeyOffer;
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.DynamoWorker;
+import com.betbrain.b3.data.EntityLinkSourcePart;
 import com.betbrain.b3.model.B3BettingOffer;
 import com.betbrain.b3.model.B3Event;
 import com.betbrain.b3.model.B3Location;
@@ -258,22 +260,32 @@ public class B3Engine implements B3Api {
 	/* (non-Javadoc)
 	 * @see com.betbrain.b3.api.B3Api#listBettingTypes()
 	 */
-	@Override
+	/*@Override
 	public BettingType[] searchBettingTypes(long matchId) {
 		JsonMapper jsonMapper = new JsonMapper();
 		B3KeyOffer offerKey = new B3KeyOffer(matchId, null, null, null, null, null);
 		@SuppressWarnings("unchecked")
-		//ArrayList<B3BettingOffer> offers = (ArrayList<B3BettingOffer>) offerKey.listEntities(
-				//false, jsonMapper, B3Table.CELL_LOCATOR_THIZ, BettingOffer.PROPERTY_NAME_bettingTypeId);
+		ArrayList<B3BettingOffer> offers = (ArrayList<B3BettingOffer>) offerKey.listEntities(
+				false, jsonMapper, B3Table.CELL_LOCATOR_THIZ, BettingOffer.PROPERTY_NAME_bettingTypeId);
 		
-		ArrayList<String> offerRangeKeys = (ArrayList<String>) offerKey.listEntities(
-				false, jsonMapper, DynamoWorker.RANGE);
 		HashSet<BettingType> result = new HashSet<>();
-		for (String one : offerRangeKeys) {
-			System.out.println("Offer range key: " + one);
-			//result.add(one.bettingType.entity);
+		for (B3BettingOffer one : offers) {
+			//System.out.println("Offer range key: " + one);
+			result.add(one.bettingType.entity);
 		}
 		System.out.println(result.size());
+		return result.toArray(new BettingType[result.size()]);
+	}*/
+	
+	/* (non-Javadoc)
+	 * @see com.betbrain.b3.api.B3Api#searchBettingTypes(long)
+	 */
+	@Override
+	public BettingType[] searchBettingTypes(long matchId) {
+		JsonMapper jsonMapper = new JsonMapper();
+		B3KeyLink linkKey = new B3KeyLink(BettingType.class, null, new EntityLinkSourcePart(Event.class, matchId));
+		ArrayList<Long> bettingTypeIds = linkKey.listLinks();
+		ArrayList<BettingType> result = B3KeyEntity.load(jsonMapper, BettingType.class, bettingTypeIds);
 		return result.toArray(new BettingType[result.size()]);
 	}
 	
@@ -311,8 +323,7 @@ public class B3Engine implements B3Api {
 	 */
 	@Override
 	public EventPart[] searchEventParts(long matchId, long bettingTypeId) {
-		JsonMapper jsonMapper = new JsonMapper();
-		//B3KeyOffer offerKey = new B3KeyOffer(eventId, eventPartId, outcomeTypeId, outcomeId, bettingTypeId, offerId)
+		/*JsonMapper jsonMapper = new JsonMapper();
 		B3KeyOffer offerKey = new B3KeyOffer(matchId, bettingTypeId, null, null, null, null);
 		@SuppressWarnings("unchecked")
 		ArrayList<B3BettingOffer> offers = (ArrayList<B3BettingOffer>) offerKey.listEntities(
@@ -323,6 +334,13 @@ public class B3Engine implements B3Api {
 			result.add(one.outcome.eventPart.entity);
 		}
 		System.out.println(result.size());
+		return result.toArray(new EventPart[result.size()]);*/
+		
+		JsonMapper jsonMapper = new JsonMapper();
+		B3KeyLink linkKey = new B3KeyLink(EventPart.class, null, 
+				new EntityLinkSourcePart(Event.class, matchId), new EntityLinkSourcePart(BettingType.class, bettingTypeId));
+		ArrayList<Long> eventPartIds = linkKey.listLinks();
+		ArrayList<EventPart> result = B3KeyEntity.load(jsonMapper, EventPart.class, eventPartIds);
 		return result.toArray(new EventPart[result.size()]);
 	}
 	

@@ -26,7 +26,6 @@ import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputExceededException;
-import com.amazonaws.services.dynamodbv2.model.ReturnConsumedCapacity;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -756,7 +755,7 @@ public class DynamoWorker {
 		if (colNames != null && colNames.length > 0) {
 			spec = spec.withAttributesToGet(colNames);
 		}
-		spec = spec.withReturnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
+		//spec = spec.withReturnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
 		ItemCollection<QueryOutcome> coll = table.query(spec);
 		IteratorSupport<Item, QueryOutcome> it = null;
 		if (coll != null) {
