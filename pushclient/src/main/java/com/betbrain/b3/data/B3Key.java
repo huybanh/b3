@@ -155,14 +155,6 @@ public abstract class B3Key {
 			ArrayList[] outLists, Integer arrayIndex, JsonMapper jsonMapper,
 			String... colNames) {
 		
-		/*Integer partitionRecordsLimit;
-		if (list == null) {
-			partitionRecordsLimit = 1;
-		} else {
-			partitionRecordsLimit = null;
-		}*/
-		//Class<? extends B3Entity<?>> b3class = getEntitySpec().b3class;
-		
 		long time = System.currentTimeMillis();
 		B3ItemIterator it = DynamoWorker.query(getTable(), hashKey, getRangeKey(), rangeKeyEnd, colNames);
 		while (it.hasNext()) {
@@ -173,28 +165,25 @@ public abstract class B3Key {
 			} catch (InstantiationException | IllegalAccessException e) {
 				throw new RuntimeException(e);
 			}
-			//b3entity.entity = entity;
-			b3entity.load(item, null, jsonMapper);
+			
+			if (!b3entity.load(item, null, jsonMapper)) {
+				String rangeKey = item.getString(DynamoWorker.RANGE);
+				outLists[arrayIndex].add(rangeKey);
+				System.out.println("Got range: " + rangeKey);
+				continue;
+			}
 			Object obj;
 			if (revisions) {
 				String rangeKey = item.getString(DynamoWorker.RANGE);
 				long revisionTime = Long.parseLong(rangeKey.substring(rangeKey.lastIndexOf('/') + 1));
 				obj = new RevisionedEntity<>(revisionTime, b3entity);
 			} else {
-				String json = item.getString(B3Table.CELL_LOCATOR_THIZ);
-				Entity entity = (Entity) jsonMapper.deserialize(json);
-				b3entity.entity = entity;
+				//String json = item.getString(B3Table.CELL_LOCATOR_THIZ);
+				//Entity entity = (Entity) jsonMapper.deserialize(json);
+				//b3entity.entity = entity;
 				obj = b3entity;
 			}
-			
 			outLists[arrayIndex].add(obj);
-			//System.out.println("Got " + obj);
-			/*if (list != null) {
-				list.add(obj);
-			} else {
-				array[arrayIndex].add(obj);
-				//break;
-			}*/
 		}
 		System.out.println("Queried " + getTable().name + ": " + hashKey + "@" + getRangeKey() +
 				", returned " + outLists[arrayIndex].size() + " in " + (System.currentTimeMillis() - time) + " ms");

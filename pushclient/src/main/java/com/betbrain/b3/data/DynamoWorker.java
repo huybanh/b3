@@ -726,8 +726,12 @@ public class DynamoWorker {
 			String hashKey, String rangeStart, String rangeEnd/*, Integer maxResulteSize*/, String... colNames) {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
-		//System.out.println(Thread.currentThread().getName() + 
-		//		": DB-QUERY " + table.getTableName() + ": " + hashKey + "@" + rangeStart);
+		String s = "";
+		for (String one : colNames) {
+			s = s + " " + one;
+		}
+		System.out.println(Thread.currentThread().getName() + 
+				": DB-QUERY " + table.getTableName() + ": " + hashKey + "@" + rangeStart + ":" + s);
 		QuerySpec spec = new QuerySpec().withHashKey(HASH, hashKey);
 		if (rangeStart != null) {
 			RangeKeyCondition rc;

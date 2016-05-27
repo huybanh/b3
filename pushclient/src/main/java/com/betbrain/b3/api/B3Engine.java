@@ -263,12 +263,15 @@ public class B3Engine implements B3Api {
 		JsonMapper jsonMapper = new JsonMapper();
 		B3KeyOffer offerKey = new B3KeyOffer(matchId, null, null, null, null, null);
 		@SuppressWarnings("unchecked")
-		ArrayList<B3BettingOffer> offers = (ArrayList<B3BettingOffer>) offerKey.listEntities(
-				false, jsonMapper, B3Table.CELL_LOCATOR_THIZ, BettingOffer.PROPERTY_NAME_bettingTypeId);
+		//ArrayList<B3BettingOffer> offers = (ArrayList<B3BettingOffer>) offerKey.listEntities(
+				//false, jsonMapper, B3Table.CELL_LOCATOR_THIZ, BettingOffer.PROPERTY_NAME_bettingTypeId);
+		
+		ArrayList<String> offerRangeKeys = (ArrayList<String>) offerKey.listEntities(
+				false, jsonMapper, DynamoWorker.RANGE);
 		HashSet<BettingType> result = new HashSet<>();
-		for (B3BettingOffer one : offers) {
-			System.out.println("Offer: " + one.entity);
-			result.add(one.bettingType.entity);
+		for (String one : offerRangeKeys) {
+			System.out.println("Offer range key: " + one);
+			//result.add(one.bettingType.entity);
 		}
 		System.out.println(result.size());
 		return result.toArray(new BettingType[result.size()]);
