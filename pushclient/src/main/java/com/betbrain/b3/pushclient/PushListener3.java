@@ -233,11 +233,13 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 								changesetPersiting.close();
 								changesetPersiting.fromFile(changesetWorkingFiles.removeFirst());
 							} else {
+								changesetWorking.close();
 								changesetPersiting = changesetWorking;
 								changesetWorking = new ChangeSet();
 							}
 						}
 					}
+					
 					if (changesetPersiting == null || changesetPersiting.isEmpty()) {
 						//this changeset has no changes
 						try {
@@ -246,7 +248,6 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 						}
 						continue;
 					}
-					changesetPersiting.close();
 					continue;
 				}
 			}
