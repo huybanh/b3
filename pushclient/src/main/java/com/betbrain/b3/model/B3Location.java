@@ -34,16 +34,18 @@ public class B3Location extends B3Entity<Location> {
 	}
 
 	@Override
-	public void load(Item item, String cellName, JsonMapper mapper) {
-		super.load(item, cellName, mapper);
+	public boolean load(Item item, String cellName, JsonMapper mapper) {
+		if (!super.load(item, cellName, mapper)) {
+			return false;
+		}
 		String baseCellName;
 		if (cellName == null) {
 			baseCellName = "";
 		} else {
 			baseCellName = cellName + B3Table.CELL_LOCATOR_SEP;
 		}
-		locationType = new B3LocationType();
-		locationType.load(item, baseCellName + Event.PROPERTY_NAME_typeId, mapper);
+		locationType = loadChild(new B3LocationType(), item, baseCellName + Event.PROPERTY_NAME_typeId, mapper);
+		return true;
 	}
 
 }

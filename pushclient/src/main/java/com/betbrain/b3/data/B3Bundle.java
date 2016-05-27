@@ -21,6 +21,7 @@ class B3Bundle {
 	Table offerTable;
 	Table eventTable;
 	Table eventInfoTable;
+	Table eprelTable;
 	Table outcomeTable;
 	Table lookupTable;
 	Table linkTable;
@@ -48,9 +49,10 @@ class B3Bundle {
 		offerTable = dynamoDB.getTable(id + "offer");
 		eventTable = dynamoDB.getTable(id + "event");
 		eventInfoTable = dynamoDB.getTable(id + "event_info");
+		eprelTable = dynamoDB.getTable(id + "eprel");
 		outcomeTable = dynamoDB.getTable(id + "outcome");
 		//lookupTable = dynamoDB.getTable(id + "lookup");
-		//linkTable = dynamoDB.getTable(id + "link");
+		linkTable = dynamoDB.getTable(id + "link");
 		entityTable = dynamoDB.getTable(id + "entity");
 		//sepcTable = dynamoDB.getTable(id + "sepc");
 	}
@@ -63,6 +65,8 @@ class B3Bundle {
 			return eventTable;
 		} else if (b3table == B3Table.EventInfo) {
 			return eventInfoTable;
+		} else if (b3table == B3Table.EPRelation) {
+			return eprelTable;
 		} else if (b3table == B3Table.Outcome) {
 			return outcomeTable;
 		} else if (b3table == B3Table.Lookup) {
@@ -101,7 +105,7 @@ class B3Bundle {
 		ceaseThroughPuts(entityTable, 200);
 	}
 	
-	static void createTables(DynamoDB dynamoDB, String id) {
+	/*static void createTables(DynamoDB dynamoDB, String id) {
 
 		Table[] tables = new Table[5];
 		//int capaHigh = 5000;
@@ -114,6 +118,29 @@ class B3Bundle {
 		//tables[i++] = createTable(dynamoDB, id, "lookup", 1, 1000, true);
 		//tables[i++] = createTable(dynamoDB, id, "link", 1, capaHigh, true);
 		tables[i++] = createTable(dynamoDB, id, "entity", 1, 1000, true);
+		//tables[i++] = createTable(dynamoDB, id, "sepc", 1, 400, true);
+		for (Table t : tables) {
+			try {
+		        System.out.println("Waiting for " + t.getTableName() + " to be created...this may take a while...");
+				t.waitForActive();
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}*/
+	
+	static void createTables(DynamoDB dynamoDB, String id) {
+
+		Table[] tables = new Table[7];
+		int i = 0;
+		tables[i++] = createTable(dynamoDB, id, "offer", 1, 1, true);
+		tables[i++] = createTable(dynamoDB, id, "event", 1, 1, true);
+		tables[i++] = createTable(dynamoDB, id, "event_info", 1, 1, true);
+		tables[i++] = createTable(dynamoDB, id, "eprel", 1, 1, true);
+		tables[i++] = createTable(dynamoDB, id, "outcome", 1, 1, true);
+		//tables[i++] = createTable(dynamoDB, id, "lookup", 1, 1000, true);
+		tables[i++] = createTable(dynamoDB, id, "link", 1, 1, true);
+		tables[i++] = createTable(dynamoDB, id, "entity", 1, 1, true);
 		//tables[i++] = createTable(dynamoDB, id, "sepc", 1, 400/*capaLow*/, true);
 		for (Table t : tables) {
 			try {

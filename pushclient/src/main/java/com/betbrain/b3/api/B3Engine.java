@@ -12,11 +12,15 @@ import java.util.LinkedList;
 import com.betbrain.b3.data.B3Key;
 import com.betbrain.b3.data.B3KeyEntity;
 import com.betbrain.b3.data.B3KeyEvent;
+import com.betbrain.b3.data.B3KeyEventParticipantRelation;
+import com.betbrain.b3.data.B3KeyLink;
 import com.betbrain.b3.data.B3KeyOffer;
 import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.DynamoWorker;
+import com.betbrain.b3.data.EntityLinkSourcePart;
 import com.betbrain.b3.model.B3BettingOffer;
 import com.betbrain.b3.model.B3Event;
+import com.betbrain.b3.model.B3EventParticipantRelation;
 import com.betbrain.b3.model.B3Location;
 import com.betbrain.b3.model.B3OutcomeTypeBettingTypeRelation;
 import com.betbrain.b3.model.B3Sport;
@@ -30,6 +34,7 @@ import com.betbrain.sepc.connector.sportsmodel.EventPart;
 import com.betbrain.sepc.connector.sportsmodel.Location;
 import com.betbrain.sepc.connector.sportsmodel.Outcome;
 import com.betbrain.sepc.connector.sportsmodel.OutcomeTypeBettingTypeRelation;
+import com.betbrain.sepc.connector.sportsmodel.Participant;
 import com.betbrain.sepc.connector.sportsmodel.Sport;
 
 /**
@@ -50,20 +55,20 @@ public class B3Engine implements B3Api {
 	public static void main(String[] args) {
 		B3Api b3 = new B3Engine();
 		//b3.searchSports();
-		b3.searchCountries(null);
-		//b3.searchLeagues(null, null);
+		//Location[] result = b3.searchCountries(8L);
+		//Event[] result = b3.searchLeagues(3L, 100L);
 		//System.out.println("Matches");
-		//b3.searchMatches(215754838, null, null);
+		//Match[] result = b3.searchMatches(213795777, null, null);
 		//((B3Engine) b3).searchBettingTypes2(219900664L);
-		//b3.searchBettingTypes(219900664L);
+		BettingType[] result = b3.searchBettingTypes(220096943L);
 		//b3.searchEventParts(219900664L, null);
 		//OutcomeParameter[][] result = b3.searchParameters(219464997L, 177L, IDs.EVENTPART_ORDINARYTIME);
 		//LinkedList<DetailedOddsTableTrait> result = b3.reportDetailedOddsTable(219464997L, 3L, 177L, null);
 		
-		/*int i = 0;
+		int i = 0;
 		for (Object o : result) {
 			System.out.println(i++ + ": " + o);
-		}*/
+		}
 	}
 
 	public B3Engine() {
@@ -230,7 +235,7 @@ public class B3Engine implements B3Api {
 	 * @see com.betbrain.b3.api.B3Api#searchMatches(long, java.util.Date, java.util.Date)
 	 */
 	@Override
-	public Event[] searchMatches(long leagueId, Date fromTime, Date toTime) {
+	public Match[] searchMatches(long leagueId, Date fromTime, Date toTime) {
 		JsonMapper jsonMapper = new JsonMapper();
 		String fromTimeString = null;
 		if (fromTime != null) {
@@ -245,11 +250,22 @@ public class B3Engine implements B3Api {
 		
 		@SuppressWarnings("unchecked")
 		ArrayList<B3Event> matches = (ArrayList<B3Event>) eventKey.listEntities(false, jsonMapper, B3Table.CELL_LOCATOR_THIZ);
-		Event[] result = new Event[matches.size()];
+		Match[] result = new Match[matches.size()];
 		int index = 0;
 		for (Object one : matches) {
-			result[index] = ((B3Event) one).entity;
-			System.out.println(result[index]);
+			Match m = new Match();
+			m.event = ((B3Event) one).entity;
+			B3KeyEventParticipantRelation keyRel = new B3KeyEventParticipantRelation(m.event.getId(), null, null, null, null);
+			ArrayList<?> relations = keyRel.listEntities(false, jsonMapper, B3Table.CELL_LOCATOR_THIZ);
+			for (Object o : relations) {
+				B3EventParticipantRelation r = (B3EventParticipantRelation) o;
+				B3KeyEntity keyEntity = new B3KeyEntity(Participant.class.getName(), r.entity.getParticipantId());
+				Participant p = (Participant) keyEntity.load(jsonMapper);
+				m.participants.add(p);
+				m.relations.put(p.getId(), r.entity);
+			}
+			result[index] = m;
+			System.out.println("Got match: " + m);
 			index++;
 		}
 		return result;
@@ -258,18 +274,32 @@ public class B3Engine implements B3Api {
 	/* (non-Javadoc)
 	 * @see com.betbrain.b3.api.B3Api#listBettingTypes()
 	 */
-	@Override
+	/*@Override
 	public BettingType[] searchBettingTypes(long matchId) {
 		JsonMapper jsonMapper = new JsonMapper();
 		B3KeyOffer offerKey = new B3KeyOffer(matchId, null, null, null, null, null);
 		@SuppressWarnings("unchecked")
 		ArrayList<B3BettingOffer> offers = (ArrayList<B3BettingOffer>) offerKey.listEntities(
 				false, jsonMapper, B3Table.CELL_LOCATOR_THIZ, BettingOffer.PROPERTY_NAME_bettingTypeId);
+		
 		HashSet<BettingType> result = new HashSet<>();
 		for (B3BettingOffer one : offers) {
+			//System.out.println("Offer range key: " + one);
 			result.add(one.bettingType.entity);
 		}
 		System.out.println(result.size());
+		return result.toArray(new BettingType[result.size()]);
+	}*/
+	
+	/* (non-Javadoc)
+	 * @see com.betbrain.b3.api.B3Api#searchBettingTypes(long)
+	 */
+	@Override
+	public BettingType[] searchBettingTypes(long matchId) {
+		JsonMapper jsonMapper = new JsonMapper();
+		B3KeyLink linkKey = new B3KeyLink(BettingType.class, null, new EntityLinkSourcePart(Event.class, matchId));
+		ArrayList<Long> bettingTypeIds = linkKey.listLinks();
+		ArrayList<BettingType> result = B3KeyEntity.load(jsonMapper, BettingType.class, bettingTypeIds);
 		return result.toArray(new BettingType[result.size()]);
 	}
 	
@@ -307,8 +337,7 @@ public class B3Engine implements B3Api {
 	 */
 	@Override
 	public EventPart[] searchEventParts(long matchId, long bettingTypeId) {
-		JsonMapper jsonMapper = new JsonMapper();
-		//B3KeyOffer offerKey = new B3KeyOffer(eventId, eventPartId, outcomeTypeId, outcomeId, bettingTypeId, offerId)
+		/*JsonMapper jsonMapper = new JsonMapper();
 		B3KeyOffer offerKey = new B3KeyOffer(matchId, bettingTypeId, null, null, null, null);
 		@SuppressWarnings("unchecked")
 		ArrayList<B3BettingOffer> offers = (ArrayList<B3BettingOffer>) offerKey.listEntities(
@@ -319,6 +348,13 @@ public class B3Engine implements B3Api {
 			result.add(one.outcome.eventPart.entity);
 		}
 		System.out.println(result.size());
+		return result.toArray(new EventPart[result.size()]);*/
+		
+		JsonMapper jsonMapper = new JsonMapper();
+		B3KeyLink linkKey = new B3KeyLink(EventPart.class, null, 
+				new EntityLinkSourcePart(Event.class, matchId), new EntityLinkSourcePart(BettingType.class, bettingTypeId));
+		ArrayList<Long> eventPartIds = linkKey.listLinks();
+		ArrayList<EventPart> result = B3KeyEntity.load(jsonMapper, EventPart.class, eventPartIds);
 		return result.toArray(new EventPart[result.size()]);
 	}
 	
@@ -364,7 +400,7 @@ public class B3Engine implements B3Api {
 				continue;
 			}
 			System.out.println("Looking for param in outcome: " + one);
-			HashSet<OutcomeParameter> paramSet = extractParameters(one);
+			HashSet<OutcomeParameter> paramSet = extractParameters(one, jsonMapper);
 			if (!paramSet.isEmpty()) {
 				setOfSets.add(paramSet);
 			}
@@ -409,8 +445,14 @@ public class B3Engine implements B3Api {
 		return result.toArray(new HashSet[result.size()]);
 	}*/
 	
-	private static HashSet<OutcomeParameter> extractParameters(Outcome outcome) {
+	private static HashSet<OutcomeParameter> extractParameters(Outcome outcome, JsonMapper mapper) {
+		
 		HashSet<OutcomeParameter> paramSet = new HashSet<>();
+		addParamParticipant(paramSet, "paramParticipantId1", outcome.getParamParticipantId1(), mapper);
+		addParamParticipant(paramSet, "paramParticipantId2", outcome.getParamParticipantId2(), mapper);
+		addParamParticipant(paramSet, "paramParticipantId3", outcome.getParamParticipantId3(), mapper);
+
+		addParam(paramSet, "paramEventPartId1", outcome.getParamEventPartId1());
 		addParam(paramSet, "paramBoolean1", outcome.getParamBoolean1());
 		addParam(paramSet, "paramString1", outcome.getParamString1());
 		addParam(paramSet, "paramFloat1", outcome.getParamFloat1());
@@ -418,6 +460,18 @@ public class B3Engine implements B3Api {
 		addParam(paramSet, "paramFloat3", outcome.getParamFloat3());
 		System.out.println("Extracted params: " + paramSet);
 		return paramSet;
+	}
+	
+	private static void addParamParticipant(HashSet<OutcomeParameter> paramSet, String name, Object value, JsonMapper mapper) {
+		if (value == null) {
+			return;
+		}
+		B3KeyEntity keyEntity = new B3KeyEntity(Participant.class, (Long) value);
+		Participant p = keyEntity.load(mapper);
+		
+		OutcomeParameter op = new OutcomeParameter(name, String.valueOf(value));
+		op.valueName = p.getName();
+		paramSet.add(op);
 	}
 	
 	private static void addParam(HashSet<OutcomeParameter> paramSet, String name, Object value) {

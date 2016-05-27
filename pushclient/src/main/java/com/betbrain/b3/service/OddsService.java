@@ -11,10 +11,10 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import com.betbrain.b3.api.Match;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.b3.report.IDs;
 import com.betbrain.b3.report.detailedodds.DetailedOddsTable2;
-import com.betbrain.sepc.connector.sportsmodel.Event;
  
 @Path("/b3")
 public class OddsService {
@@ -57,7 +57,7 @@ public class OddsService {
 		/*B3KeyEvent eventKey = new B3KeyEvent(leagueId, IDs.EVENTTYPE_GENERICMATCH, (String) null);
 		@SuppressWarnings("unchecked")
 		ArrayList<B3Event> eventIds = (ArrayList<B3Event>) eventKey.listEntities(false, mapper);*/
-		Event[] matches = DemoApp.b3.searchMatches(leagueId, fromTime, toTime);
+		Match[] matches = DemoApp.b3.searchMatches(leagueId, fromTime, toTime);
 		/*String s = "";
 		for (Event e : matches) {
 			s += e.getId() + "\n";

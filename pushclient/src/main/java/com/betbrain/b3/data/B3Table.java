@@ -8,6 +8,7 @@ public enum B3Table {
 	Entity("entity", null),
 	Link("link", null),
 	Event("event", "E"),
+	EPRelation("eprel", "R"),
 	EventInfo("event_info", "I"),
 	Outcome("outcome", "C"),
 	BettingOffer("betting_offer", "B"),
@@ -19,7 +20,7 @@ public enum B3Table {
 	//exact one character
 	public final String shortName;
 	
-	public static final int DIST_FACTOR = 200;
+	public static final int DIST_FACTOR = 300;
 	
 	public static final String CELL_LOCATOR_THIZ = "THIZ";
 	public static final String CELL_LOCATOR_SEP = "_";

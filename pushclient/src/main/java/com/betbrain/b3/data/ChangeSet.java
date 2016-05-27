@@ -1,8 +1,16 @@
 package com.betbrain.b3.data;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
+
+import com.betbrain.b3.pushclient.JsonMapper;
 
 public class ChangeSet implements DBTrait {
 	
@@ -33,7 +41,7 @@ public class ChangeSet implements DBTrait {
 		this.lastBatchTime = createTime;
 		changeCount++;
 		
-		if (changeCount % 1000 == 0) {
+		if (changeCount % 5000 == 0) {
 			System.out.println(Thread.currentThread().getName() + ": ChangeSet status: " +
 					changeCount + " changes, consolidated size: " + changesBeingConsolidated.size());
 		}
@@ -48,6 +56,10 @@ public class ChangeSet implements DBTrait {
 		}
 	}
 	
+	public boolean isClosed() {
+		return changesBeingConsolidated == null;
+	}
+	
 	public ChangeSetItem checkout() {
 		if (changesBeingPersisted.isEmpty()) {
 			//System.out.println(Thread.currentThread().getName() + ": ChangeSet persisted: " +
@@ -57,9 +69,13 @@ public class ChangeSet implements DBTrait {
 		return changesBeingPersisted.removeFirst();
 	}
 	
-	public int countChangesBeingPersisted() {
-		return changesBeingPersisted.size();
+	public int getChangeSize() {
+		return this.changeCount;
 	}
+	
+	/*public int countChangesBeingPersisted() {
+		return changesBeingPersisted.size();
+	}*/
 	
 	@Override
 	public void put(B3Table table, String hashKey, String rangeKey, B3Cell<?>... cells) {
@@ -104,20 +120,36 @@ public class ChangeSet implements DBTrait {
 		}*/
 	}
 	
-	/*public void persist() {
-		
-		if (changeItems.isEmpty()) {
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
+	public void toFile(String fileName) {
+		try {
+			System.out.println(Thread.currentThread().getName() + ": Filing changeset: " + fileName);
+			JsonMapper mapper = new JsonMapper();
+			BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, false));
+			for (ChangeSetItem c : changesBeingPersisted) {
+				c.toFile(writer, mapper);
 			}
-			return;
+			writer.close();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
-
-		System.out.println("Persisting changeset of " + changeCount + " changes");
-		for (ChangeSetItem one : changeItems.values()) {
-			one.persist();
+	}
+	
+	public void fromFile(String fileName) {
+		try {
+			System.out.println(Thread.currentThread().getName() + ": changeset from file " + fileName);
+			BufferedReader reader = new BufferedReader(new FileReader(fileName));
+			while (true) {
+				String line = reader.readLine();
+				if (line == null) {
+					reader.close();
+					new File(fileName).delete();
+					return;
+				}
+				ChangeSetItem c = new ChangeSetItem(line);
+				changesBeingPersisted.add(c);
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
-		
-	}*/
+	}
 }

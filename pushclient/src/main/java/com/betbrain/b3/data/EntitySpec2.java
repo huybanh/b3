@@ -11,6 +11,7 @@ import com.betbrain.b3.model.B3Event;
 import com.betbrain.b3.model.B3EventInfo;
 import com.betbrain.b3.model.B3EventInfoType;
 import com.betbrain.b3.model.B3EventPart;
+import com.betbrain.b3.model.B3EventParticipantRelation;
 import com.betbrain.b3.model.B3EventStatus;
 import com.betbrain.b3.model.B3EventTemplate;
 import com.betbrain.b3.model.B3EventType;
@@ -44,6 +45,8 @@ public enum EntitySpec2 {
 			com.betbrain.sepc.connector.sportsmodel.EventInfoType.class),
 	EventPart("EP", null, false, B3EventPart.class,
 			com.betbrain.sepc.connector.sportsmodel.EventPart.class),
+	EventParticipantRelation("ER", B3Table.EPRelation, false, B3EventParticipantRelation.class,
+			com.betbrain.sepc.connector.sportsmodel.EventParticipantRelation.class),
 	EventStatus("ES", null, false, B3EventStatus.class,
 			com.betbrain.sepc.connector.sportsmodel.EventStatus.class),
 	EventTemplate("EM", null, false, B3EventTemplate.class, 

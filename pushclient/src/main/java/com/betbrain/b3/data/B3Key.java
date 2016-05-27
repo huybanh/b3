@@ -2,7 +2,12 @@ package com.betbrain.b3.data;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.betbrain.b3.model.B3Entity;
@@ -13,6 +18,8 @@ public abstract class B3Key {
 	
 	//static final SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyyyyHHmmss");
 	public static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+	
+	static final ExecutorService exectuorService = Executors.newFixedThreadPool(20);
 	
 	//TODO remove this flag
 	public static boolean version2 = true;
@@ -73,7 +80,7 @@ public abstract class B3Key {
 		System.out.println(zeroPadding(5, 23));
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	/*@SuppressWarnings({ "unchecked", "rawtypes" })
 	public ArrayList<?> listEntities(final boolean revisions, final Class<? extends B3Entity<?>> b3class,
 			final JsonMapper jsonMapper, final String... colNames ) {
 		
@@ -147,6 +154,57 @@ public abstract class B3Key {
 			resultList.addAll(outLists[i]);
 		}
 		return resultList;
+	}*/
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public ArrayList<?> listEntities(final boolean revisions, final Class<? extends B3Entity<?>> b3class,
+			final JsonMapper jsonMapper, final String... colNames ) {
+		
+		final String hashKeySuffix;
+		if (revisions) {
+			hashKeySuffix = B3Table.KEY_SUFFIX_REVISION;
+		} else {
+			hashKeySuffix = "";
+		}
+
+		String hashKeyPart = getHashKeyInternal();
+		if (hashKeyPart != null) {
+			ArrayList[] outLists = new ArrayList[] {new ArrayList()};
+			query(hashKeyPart + hashKeySuffix, revisions, b3class, outLists, 0, jsonMapper, colNames);
+			return outLists[0];
+		}
+
+		final String hashKeyPrefix;
+		String prefix = getHashKeyPrefix();
+		if (prefix == null) {
+			hashKeyPrefix = "";
+		} else {
+			hashKeyPrefix = prefix;
+		}
+		
+		final ArrayList[] outLists = new ArrayList[B3Table.DIST_FACTOR];
+		for (int i = 0; i < outLists.length; i++) {
+			outLists[i] = new ArrayList();
+		}
+		
+		LinkedList<Future<?>> futures = new LinkedList<>();
+		for (int i = 0; i < B3Table.DIST_FACTOR; i++) {
+			final int oneDist = i;
+			Runnable task = new Runnable() {
+				public void run() {
+					query(hashKeyPrefix + oneDist + hashKeySuffix, 
+							revisions, b3class, outLists, oneDist, new JsonMapper(), colNames);
+				}
+			};
+			futures.add(exectuorService.submit(task));
+		}
+		
+		waitForTaskCompletions(futures);
+		ArrayList resultList = new ArrayList<>();
+		for (int i = 0; i < outLists.length; i++) {
+			resultList.addAll(outLists[i]);
+		}
+		return resultList;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -154,14 +212,6 @@ public abstract class B3Key {
 			@SuppressWarnings("rawtypes") /*ArrayList list,*/ 
 			ArrayList[] outLists, Integer arrayIndex, JsonMapper jsonMapper,
 			String... colNames) {
-		
-		/*Integer partitionRecordsLimit;
-		if (list == null) {
-			partitionRecordsLimit = 1;
-		} else {
-			partitionRecordsLimit = null;
-		}*/
-		//Class<? extends B3Entity<?>> b3class = getEntitySpec().b3class;
 		
 		long time = System.currentTimeMillis();
 		B3ItemIterator it = DynamoWorker.query(getTable(), hashKey, getRangeKey(), rangeKeyEnd, colNames);
@@ -173,30 +223,63 @@ public abstract class B3Key {
 			} catch (InstantiationException | IllegalAccessException e) {
 				throw new RuntimeException(e);
 			}
-			//b3entity.entity = entity;
-			b3entity.load(item, null, jsonMapper);
+			
+			if (!b3entity.load(item, null, jsonMapper)) {
+				String rangeKey = item.getString(DynamoWorker.RANGE);
+				outLists[arrayIndex].add(rangeKey);
+				System.out.println("Got range: " + rangeKey);
+				continue;
+			}
 			Object obj;
 			if (revisions) {
 				String rangeKey = item.getString(DynamoWorker.RANGE);
 				long revisionTime = Long.parseLong(rangeKey.substring(rangeKey.lastIndexOf('/') + 1));
 				obj = new RevisionedEntity<>(revisionTime, b3entity);
 			} else {
-				String json = item.getString(B3Table.CELL_LOCATOR_THIZ);
-				Entity entity = (Entity) jsonMapper.deserialize(json);
-				b3entity.entity = entity;
+				//String json = item.getString(B3Table.CELL_LOCATOR_THIZ);
+				//Entity entity = (Entity) jsonMapper.deserialize(json);
+				//b3entity.entity = entity;
 				obj = b3entity;
 			}
-			
 			outLists[arrayIndex].add(obj);
-			//System.out.println("Got " + obj);
-			/*if (list != null) {
-				list.add(obj);
-			} else {
-				array[arrayIndex].add(obj);
-				//break;
-			}*/
 		}
 		System.out.println("Queried " + getTable().name + ": " + hashKey + "@" + getRangeKey() +
 				", returned " + outLists[arrayIndex].size() + " in " + (System.currentTimeMillis() - time) + " ms");
+	}
+	
+	static void waitForTaskCompletions(LinkedList<Future<?>> futures) {
+		for (Future<?> f : futures) {
+			while (true) {
+				try {
+					f.get();
+				} catch (InterruptedException e) {
+					continue;
+				} catch (ExecutionException e) {
+					throw new RuntimeException(e);
+				}
+				break;
+			}
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	static <E> void waitForTaskCompletions(LinkedList<Future<E>> futures, ArrayList<E> taskResultList) {
+		for (Future<E> f : futures) {
+			while (true) {
+				try {
+					E e = f.get();
+					if (e instanceof Collection) {
+						taskResultList.addAll((Collection<E>) e);
+					} else {
+						taskResultList.add(e);
+					}
+				} catch (InterruptedException e) {
+					continue;
+				} catch (ExecutionException e) {
+					throw new RuntimeException(e);
+				}
+				break;
+			}
+		}
 	}
 }

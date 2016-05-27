@@ -46,12 +46,13 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 	
 	private boolean workingOnLinkNamesOnly = false;
 	
-	abstract protected void getDownlinkedEntitiesInternal();
+	abstract void getDownlinkedEntitiesInternal();
 	
 	protected final void addDownlink(String name, Class<?> linkedEntityClazz, B3Entity<?> linkedEntity) {
 		
 		if (workingOnLinkNamesOnly) {
-			downlinks.add(new EntityLink(name, null, linkedEntityClazz));
+			//downlinks.add(new EntityLink(name, null, linkedEntityClazz));
+			downlinks.add(new EntityLink(name, linkedEntityClazz, null));
 			return;
 		}
 		
@@ -92,13 +93,17 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		downlinks = null;
 		return links;
 	}
+	
+	public LinkedList<EntityLink> getCrossLinks() {
+		return null;
+	}
 
 	/*public void load(Item item, JsonMapper mapper) {
 		throw new RuntimeException("Entity must override this: " + this.getClass().getName());
 	}*/
 
 	@SuppressWarnings("unchecked")
-	public void load(Item item, String cellName, JsonMapper mapper) {
+	public boolean load(Item item, String cellName, JsonMapper mapper) {
 
 		String actualCellName;
 		if (cellName == null) {
@@ -108,33 +113,18 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		}
 		String json = item.getString(actualCellName);
 		if (json == null) {
-			return;
+			return false;
 		}
 		this.entity = (E) mapper.deserialize(json);
-		
-		/*EntityLink[] links = getDownlinkedNames();
-		if (links != null) {
-			B3Entity<?> b3Link;
-			for (EntityLink link : links) {
-				if (link.linkedEntityClazz == null) {
-					//unfollowed link
-					continue;
-				}
-				EntitySpec2  spec = EntitySpec2.get(link.linkedEntityClazz.getName());
-				try {
-					b3Link =  (B3Entity<?>) spec.b3class.newInstance();
-				} catch (InstantiationException | IllegalAccessException e) {
-					throw new RuntimeException();
-				}
-				
-				if (cellName == null) {
-					actualCellName = link.name;
-				} else {
-					actualCellName = cellName + B3Table.CELL_LOCATOR_SEP + link.name;
-				}
-				b3Link.load(item, actualCellName, mapper);
-			}
-		}*/
+		return true;
+	}
+	
+	<B3E extends B3Entity<?>> B3E loadChild(B3E b3e, Item item, String cellName, JsonMapper mapper) {
+		if (b3e.load(item, cellName, mapper)) {
+			return b3e;
+		} else {
+			return null;
+		}
 	}
 	
 	abstract public void buildDownlinks(boolean forMainKeyOnly, 
@@ -194,13 +184,13 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		return foundEntity;
 	}
 	
-	@SuppressWarnings("unchecked")
+	/*@SuppressWarnings("unchecked")
 	void deserialize(JsonMapper mapper, Item item, String cellName) {
 		String json = item.getString(cellName);
 		if (json != null) {
 			entity = (E) mapper.deserialize(json);
 		}
-	}
+	}*/
 	
 	/**
 	 * @return error message if cannot, null if ok

@@ -1,9 +1,8 @@
 package com.betbrain.b3.pushclient;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -15,9 +14,9 @@ import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
 import com.betbrain.b3.data.B3CellString;
 import com.betbrain.b3.data.DynamoWorker;
 import com.betbrain.b3.data.EntitySpec2;
+import com.betbrain.b3.data.InitialDumpDeployer;
 import com.betbrain.b3.data.ChangeSet;
 import com.betbrain.b3.data.ChangeSetItem;
-import com.betbrain.b3.data.InitialDumpDeployer;
 import com.betbrain.b3.model.B3Entity;
 import com.betbrain.sepc.connector.sdql.EntityChangeBatchProcessingMonitor;
 import com.betbrain.sepc.connector.sdql.SEPCConnector;
@@ -30,11 +29,13 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 	
 	private final HashMap<String, HashMap<Long, Entity>> masterMap = new HashMap<>();
 	
-	private final ChangeSet[] changesetWorking = new ChangeSet[] {new ChangeSet()};
+	private ChangeSet changesetWorking = new ChangeSet();
+	//private ChangeSet changesetWorkingInitial = new ChangeSet();
+	private LinkedList<String> changesetWorkingFiles = new LinkedList<>();
+	private final Object workingLock = new Object();
 	
 	private ChangeSet changesetPersiting = null;
-	
-	private final Object changesetPersitingLock = new Object();
+	private final Object persitingLock = new Object();
 	
 	private static int initialThreadCount;
 	
@@ -99,7 +100,7 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 			logger.info(entry.getKey() + ": " + entry.getValue().size());
 		}
 
-		logger.info("Starting initial deploying thread");
+		logger.info("Doing the rest of initial works in another thread");
 		new Thread() {
 			public void run() {
 				processInitialDump(entityList);
@@ -109,7 +110,7 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 	
 	private void processInitialDump(List<? extends Entity> entityList) {
 		
-		logger.info("Saving initial_dump file for debugging purpose");
+		/*logger.info("Saving initial_dump file for debugging purpose");
 		JsonMapper jsonMapper = new JsonMapper();
 		try {
 			BufferedWriter writer = new BufferedWriter(new FileWriter("initial_dump", false));
@@ -120,7 +121,7 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 			writer.close();
 		} catch (IOException e1) {
 			throw new RuntimeException(e1);
-		}
+		}*/
 		
 		//another map for initial dump
 		final HashMap<String, HashMap<Long, Entity>> immutableMasterMap = new HashMap<>();
@@ -132,14 +133,12 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 			}
 			subMap.put(e.getId(), e);
 		}
-		DynamoWorker.openLocalWriters();
-		new InitialDumpDeployer(immutableMasterMap, 0).initialPutMaster();
+		new InitialDumpDeployer(immutableMasterMap).initialPutMaster();
 		logger.info("Start deploying initial dump");
 		DynamoWorker.putAllFromLocal(initialThreadCount);
 		
 		logger.info("Start deploying changesets now");
 		DynamoWorker.setWorkingBundleStatus(DynamoWorker.BUNDLE_STATUS_PUSHING);
-
 		for (int i = 0; i < pushThreadCount; i++) {
 			new Thread("Push-thread-" + i) {
 				public void run() {
@@ -153,17 +152,15 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 	
 	@Override
 	public void notifyEntityUpdates(EntityChangeBatch changeBatch) {
-
-		/*if (pushStatusCount == 0) {
-			DynamoWorker.updateSetting(
-					new B3CellString(DynamoWorker.BUNDLE_CELL_PUSHSTATUS, DynamoWorker.BUNDLE_PUSHSTATUS_ONGOING),
-					new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_RECEIVED_ID, String.valueOf(changeBatch.getId())),
-					new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_RECEIVED_TIMESTAMP, changeBatch.getCreateTime().toString()));
+		try {
+			notifyEntityUpdatesInternal(changeBatch);
+		} catch (RuntimeException re) {
+			re.printStackTrace();
+			throw re;
 		}
-		pushStatusCount++;
-		if (pushStatusCount == 1000) {
-			pushStatusCount = 0;
-		}*/
+	}
+	
+	private void notifyEntityUpdatesInternal(EntityChangeBatch changeBatch) {
 
 		//System.out.println(Thread.currentThread().getName() + ": Processing changebatch " + changeBatch.getId());
 		long changeTime = changeBatch.getCreateTime().getTime();
@@ -192,42 +189,58 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 				throw new RuntimeException(e);
 			}
 			
-			synchronized (changesetWorking) {
-				b3entity.applyChange(changesetWorking[0], change, changeTime, masterMap, pushingMapper);
-				changesetWorking[0].record(changeBatch.getId(), changeBatch.getCreateTime());
+			synchronized (workingLock) {
+				b3entity.applyChange(changesetWorking, change, changeTime, masterMap, pushingMapper);
+				changesetWorking.record(changeBatch.getId(), changeBatch.getCreateTime());
+				if (changesetWorking.getChangeSize() > 200000) {
+					changesetWorking.close();
+					String fileName = System.currentTimeMillis() + "";
+					changesetWorkingFiles.add(fileName);
+					changesetWorking.toFile(fileName);
+					changesetWorking = new ChangeSet();
+				}
 			}
 		}
 		lastBatch = changeBatch;
 	}
 	
-	private int statusUpdateCount;
-	
 	private void persistChanges() {
 		
 		int persistedCount = 0;
 		while (true) {
-			
 			ChangeSetItem oneChange;
-			synchronized (changesetPersitingLock) {
-				
+			synchronized (persitingLock) {
 				if (changesetPersiting != null) {
 					oneChange = changesetPersiting.checkout();
 				} else {
 					oneChange = null;
 				}
-				
 				if (oneChange == null) {
-					
 					//change to next changeset
-					ChangeSet previousPersisting = changesetPersiting;
-					synchronized (changesetWorking) {
-						changesetWorking[0].close();
-						changesetPersiting = changesetWorking[0];
-						changesetWorking[0] = new ChangeSet();
+					persistedCount = 0;
+					updateStatus(changesetPersiting);
+					synchronized (workingLock) {
+						/*if (changesetWorkingInitial != null) {
+							if (!changesetWorkingInitial.isClosed()) {
+								changesetPersiting = null;
+							} else {
+								changesetPersiting = changesetWorkingInitial;
+								changesetWorkingInitial = null;
+							}
+						} else*/ {
+							if (!changesetWorkingFiles.isEmpty()) {
+								changesetPersiting = new ChangeSet();
+								changesetPersiting.close();
+								changesetPersiting.fromFile(changesetWorkingFiles.removeFirst());
+							} else {
+								changesetWorking.close();
+								changesetPersiting = changesetWorking;
+								changesetWorking = new ChangeSet();
+							}
+						}
 					}
 					
-					//update status
-					if (changesetPersiting.isEmpty()) {
+					if (changesetPersiting == null || changesetPersiting.isEmpty()) {
 						//this changeset has no changes
 						try {
 							Thread.sleep(1);
@@ -235,40 +248,39 @@ public class PushListener3 implements SEPCConnectorListener, EntityChangeBatchPr
 						}
 						continue;
 					}
-					
-					//update status to setting table
-					if (previousPersisting != null && !previousPersisting.isEmpty() && statusUpdateCount == 0) {
-						if (lastBatch != null) {
-							DynamoWorker.updateSetting(
-									new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_RECEIVED_ID, String.valueOf(lastBatch.getId())),
-									new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_RECEIVED_TIMESTAMP, lastBatch.getCreateTime().toString()),
-									new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_ID, String.valueOf(previousPersisting.getLastBatchId())),
-									new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_TIMESTAMP, previousPersisting.getLastBatchTime().toString()));
-						} else {
-							DynamoWorker.updateSetting(
-									new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_ID, String.valueOf(previousPersisting.getLastBatchId())),
-									new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_TIMESTAMP, previousPersisting.getLastBatchTime().toString()));
-							
-						}
-					}
-					statusUpdateCount++;
-					if (statusUpdateCount == 1) {
-						statusUpdateCount = 0;
-					}
 					continue;
 				}
-				
-				//got one non-null change
-				//logging
-				if (persistedCount == 1000) {
-					persistedCount = 0;
-					System.out.println(Thread.currentThread().getName() + 
-							": remain updates to persist: " + changesetPersiting.countChangesBeingPersisted());
-				}
-				persistedCount++;
 			}
 			
+			//got one non-null change
+			if (persistedCount % 5000 == 0) {
+				System.out.println(Thread.currentThread().getName() + ": persisted: " + persistedCount);
+			}
+			persistedCount++;
 			oneChange.persist();
+		}
+	}
+	
+	private int statusUpdateCount;
+	
+	private void updateStatus(ChangeSet previousPersisting) {
+		if (previousPersisting != null && !previousPersisting.isEmpty() && statusUpdateCount == 0) {
+			if (lastBatch != null) {
+				DynamoWorker.updateSetting(
+						new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_RECEIVED_ID, String.valueOf(lastBatch.getId())),
+						new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_RECEIVED_TIMESTAMP, lastBatch.getCreateTime().toString()),
+						new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_ID, String.valueOf(previousPersisting.getLastBatchId())),
+						new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_TIMESTAMP, previousPersisting.getLastBatchTime().toString()));
+			} else {
+				DynamoWorker.updateSetting(
+						new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_ID, String.valueOf(previousPersisting.getLastBatchId())),
+						new B3CellString(DynamoWorker.BUNDLE_CELL_LASTBATCH_DEPLOYED_TIMESTAMP, previousPersisting.getLastBatchTime().toString()));
+				
+			}
+			statusUpdateCount++;
+			if (statusUpdateCount == 1) {
+				statusUpdateCount = 0;
+			}
 		}
 	}
 }

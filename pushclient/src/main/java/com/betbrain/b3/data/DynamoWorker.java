@@ -26,7 +26,6 @@ import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputExceededException;
-import com.amazonaws.services.dynamodbv2.model.ReturnConsumedCapacity;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -37,8 +36,8 @@ public class DynamoWorker {
 	
 	private static Logger logger = Logger.getLogger(DynamoWorker.class);
 	
-	static String HASH = "HASH";
-	public static String RANGE = "RANGE";
+	static String HASH = "H";
+	public static String RANGE = "R";
 	
 	private static String[] BUNDLEIDS = {"x", "y", "z", "t", "u"};
 	
@@ -89,7 +88,7 @@ public class DynamoWorker {
 		dynaClient = new AmazonDynamoDBClient(new ProfileCredentialsProvider());
 		dynaClient.setRegion(Region.getRegion(Regions.AP_SOUTHEAST_1));
 		dynamoDB = new DynamoDB(dynaClient);
-		settingTable = dynamoDB.getTable("setting");
+		settingTable = dynamoDB.getTable("setting2");
 	}
 	
 	public static void createTables() {
@@ -248,6 +247,7 @@ public class DynamoWorker {
 	private static BufferedWriter outOutcome;
 	private static BufferedWriter outInfo;
 	private static BufferedWriter outEvent;
+	private static BufferedWriter outEprel;
 	
 	private static BufferedWriter outEntity;
 	private static BufferedWriter outLink;
@@ -257,6 +257,7 @@ public class DynamoWorker {
 	private static BufferedReader inOutcome;
 	private static BufferedReader inInfo;
 	private static BufferedReader inEvent;
+	private static BufferedReader inEprel;
 	
 	private static BufferedReader inEntity;
 	private static BufferedReader inLink;
@@ -265,9 +266,9 @@ public class DynamoWorker {
 	private static BufferedReader[] allReaders;
 	
 	private static B3Table[] tableByReader;
-	private static Long[] pendTimes = new Long[] {null, null, null, null, null, null, null};
-	private static long[] recordCount = new long[] {0, 0, 0, 0, 0, 0, 0};
-	private static JsonObject[] pendPuts = new JsonObject[] {null, null, null, null, null, null, null};
+	private static Long[] pendTimes = new Long[] {null, null, null, null, null, null, null, null};
+	private static long[] recordCount = new long[] {0, 0, 0, 0, 0, 0, 0, 0};
+	private static JsonObject[] pendPuts = new JsonObject[] {null, null, null, null, null, null, null, null};
 
 	private static int readerIndex = 0;
 	
@@ -277,6 +278,7 @@ public class DynamoWorker {
 			outOutcome = new BufferedWriter(new FileWriter("T_" + B3Table.Outcome.name, false));
 			outInfo = new BufferedWriter(new FileWriter("T_" + B3Table.EventInfo.name, false));
 			outEvent = new BufferedWriter(new FileWriter("T_" + B3Table.Event.name, false));
+			outEprel = new BufferedWriter(new FileWriter("T_" + B3Table.EPRelation.name, false));
 			
 			outEntity = new BufferedWriter(new FileWriter("T_" + B3Table.Entity.name, false));
 			outLink = new BufferedWriter(new FileWriter("T_" + B3Table.Link.name, false));
@@ -292,6 +294,7 @@ public class DynamoWorker {
 			outOutcome.close();
 			outInfo.close();
 			outEvent.close();
+			outEprel.close();
 			
 			outEntity.close();
 			outLink.close();
@@ -307,6 +310,7 @@ public class DynamoWorker {
 			inOutcome = new BufferedReader(new FileReader("T_" + B3Table.Outcome.name));
 			inInfo = new BufferedReader(new FileReader("T_" + B3Table.EventInfo.name));
 			inEvent = new BufferedReader(new FileReader("T_" + B3Table.Event.name));
+			inEprel = new BufferedReader(new FileReader("T_" + B3Table.EPRelation.name));
 			
 			inEntity = new BufferedReader(new FileReader("T_" + B3Table.Entity.name));
 			inLink = new BufferedReader(new FileReader("T_" + B3Table.Link.name));
@@ -316,10 +320,10 @@ public class DynamoWorker {
 		}
 		
 		allReaders = new BufferedReader[] {
-				inOffer, inOutcome, inInfo, inEvent, inEntity, inLink, inLookup
+				inOffer, inOutcome, inInfo, inEvent, inEprel, inEntity, inLink, inLookup
 		};
 		tableByReader = new B3Table[] {
-				B3Table.BettingOffer, B3Table.Outcome, B3Table.EventInfo, B3Table.Event,
+				B3Table.BettingOffer, B3Table.Outcome, B3Table.EventInfo, B3Table.Event, B3Table.EPRelation,
 				B3Table.Entity, B3Table.Link, B3Table.Lookup
 		};
 	}
@@ -330,6 +334,7 @@ public class DynamoWorker {
 			inOutcome.close();
 			inInfo.close();
 			inEvent.close();
+			inEprel.close();
 			
 			inEntity.close();
 			inLink.close();
@@ -355,6 +360,8 @@ public class DynamoWorker {
 			return outLink;
 		} else if (b3table == B3Table.Entity) {
 			return outEntity;
+		} else if (b3table == B3Table.EPRelation) {
+			return outEprel;
 		} else {
 			throw new RuntimeException("Unmapped table: " + b3table);
 		}
@@ -726,11 +733,15 @@ public class DynamoWorker {
 			String hashKey, String rangeStart, String rangeEnd/*, Integer maxResulteSize*/, String... colNames) {
 		
 		Table table = B3Bundle.workingBundle.getTable(b3table);
-		//System.out.println(Thread.currentThread().getName() + 
-		//		": DB-QUERY " + table.getTableName() + ": " + hashKey + "@" + rangeStart);
+		String s = "";
+		for (String one : colNames) {
+			s = s + " " + one;
+		}
+		System.out.println(Thread.currentThread().getName() + 
+				": DB-QUERY " + table.getTableName() + ": " + hashKey + "@" + rangeStart + ":" + s);
 		QuerySpec spec = new QuerySpec().withHashKey(HASH, hashKey);
 		if (rangeStart != null) {
-			RangeKeyCondition rc = new RangeKeyCondition(RANGE).beginsWith(rangeStart);
+			RangeKeyCondition rc;
 			if (rangeEnd != null) {
 				rc = new RangeKeyCondition(RANGE).between(rangeStart, rangeEnd);
 			} else {
@@ -744,7 +755,7 @@ public class DynamoWorker {
 		if (colNames != null && colNames.length > 0) {
 			spec = spec.withAttributesToGet(colNames);
 		}
-		spec = spec.withReturnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
+		//spec = spec.withReturnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
 		ItemCollection<QueryOutcome> coll = table.query(spec);
 		IteratorSupport<Item, QueryOutcome> it = null;
 		if (coll != null) {

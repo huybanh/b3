@@ -5,6 +5,8 @@ public class OutcomeParameter {
 	public final String name;
 
 	public final String value;
+
+	public String valueName;
 	
 	public OutcomeParameter(String name, String value) {
 		super();
