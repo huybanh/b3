@@ -10,11 +10,11 @@ public class B3ItemIterator {
 	
 	private final IteratorSupport<Item, QueryOutcome> it;
 	
-	private final ItemCollection<QueryOutcome> coll;
+	//private final ItemCollection<QueryOutcome> coll;
 	
 	B3ItemIterator(IteratorSupport<Item, QueryOutcome> it, ItemCollection<QueryOutcome> coll) {
 		this.it = it;
-		this.coll = coll;
+		//this.coll = coll;
 	}
 	
 	public boolean hasNext() {
@@ -23,11 +23,12 @@ public class B3ItemIterator {
 		}
 		while (true) {
 			try {
-				boolean b = it.hasNext();
+				return it.hasNext();
+				/*boolean b = it.hasNext();
 				if (!b) {
 					System.out.println("consumed capa: " + coll.getAccumulatedConsumedCapacity());
 				}
-				return b;
+				return b;*/
 			} catch (ProvisionedThroughputExceededException e) {
 				
 			}
