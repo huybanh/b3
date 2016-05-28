@@ -8,6 +8,8 @@ public class OutcomeParameter {
 
 	public String valueName;
 	
+	public boolean primaryParam = true;
+	
 	public OutcomeParameter(String name, String value) {
 		super();
 		this.name = name;
