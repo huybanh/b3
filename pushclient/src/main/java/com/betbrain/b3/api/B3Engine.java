@@ -9,7 +9,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import com.betbrain.b3.data.B3Key;
 import com.betbrain.b3.data.B3KeyEntity;
 import com.betbrain.b3.data.B3KeyEvent;
 import com.betbrain.b3.data.B3KeyEventParticipantRelation;
@@ -170,7 +169,7 @@ public class B3Engine implements B3Api {
 	@Override
 	public Location[] searchCountries(Long sportId) {
 		JsonMapper jsonMapper = new JsonMapper();
-		B3KeyEvent eventKey = new B3KeyEvent(null, IDs.EVENTTYPE_GENERICTOURNAMENT, (String) null);
+		B3KeyEvent eventKey = new B3KeyEvent(null, IDs.EVENTTYPE_GENERICTOURNAMENT/*, (String) null*/);
 		ArrayList<?> allLeagues = eventKey.listEntities(false, jsonMapper, 
 				B3Table.CELL_LOCATOR_THIZ, Event.PROPERTY_NAME_venueId);
 		HashSet<Location> countrySet = new HashSet<>();
@@ -218,7 +217,7 @@ public class B3Engine implements B3Api {
 	@Override
 	public Event[] searchLeagues(Long sportId, Long countryId) {
 		JsonMapper jsonMapper = new JsonMapper();
-		B3KeyEvent eventKey = new B3KeyEvent(null, IDs.EVENTTYPE_GENERICTOURNAMENT, (String) null);
+		B3KeyEvent eventKey = new B3KeyEvent(null, IDs.EVENTTYPE_GENERICTOURNAMENT/*, (String) null*/);
 		ArrayList<?> allLeagues = eventKey.listEntities(false, jsonMapper, B3Table.CELL_LOCATOR_THIZ);
 		LinkedList<Event> result = new LinkedList<>();
 		Iterator<?> it = allLeagues.iterator();
@@ -238,24 +237,32 @@ public class B3Engine implements B3Api {
 	@Override
 	public Match[] searchMatches(long leagueId, Date fromTime, Date toTime) {
 		JsonMapper jsonMapper = new JsonMapper();
-		String fromTimeString = null;
+		/*String fromTimeString = null;
 		if (fromTime != null) {
 			fromTimeString = B3Key.dateFormat.format(fromTime);
 		}
 		String toTimeString = null;
 		if (toTime != null) {
 			toTimeString = B3Key.dateFormat.format(toTime);
-		}
-		B3KeyEvent eventKey = new B3KeyEvent(leagueId, IDs.EVENTTYPE_GENERICMATCH, fromTimeString);
-		eventKey.rangeKeyEnd = toTimeString;
+		}*/
+		B3KeyEvent eventKey = new B3KeyEvent(leagueId, IDs.EVENTTYPE_GENERICMATCH/*, fromTimeString*/);
+		//eventKey.rangeKeyEnd = toTimeString;
 		
 		@SuppressWarnings("unchecked")
 		ArrayList<B3Event> matches = (ArrayList<B3Event>) eventKey.listEntities(false, jsonMapper, B3Table.CELL_LOCATOR_THIZ);
-		Match[] result = new Match[matches.size()];
-		int index = 0;
+		ArrayList<Match> result = new ArrayList<>();
 		for (Object one : matches) {
 			Match m = new Match();
 			m.event = ((B3Event) one).entity;
+			Date eventStart = m.event.getStartTime();
+			if (eventStart != null) {
+				if (fromTime != null && eventStart.before(fromTime)) {
+					continue;
+				}
+				if (toTime != null && eventStart.after(toTime)) {
+					continue;
+				}
+			}
 			B3KeyEventParticipantRelation keyRel = new B3KeyEventParticipantRelation(m.event.getId(), null, null, null, null);
 			ArrayList<?> relations = keyRel.listEntities(false, jsonMapper, B3Table.CELL_LOCATOR_THIZ);
 			for (Object o : relations) {
@@ -265,11 +272,10 @@ public class B3Engine implements B3Api {
 				m.participants.add(p);
 				m.relations.put(p.getId(), r.entity);
 			}
-			result[index] = m;
+			result.add(m);
 			//System.out.println("Got match: " + m.event);
-			index++;
 		}
-		return result;
+		return result.toArray(new Match[result.size()]);
 	}
 	
 	/* (non-Javadoc)

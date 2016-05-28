@@ -8,6 +8,7 @@ import com.betbrain.b3.data.B3Table;
 import com.betbrain.b3.data.EntitySpec2;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
+import com.betbrain.sepc.connector.sportsmodel.EntityUpdate;
 import com.betbrain.sepc.connector.sportsmodel.Event;
 import com.betbrain.sepc.connector.sportsmodel.EventPart;
 import com.betbrain.sepc.connector.sportsmodel.EventStatus;
@@ -63,6 +64,11 @@ public class B3Event extends B3Entity<Event> {
 				EventType.class, masterMap, mapper);
 		this.venue = build(forMainKeyOnly, entity.getVenueId(), new B3Location(),
 				Location.class, masterMap, mapper);
+	}
+
+	@Override
+	public boolean isKeyChange(EntityUpdate update) {
+		return update.getPropertyNames().contains(Event.PROPERTY_NAME_startTime);
 	}
 	
 	@Override

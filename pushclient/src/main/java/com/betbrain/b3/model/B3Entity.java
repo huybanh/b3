@@ -400,6 +400,10 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		mainKey.setRevisionId(revisionId);
 		changeSet.put(entitySpec.mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), cells);
 	}
+
+	public boolean isKeyChange(EntityUpdate update) {
+		return false;
+	}
 	
 	/*private void deleteCurrent(ChangeSet changeSet) {
 		if (this.entity == null) {
