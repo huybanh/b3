@@ -46,8 +46,18 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 	
 	private boolean workingOnLinkNamesOnly = false;
 	
+	/**
+	 * subclasses to provide linked entities 
+	 */
 	abstract void getDownlinkedEntitiesInternal();
 	
+	/**
+	 * Convenient method for subclasses to add linked entities
+	 * 
+	 * @param name
+	 * @param linkedEntityClazz
+	 * @param linkedEntity
+	 */
 	protected final void addDownlink(String name, Class<?> linkedEntityClazz, B3Entity<?> linkedEntity) {
 		
 		if (workingOnLinkNamesOnly) {
@@ -62,6 +72,15 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		downlinks.add(new EntityLink(name, linkedEntity));
 	}
 	
+	/**
+	 * Convenient method for subclasses to add unfollowed linked entities
+	 * 
+	 * Unfollowed linked entities are not put to any table. These are to the updating process,
+	 * to determine when to rebuild the whole record upon a push-update message from SE.  
+	 * 
+	 * @param name
+	 * @param linkedEntityClazz
+	 */
 	protected final void addDownlinkUnfollowed(String name, Class<?> linkedEntityClazz/*, Long linkedEntityId*/) {
 		
 		if (workingOnLinkNamesOnly) {
@@ -217,6 +236,18 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		}
 	}
 	
+	/**
+	 * For given EntityChange, generate updated data and apply the changes
+	 * to the given ChangeSet (not directly to table).
+	 * 
+	 * The changes will be apply to tables asynchronously by other threads
+	 * 
+	 * @param changeSet
+	 * @param change
+	 * @param changeTime
+	 * @param masterMap
+	 * @param mapper
+	 */
 	@SuppressWarnings("unchecked")
 	public void applyChange(ChangeSet changeSet, EntityChange change, long changeTime,
 			HashMap<String, HashMap<Long, Entity>> masterMap, JsonMapper mapper) {
@@ -315,6 +346,8 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 				B3CellString[] cellArray = b3Cells.toArray(new B3CellString[b3Cells.size()]);
 				String entityJson = mapper.serialize(this.entity);
 
+				//putCurrent does replace current data with new data.
+				//There is no need for a separate delete
 				//deleteCurrent(changeSet);
 				putCurrent(changeSet, mainKey, cellArray, entityJson);
 				
@@ -399,6 +432,10 @@ public abstract class B3Entity<E extends Entity/*, K extends B3Key*/> {
 		}
 		mainKey.setRevisionId(revisionId);
 		changeSet.put(entitySpec.mainTable, mainKey.getHashKey(), mainKey.getRangeKey(), cells);
+	}
+
+	public boolean isKeyChange(EntityUpdate update) {
+		return false;
 	}
 	
 	/*private void deleteCurrent(ChangeSet changeSet) {

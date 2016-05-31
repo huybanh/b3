@@ -192,7 +192,7 @@ class B3Bundle {
 	void deleteTables(DynamoDB dynamoDB) {
 
 		Table[] tables = new Table[] {offerTable, eventTable, eventInfoTable, 
-				outcomeTable, lookupTable, linkTable, entityTable/*, sepcTable*/};
+				outcomeTable, /*lookupTable,*/ linkTable, entityTable/*, sepcTable*/};
 		for (Table t : tables) {
 			System.out.println("Deleting table " + t.getTableName());
 			t.delete();

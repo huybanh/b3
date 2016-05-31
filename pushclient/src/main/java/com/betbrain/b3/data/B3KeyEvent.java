@@ -14,7 +14,7 @@ public class B3KeyEvent extends B3MainKey<Event> {
 	
 	private final Long eventTypeId;
 	
-	private final String startTime;
+	//private final String startTime;
 	
 	private final Long eventId;
 	
@@ -22,19 +22,19 @@ public class B3KeyEvent extends B3MainKey<Event> {
 		sportId = event.getSportId();
 		eventTypeId = event.getTypeId();
 		parentId = event.getParentId();
-		startTime = dateFormat.format(event.getStartTime());
+		//startTime = dateFormat.format(event.getStartTime());
 		eventId = event.getId();
 	}
 
-	@Deprecated
+	/*@Deprecated
 	public B3KeyEvent(Long sportId, Long eventTypeId, Long eventId) {
 		super();
 		this.sportId = sportId;
 		this.eventTypeId = eventTypeId;
 		parentId = null;
-		this.startTime = null;
+		//this.startTime = null;
 		this.eventId = eventId;
-	}
+	}*/
 
 	/*public B3KeyEvent(Long parentId, Long eventTypeId, Long eventId, Date startTime) {
 		super();
@@ -45,12 +45,12 @@ public class B3KeyEvent extends B3MainKey<Event> {
 		this.eventId = eventId;
 	}*/
 
-	public B3KeyEvent(Long parentId, Long typeId, String startTime) {
+	public B3KeyEvent(Long parentId, Long typeId/*, String startTime*/) {
 		super();
 		sportId = null;
 		this.parentId = parentId;
 		this.eventTypeId = typeId;
-		this.startTime = startTime;
+		//this.startTime = startTime;
 		this.eventId = null;
 	}
 	
@@ -104,13 +104,13 @@ public class B3KeyEvent extends B3MainKey<Event> {
 			if (eventTypeId == null) {
 				return pid + B3Table.KEY_SEP;
 			}
-			if (startTime == null) {
+			/*if (startTime == null) {
 				return pid + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP;
-			}
+			}*/
 			if (eventId == null) {
-				return pid + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + startTime; 
+				return pid + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP; 
 			}
-			return pid + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + startTime + B3Table.KEY_SEP + eventId;
+			return pid + B3Table.KEY_SEP + eventTypeId + B3Table.KEY_SEP + eventId;
 		}
 		
 		return String.valueOf(eventId);

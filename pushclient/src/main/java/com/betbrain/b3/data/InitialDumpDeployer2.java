@@ -8,6 +8,7 @@ import com.betbrain.b3.model.B3Entity;
 import com.betbrain.b3.pushclient.JsonMapper;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 
+@Deprecated
 public class InitialDumpDeployer2 {
     
     private final JsonMapper jsonMapper = new JsonMapper();

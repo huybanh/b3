@@ -116,14 +116,17 @@ public enum EntitySpec2 {
 	public boolean isStructuralChange(EntityUpdate update) {
 		if (idPropertyNames == null) {
 			idPropertyNames = new LinkedList<>();
-			EntityLink[] links;
 			try {
-				links = ((B3Entity<?>) b3class.newInstance()).getDownlinkedNames();
+				B3Entity<?> b3e = (B3Entity<?>) b3class.newInstance();
+				/*if (b3e.isKeyChange(update)) {
+					return true;
+				}*/
+				EntityLink[] links = b3e.getDownlinkedNames();
+				for (EntityLink one : links) {
+					idPropertyNames.add(one.getLinkName());
+				}
 			} catch (InstantiationException | IllegalAccessException e) {
 				throw new RuntimeException(e);
-			}
-			for (EntityLink one : links) {
-				idPropertyNames.add(one.getLinkName());
 			}
 		}
 		for (String changedPropertyName : update.getPropertyNames()) {
