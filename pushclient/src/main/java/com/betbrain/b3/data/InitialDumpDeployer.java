@@ -59,6 +59,13 @@ public class InitialDumpDeployer {
 		//this.totalCount = totalCount;
 	}
 	
+	/**
+	 * Put all entities from initial dump to b3, in 2 stages:
+	 * 
+	 * - Put to local files
+	 * - From local files, put to dynamodb to equally distribute work-load among db's partitions
+	 * 
+	 */
 	public void initialPutMaster() {
 
 		DynamoWorker.openLocalWriters();
@@ -198,7 +205,12 @@ public class InitialDumpDeployer {
 		return parentList.toArray(new ArrayList[parentList.size()]);
 	}*/
 	
-	public void initialPutAllEntities(final DBTrait db) {
+	/**
+	 * Put all entities to table entity
+	 * 
+	 * @param db
+	 */
+	private void initialPutAllEntities(final DBTrait db) {
 
 		for (Entry<String, HashMap<Long, Entity>> entry : masterMap.entrySet()) {
 			final Collection<Entity> entities = entry.getValue().values();
@@ -246,6 +258,21 @@ public class InitialDumpDeployer {
 		B3Key buildKey(B3Entity<E> b3entity);
 	}*/
 	
+	/**
+	 * put main entities to their own tables. The entities are:
+	 *   - Event
+	 *   - EventInfo
+	 *   - Outcome
+	 *   - BettingOffer
+	 *   - EventParticipantRelation
+	 *   
+	 * Also, generate and put linking data to the link table. Link data are defined and retrived
+	 * from concrete B3Entity classes
+	 * 
+	 * @param db
+	 * @param runnerList
+	 * @param spec
+	 */
 	@SuppressWarnings("unchecked")
 	private <E extends Entity> void initialPutAllToMainTable(
 			final DBTrait db, ArrayList<Runnable> runnerList,  final EntitySpec2 spec
