@@ -433,16 +433,16 @@ public class B3Engine implements B3Api {
 		addParam(paramSet, "paramFloat3", outcome.getParamFloat3());
 		primaryParamFound[0] = !paramSet.isEmpty();
 
-		addParam(paramSet, "paramEventPartId1", outcome.getParamEventPartId1());
+		/*addParam(paramSet, "paramEventPartId1", outcome.getParamEventPartId1());
 		addParam(paramSet, "paramBoolean1", outcome.getParamBoolean1());
 		addParamParticipant(paramSet, "paramParticipantId1", outcome.getParamParticipantId1(), mapper);
 		addParamParticipant(paramSet, "paramParticipantId2", outcome.getParamParticipantId2(), mapper);
-		addParamParticipant(paramSet, "paramParticipantId3", outcome.getParamParticipantId3(), mapper);
+		addParamParticipant(paramSet, "paramParticipantId3", outcome.getParamParticipantId3(), mapper);*/
 		System.out.println("Extracted params: " + paramSet);
 		return paramSet;
 	}
 	
-	private static void addParamParticipant(HashSet<OutcomeParameter> paramSet, String name, Object value, JsonMapper mapper) {
+	/*private static void addParamParticipant(HashSet<OutcomeParameter> paramSet, String name, Object value, JsonMapper mapper) {
 		if (value == null) {
 			return;
 		}
@@ -453,7 +453,7 @@ public class B3Engine implements B3Api {
 		op.primaryParam = false;
 		op.valueName = p.getName();
 		paramSet.add(op);
-	}
+	}*/
 	
 	private static void addParam(HashSet<OutcomeParameter> paramSet, String name, Object value) {
 		if (value == null) {

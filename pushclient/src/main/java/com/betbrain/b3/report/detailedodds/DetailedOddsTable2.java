@@ -32,7 +32,7 @@ public class DetailedOddsTable2 {
 	private final Float paramFloat1;
 	private final Float paramFloat2; 
 	private final Float paramFloat3;
-	private final Boolean paramBoolean1; 
+	//private final Boolean paramBoolean1; 
 	private final String paramString1;
 	
 	private ArrayList<RevisionedEntity<B3EventInfo>> statuses;
@@ -111,15 +111,15 @@ public class DetailedOddsTable2 {
 			} else {
 				this.paramFloat3 = null;
 			}
-			value = paramMap.get("paramBoolean1");
+			/*value = paramMap.get("paramBoolean1");
 			if (value != null) {
 				this.paramBoolean1 = Boolean.parseBoolean(value);
 			} else {
 				this.paramBoolean1 = null;
-			}
+			}*/
 			this.paramString1 = paramMap.get("paramString1");
 		} else {
-			paramBoolean1 = null;
+			//paramBoolean1 = null;
 			paramFloat1 = null;
 			paramFloat2 = null;
 			paramFloat3 = null;
@@ -202,7 +202,7 @@ public class DetailedOddsTable2 {
 						(paramFloat1 != null && !paramFloat1.equals(o.entity.getParamFloat1())) ||
 						(paramFloat2 != null && !paramFloat2.equals(o.entity.getParamFloat2())) ||
 						(paramFloat3 != null && !paramFloat3.equals(o.entity.getParamFloat3())) ||
-						(paramBoolean1 != null && !paramBoolean1.equals(o.entity.getParamBoolean1())) ||
+						//(paramBoolean1 != null && !paramBoolean1.equals(o.entity.getParamBoolean1())) ||
 						(paramString1 != null && !paramString1.equals(o.entity.getParamString1()))) {
 					it.remove();
 					continue;
